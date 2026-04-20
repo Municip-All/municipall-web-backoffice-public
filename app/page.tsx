@@ -7,6 +7,7 @@ import PoulsAiDashboard from "@/components/PoulsAiDashboard";
 import ModerationMatrix from "@/components/ModerationMatrix";
 import WidgetGenerator from "@/components/WidgetGenerator";
 import TargetedCommunication from "@/components/TargetedCommunication";
+import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import Login from "@/components/Login";
 
 export default function Home() {
@@ -30,6 +31,7 @@ export default function Home() {
             {activeView === "moderation" && <ModerationMatrix />}
             {activeView === "widgets" && <WidgetGenerator />}
             {activeView === "targeted-push" && <TargetedCommunication />}
+            {activeView === "settings" && <WhiteLabelSettings />}
           </div>
         </main>
       </div>

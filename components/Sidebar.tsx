@@ -1,55 +1,92 @@
 import React from "react";
-import { LayoutGrid, AlertTriangle, Bell, Settings } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  ShieldAlert, 
+  Smartphone, 
+  Send,
+  Settings
+} from "lucide-react";
 import clsx from "clsx";
 
-export type ViewType = "pouls-ai" | "moderation" | "widgets" | "targeted-push";
+export type ViewType = "pouls-ai" | "moderation" | "widgets" | "targeted-push" | "settings";
 
 interface SidebarProps {
   activeView: ViewType;
   onViewChange: (view: ViewType) => void;
 }
 
-const navItems = [
-  { id: "pouls-ai", label: "Pouls de la Ville", icon: LayoutGrid },
-  { id: "moderation", label: "Modération", icon: AlertTriangle },
-  { id: "targeted-push", label: "Communication Directe", icon: Bell },
-  { id: "widgets", label: "Gestion des Widgets", icon: Settings },
-] as const;
-
 export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
+  const menuItems = [
+    {
+      id: "pouls-ai",
+      label: "Pouls de la Ville (IA)",
+      icon: LayoutDashboard,
+    },
+    {
+      id: "moderation",
+      label: "Console de Modération",
+      icon: ShieldAlert,
+    },
+    {
+      id: "targeted-push",
+      label: "Communication Directe",
+      icon: Send,
+    },
+    {
+      id: "widgets",
+      label: "Gestionnaire de Widgets",
+      icon: Smartphone,
+    },
+  ] as const;
+
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full shrink-0 relative z-10">
-      <nav className="flex flex-col gap-1 px-4 py-8">
-        {navItems.map((item) => {
-          const Icon = item.icon;
+    <aside className="w-72 bg-white border-r border-gray-100 flex flex-col justify-between py-6 shadow-sm z-20 h-full">
+      <div className="px-4 space-y-1.5 flex-1">
+        <p className="px-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">
+          Outils d'Administration
+        </p>
+
+        {menuItems.map((item) => {
           const isActive = activeView === item.id;
-          
+          const Icon = item.icon;
+
           return (
             <button
               key={item.id}
               onClick={() => onViewChange(item.id)}
               className={clsx(
-                "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-left w-full text-sm font-semibold relative",
+                "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 border-l-4 group outline-none",
                 isActive 
-                  ? "text-municipall-blue bg-indigo-50/70" 
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-indigo-50/70 text-municipall-blue border-municipall-blue shadow-sm" 
+                  : "border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
               )}
             >
-              {isActive && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-municipall-blue rounded-r-full -ml-4" />
-              )}
-              <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.5 : 2} />
-              <span>{item.label}</span>
+              <Icon className={clsx(
+                "w-[22px] h-[22px] transition-colors",
+                isActive ? "text-municipall-blue flex-shrink-0 drop-shadow-sm" : "text-gray-400 group-hover:text-gray-700"
+              )} strokeWidth={isActive ? 2.5 : 2} />
+              {item.label}
             </button>
           );
         })}
-      </nav>
+      </div>
 
-      <div className="mt-8 px-4">
-        <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4">
-          <p className="text-xs font-bold text-municipall-blue mb-1">Système Opérationnel</p>
-          <p className="text-[10px] text-gray-500">Dernière maj: Aujourd'hui, 08:30</p>
-        </div>
+      <div className="px-4 mt-auto">
+        <button
+          onClick={() => onViewChange("settings")}
+          className={clsx(
+            "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 border-l-4 group outline-none mt-2",
+            activeView === "settings"
+              ? "bg-indigo-50/70 text-municipall-blue border-municipall-blue shadow-sm" 
+              : "border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+          )}
+        >
+          <Settings className={clsx(
+            "w-[22px] h-[22px] transition-colors",
+            activeView === "settings" ? "text-municipall-blue drop-shadow-sm" : "text-gray-400 group-hover:text-gray-700"
+          )} strokeWidth={activeView === "settings" ? 2.5 : 2} />
+          Paramètres Marque Blanche
+        </button>
       </div>
     </aside>
   );
