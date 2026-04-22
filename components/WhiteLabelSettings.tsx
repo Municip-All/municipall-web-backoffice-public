@@ -45,9 +45,9 @@ export default function WhiteLabelSettings() {
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h2 className="text-[28px] font-bold text-gray-900 tracking-tight mb-2">
-            Marque Blanche & Application
+            Marque Blanche &amp; Application
           </h2>
-          <p className="text-sm text-gray-500">Personnalisez l'identité visuelle de l'application citoyenne selon la charte graphique de votre commune.</p>
+          <p className="text-sm text-gray-500">Personnalisez l&apos;identité visuelle de l&apos;application citoyenne selon la charte graphique de votre commune.</p>
         </div>
         
         <button 
@@ -73,12 +73,12 @@ export default function WhiteLabelSettings() {
           <div className="card-panel p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
               <Type className="w-5 h-5 text-municipall-blue" />
-              Identité de l'Application
+              Identité de l&apos;Application
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Nom de l'Application</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Nom de l&apos;Application</label>
                 <input 
                   type="text" 
                   value={appName}
@@ -86,7 +86,7 @@ export default function WhiteLabelSettings() {
                   placeholder="Ex: Ma Ville en poche" 
                   className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg px-4 py-3 focus:ring-1 focus:ring-municipall-blue focus:border-municipall-blue/50 outline-none transition-all"
                 />
-                <p className="text-xs text-gray-500 mt-2">Ce nom sera affiché sur les stores (iOS/Android) et sur l'écran d'accueil du téléphone.</p>
+                <p className="text-xs text-gray-500 mt-2">Ce nom sera affiché sur les stores (iOS/Android) et sur l&apos;écran d&apos;accueil du téléphone.</p>
               </div>
 
               <div>
@@ -94,6 +94,7 @@ export default function WhiteLabelSettings() {
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 relative shrink-0">
                     {logoPreview ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
                     ) : (
                       <ImageIcon className="w-6 h-6 text-gray-400" />
@@ -149,7 +150,7 @@ export default function WhiteLabelSettings() {
                     ))}
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-3">Cette couleur s'appliquera principalement aux boutons d'actions, aux en-têtes et aux icônes principales de l'application citoyenne.</p>
+                <p className="text-xs text-gray-500 mt-3">Cette couleur s&apos;appliquera principalement aux boutons d&apos;actions, aux en-têtes et aux icônes principales de l&apos;application citoyenne.</p>
               </div>
               
               <div className="border-t border-gray-100 pt-5">
@@ -192,6 +193,7 @@ export default function WhiteLabelSettings() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center p-1 shrink-0 overflow-hidden border border-white/30">
                       {logoPreview ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={logoPreview} alt="Logo" className="w-full h-full object-contain drop-shadow" />
                       ) : (
                         <span className="text-white font-bold text-lg">M</span>
@@ -217,7 +219,7 @@ export default function WhiteLabelSettings() {
                     <Bell className="w-4 h-4 mt-0.5" style={{ color: secondaryColor }} />
                     <div>
                       <p className="text-xs font-bold text-gray-900">Nouvelle alerte travaux</p>
-                      <p className="text-[10px] text-gray-600 leading-snug mt-0.5">Route barrée au centre-ville jusqu'à vendredi.</p>
+                      <p className="text-[10px] text-gray-600 leading-snug mt-0.5">Route barrée au centre-ville jusqu&apos;à vendredi.</p>
                     </div>
                   </div>
 

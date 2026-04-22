@@ -12,7 +12,7 @@ export default function Header() {
         </div>
         <div>
           <h1 className="text-xl font-extrabold text-municipall-blue tracking-tight leading-none mb-0.5">
-            Municip'All
+            Municip&apos;All
           </h1>
           <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">
             ESPACE MAIRIE

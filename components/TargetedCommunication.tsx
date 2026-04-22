@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef } from "react";
-import { Send, MapPin, AlertCircle, Info, Radio, Settings, Plus, Trash2, CheckCircle2 } from "lucide-react";
+import { Send, AlertCircle, Info, Radio, Settings, Plus, Trash2, CheckCircle2 } from "lucide-react";
 import clsx from "clsx";
 
 interface Neighborhood {
@@ -122,12 +122,12 @@ export default function TargetedCommunication() {
             <h3 className="text-lg font-bold text-gray-900 mb-6">Rédiger le message</h3>
             
             <div className="mb-5">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Titre de l'alerte</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Titre de l&apos;alerte</label>
               <input 
                 type="text" 
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ex: Travaux sur le réseau d'eau" 
+                placeholder="Ex: Travaux sur le réseau d&apos;eau" 
                 className="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg px-4 py-2.5 focus:ring-1 focus:ring-municipall-blue focus:border-municipall-blue outline-none transition-all shadow-sm"
               />
             </div>
@@ -144,12 +144,12 @@ export default function TargetedCommunication() {
             </div>
             
             <div className="flex justify-between items-center text-xs text-gray-500 mb-6">
-              <span>Le message doit être concis et aller à l'essentiel.</span>
+              <span>Le message doit être concis et aller à l&apos;essentiel.</span>
               <span>{message.length}/250 caractères</span>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-3">Type d'alerte</label>
+              <label className="block text-sm font-bold text-gray-700 mb-3">Type d&apos;alerte</label>
               <div className="grid grid-cols-2 gap-4">
                 <button 
                   onClick={() => setAlertType("info")}
@@ -349,9 +349,9 @@ export default function TargetedCommunication() {
                         <div className="w-5 h-5 bg-municipall-blue rounded flex items-center justify-center shrink-0">
                           <span className="text-white text-[8px] font-bold">M</span>
                         </div>
-                        <span className="text-[10px] font-bold text-gray-900 tracking-wide">MUNICIP'ALL</span>
+                        <span className="text-[10px] font-bold text-gray-900 tracking-wide">MUNICIP&apos;ALL</span>
                       </div>
-                      <span className="text-[10px] text-gray-400">à l'instant</span>
+                      <span className="text-[10px] text-gray-400">à l&apos;instant</span>
                     </div>
                     <div className="mt-2">
                       <h4 className={clsx("text-sm font-bold leading-tight mb-1", alertType === "urgent" ? "text-red-600" : "text-gray-900")}>
@@ -372,7 +372,7 @@ export default function TargetedCommunication() {
             className="w-full btn-primary py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-municipall-blue/20 transition-all"
           >
             <Send className="w-5 h-5" />
-            Envoyer l'alerte via GPS
+            Envoyer l&apos;alerte via GPS
           </button>
         </div>
 

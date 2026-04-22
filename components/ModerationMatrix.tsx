@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ShieldAlert, Clock, Wrench, Check, Search } from "lucide-react";
-import clsx from "clsx";
+import { ShieldAlert, Clock, Wrench, Check } from "lucide-react";
 
 interface Report {
   id: string;
@@ -64,7 +63,7 @@ export default function ModerationMatrix() {
           <h2 className="text-[28px] font-bold text-gray-900 tracking-tight mb-2">
             Console de Modération
           </h2>
-          <p className="text-sm text-gray-500">Gestion des signalements citoyens qualifiés par l'IA.</p>
+          <p className="text-sm text-gray-500">Gestion des signalements citoyens qualifiés par l&apos;IA.</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -99,6 +98,7 @@ export default function ModerationMatrix() {
             {reports.map((report) => (
               <tr key={report.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="py-4 px-6">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={report.photoUrl} alt="Photo du signalement" className="w-16 h-16 rounded-xl object-cover bg-gray-100 border border-black/5" />
                 </td>
                 

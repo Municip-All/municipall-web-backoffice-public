@@ -21,7 +21,7 @@ export default function PoulsAiDashboard() {
         <h2 className="text-[28px] font-bold text-gray-900 tracking-tight mb-2">
           Pouls de la Ville
         </h2>
-        <p className="text-sm text-gray-500">Vue d'ensemble du sentiment citoyen et statistiques clés.</p>
+        <p className="text-sm text-gray-500">Vue d&apos;ensemble du sentiment citoyen et statistiques clés.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -125,7 +125,7 @@ export default function PoulsAiDashboard() {
               Synthèse de la Semaine
             </h3>
             <p className="text-sm text-gray-700 leading-relaxed relative z-10">
-              L'IA note une <strong>amélioration globale de 5%</strong> de la satisfaction ce mois-ci. Les efforts sur la propreté sont salués. Cependant, une hausse des plaintes concernant l'état de la voirie (nids-de-poule) est détectée dans le secteur Nord.
+              L&apos;IA note une <strong>amélioration globale de 5%</strong> de la satisfaction ce mois-ci. Les efforts sur la propreté sont salués. Cependant, une hausse des plaintes concernant l&apos;état de la voirie (nids-de-poule) est détectée dans le secteur Nord.
             </p>
             <div className="absolute right-4 top-4 w-12 h-12 border-2 border-indigo-100/50 rounded-lg bg-white/50"></div>
           </div>

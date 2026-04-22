@@ -1,6 +1,6 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   status: number;
@@ -9,7 +9,7 @@ export interface ApiResponse<T = any> {
 async function request<T>(
   endpoint: string,
   method: string = 'GET',
-  body?: any,
+  body?: unknown,
   headers: Record<string, string> = {}
 ): Promise<ApiResponse<T>> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
@@ -53,10 +53,10 @@ export const api = {
   get: <T>(endpoint: string, headers?: Record<string, string>) => 
     request<T>(endpoint, 'GET', undefined, headers),
   
-  post: <T>(endpoint: string, body: any, headers?: Record<string, string>) => 
+  post: <T>(endpoint: string, body: unknown, headers?: Record<string, string>) => 
     request<T>(endpoint, 'POST', body, headers),
   
-  put: <T>(endpoint: string, body: any, headers?: Record<string, string>) => 
+  put: <T>(endpoint: string, body: unknown, headers?: Record<string, string>) => 
     request<T>(endpoint, 'PUT', body, headers),
   
   delete: <T>(endpoint: string, headers?: Record<string, string>) => 
