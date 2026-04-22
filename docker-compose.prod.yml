@@ -1,0 +1,16 @@
+services:
+  backoffice-prod:
+    build:
+      context: .
+      args:
+        - NEXT_PUBLIC_API_URL=https://api.municipall.dev
+    container_name: municipall-backoffice-prod
+    restart: always
+    ports:
+      - "4000:3000"
+    networks:
+      - proxy-bridge
+
+networks:
+  proxy-bridge:
+    external: true

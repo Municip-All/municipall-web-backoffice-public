@@ -1,7 +1,9 @@
-import React from "react";
 import { LogOut, Building2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Header() {
+  const { user, logout } = useAuth();
+
   return (
     <header className="h-[72px] bg-white border-b border-gray-200 px-8 flex items-center justify-between shrink-0 relative z-20">
       <div className="flex items-center gap-3">
@@ -13,17 +15,21 @@ export default function Header() {
             Municip'All
           </h1>
           <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">
-            BACK-OFFICE
+            ESPACE MAIRIE
           </p>
         </div>
       </div>
       
       <div className="flex items-center gap-5">
         <div className="text-right">
-          <p className="font-bold text-gray-900 text-sm leading-tight">Jean Dupont</p>
-          <p className="text-xs text-gray-500">Maire-Adjoint</p>
+          <p className="font-bold text-gray-900 text-sm leading-tight">{user?.name || 'Agent'}</p>
+          <p className="text-xs text-gray-500">{user?.role || 'Service Municipal'}</p>
         </div>
-        <button className="text-gray-400 hover:text-gray-700 transition-colors p-1" aria-label="Se déconnecter">
+        <button 
+          onClick={logout}
+          className="text-gray-400 hover:text-red-500 transition-colors p-1" 
+          aria-label="Se déconnecter"
+        >
           <LogOut className="w-5 h-5" />
         </button>
       </div>

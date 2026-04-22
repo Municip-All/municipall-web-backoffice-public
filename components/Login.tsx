@@ -1,20 +1,17 @@
-"use client";
-
 import React, { useState } from "react";
 import { Shield, Lock, Mail, ArrowRight, AlertTriangle } from "lucide-react";
 import clsx from "clsx";
+import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
-interface LoginProps {
-  onLoginSuccess: () => void;
-}
-
-export default function Login({ onLoginSuccess }: LoginProps) {
+export default function Login() {
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -23,21 +20,24 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       return;
     }
 
-    // Vérification de domaine gouvernemental ou municipal (.gouv.fr ou .fr par défaut pour l'exemple strict)
-    const validDomains = [".gouv.fr", "ville-", "mairie-"];
-    const isGovEmail = validDomains.some(domain => email.toLowerCase().includes(domain));
-
-    if (!isGovEmail && !email.toLowerCase().endsWith(".fr")) {
-      setError("Accès restreint. Veuillez utiliser votre adresse e-mail institutionnelle (ex: nom@ville.gouv.fr).");
-      return;
-    }
-
-    // Simulation de chargement
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      
+      if (response.error) {
+        setError(response.error);
+        return;
+      }
+
+      if (response.data) {
+        const { access_token, user } = response.data;
+        login(access_token, user);
+      }
+    } catch (err) {
+      setError("Impossible de contacter le serveur d'authentification.");
+    } finally {
       setIsLoading(false);
-      onLoginSuccess();
-    }, 1200);
+    }
   };
 
   return (
@@ -52,7 +52,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Municip'All</h1>
-          <p className="text-gray-500 font-medium mt-1">Portail d'Administration Sécurisé</p>
+          <p className="text-gray-500 font-medium mt-1">Espace de Gestion Municipale</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
