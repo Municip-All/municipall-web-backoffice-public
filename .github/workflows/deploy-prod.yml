@@ -64,33 +64,31 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Set lower case repository owner
         run: |
           echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >>${GITHUB_ENV}
 
-      - name: Deploy to VPS
+      - name: Copy docker-compose via SCP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "~/municipall/backoffice-prod/"
+
+      - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p ~/municipall/backoffice-prod
             cd ~/municipall/backoffice-prod
-            cat <<EOF > docker-compose.prod.yml
-            services:
-              backoffice-prod:
-                image: ghcr.io/${{ env.OWNER_LC }}/municipall-backoffice-prod:latest
-                container_name: municipall-backoffice-prod
-                restart: always
-                ports:
-                  - "4000:3000"
-                networks:
-                  - proxy-bridge
-
-            networks:
-              proxy-bridge:
-                external: true
+            cat > .env <<EOF
+            GITHUB_REPOSITORY_OWNER=${{ env.OWNER_LC }}
             EOF
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
             docker compose -f docker-compose.prod.yml pull

@@ -1,9 +1,6 @@
 services:
   backoffice-dev:
-    build:
-      context: .
-      args:
-        - NEXT_PUBLIC_API_URL=https://dev.api.municipall.dev
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/municipall-backoffice-dev:latest
     container_name: municipall-backoffice-dev
     restart: always
     ports:
