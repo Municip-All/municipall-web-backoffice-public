@@ -10,23 +10,26 @@ export default function PoulsAiDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<CityDashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    if (!user?.cityId) {
-      setIsLoading(false);
-      return;
-    }
-    const fetchStats = async () => {
-      setIsLoading(true);
-      try {
-        const data = await api.getDashboardStats(user.cityId);
-        setStats(data);
-      } finally {
+    const timer = setTimeout(() => {
+      if (!user?.cityId) {
         setIsLoading(false);
+        return;
       }
-    };
-    fetchStats().catch(console.error);
-  }, [user?.cityId]);
+      setIsLoading(true);
+      api.getDashboardStats(user.cityId)
+        .then(data => {
+          setStats(data);
+          setIsLoading(false);
+        })
+        .catch(() => setIsLoading(false));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [user?.cityId, refreshKey]);
+
+  void setRefreshKey; // kept for manual refresh if needed
 
   const trendData = stats?.trendData ?? [
     { name: "Lun", satisfaction: 0 },

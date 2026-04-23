@@ -17,16 +17,24 @@ export default function WhiteLabelSettings() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.cityId) { setIsLoading(false); return; }
-    api.getCityConfig(user.cityId).then(config => {
-      if (config) {
-        setAppName(config.name || "");
-        setPrimaryColor(config.theme.primaryColor || "#0B0080");
-        setSecondaryColor(config.theme.secondaryColor || "#4F46E5");
-        setLogoPreview(config.theme.logoUrl || null);
+    const timer = setTimeout(() => {
+      if (!user?.cityId) {
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
-    }).catch(() => setIsLoading(false));
+      api.getCityConfig(user.cityId)
+        .then(config => {
+          if (config) {
+            setAppName(config.name || "");
+            setPrimaryColor(config.theme.primaryColor || "#0B0080");
+            setSecondaryColor(config.theme.secondaryColor || "#4F46E5");
+            setLogoPreview(config.theme.logoUrl || null);
+          }
+          setIsLoading(false);
+        })
+        .catch(() => setIsLoading(false));
+    }, 0);
+    return () => clearTimeout(timer);
   }, [user?.cityId]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

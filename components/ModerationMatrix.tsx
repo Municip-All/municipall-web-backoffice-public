@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { ShieldAlert, Clock, Wrench, Check, Loader2, RefreshCcw } from "lucide-react";
 import { api, Report } from "@/lib/api";
 
@@ -30,24 +30,22 @@ export default function ModerationMatrix() {
   const [reports, setReports] = useState<DisplayReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const fetchReports = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const data = await api.getReports();
-      const enriched: DisplayReport[] = data.map(r => ({
-        ...r,
-        priority: getPriority(r.category),
-      }));
-      setReports(enriched);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const fetchReports = () => setRefreshKey(k => k + 1);
 
   useEffect(() => {
-    fetchReports().catch(console.error);
-  }, [fetchReports]);
+    const timer = setTimeout(() => {
+      setIsLoading(true);
+      api.getReports()
+        .then(data => {
+          setReports(data.map(r => ({ ...r, priority: getPriority(r.category) })));
+          setIsLoading(false);
+        })
+        .catch(() => setIsLoading(false));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [refreshKey]);
 
   const assignReport = async (id: number) => {
     const ok = await api.updateReportStatus(id, "En cours");
