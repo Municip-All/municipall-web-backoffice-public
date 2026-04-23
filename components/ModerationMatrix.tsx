@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { ShieldAlert, Clock, Wrench, Check, Loader2, RefreshCcw } from "lucide-react";
 import { api, Report } from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
 
 interface DisplayReport extends Report {
   priority: "Haute" | "Moyenne" | "Basse";
@@ -27,6 +28,7 @@ function formatDate(dateStr: string): string {
 }
 
 export default function ModerationMatrix() {
+  const toast = useToast();
   const [reports, setReports] = useState<DisplayReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -53,6 +55,9 @@ export default function ModerationMatrix() {
       setReports(current =>
         current.map(r => (r.id === id ? { ...r, status: "En cours" } : r))
       );
+      toast("success", `Signalement #${String(id).padStart(4,'0')} assigné aux services.`);
+    } else {
+      toast("error", "Impossible de mettre à jour le signalement.");
     }
   };
 

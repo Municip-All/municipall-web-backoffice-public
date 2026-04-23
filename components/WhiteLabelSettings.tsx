@@ -5,9 +5,11 @@ import { PaintBucket, Image as ImageIcon, Type, Save, CheckCircle2, MapPin, Bell
 import clsx from "clsx";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
 
 export default function WhiteLabelSettings() {
   const { user } = useAuth();
+  const toast = useToast();
   const [appName, setAppName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#0B0080");
   const [secondaryColor, setSecondaryColor] = useState("#4F46E5");
@@ -52,14 +54,21 @@ export default function WhiteLabelSettings() {
     if (!user?.cityId) return;
     setIsSaving(true);
     try {
-      await api.saveCityConfig(user.cityId, {
+      const ok = await api.saveCityConfig(user.cityId, {
         primaryColor,
         secondaryColor,
         logoUrl: logoPreview || '',
         useGradient: false,
       });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      if (ok) {
+        toast("success", "Paramètres publiés avec succès !");
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        toast("error", "Échec de la mise à jour. Réessayez.");
+      }
+    } catch {
+      toast("error", "Impossible de contacter le serveur.");
     } finally {
       setIsSaving(false);
     }
