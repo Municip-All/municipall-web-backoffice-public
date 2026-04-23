@@ -1,16 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
-import { PaintBucket, Image as ImageIcon, Type, Save, CheckCircle2, MapPin, Bell, Calendar, UserRound } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { PaintBucket, Image as ImageIcon, Type, Save, CheckCircle2, MapPin, Bell, Calendar, UserRound, Loader2 } from "lucide-react";
 import clsx from "clsx";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 
 export default function WhiteLabelSettings() {
-  const [appName, setAppName] = useState("Bouffémont en poche");
-  const [primaryColor, setPrimaryColor] = useState("#0B0080"); // Default navy
-  const [secondaryColor, setSecondaryColor] = useState("#4F46E5"); // Default indigo
+  const { user } = useAuth();
+  const [appName, setAppName] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#0B0080");
+  const [secondaryColor, setSecondaryColor] = useState("#4F46E5");
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user?.cityId) { setIsLoading(false); return; }
+    api.getCityConfig(user.cityId).then(config => {
+      if (config) {
+        setAppName(config.name || "");
+        setPrimaryColor(config.theme.primaryColor || "#0B0080");
+        setSecondaryColor(config.theme.secondaryColor || "#4F46E5");
+        setLogoPreview(config.theme.logoUrl || null);
+      }
+      setIsLoading(false);
+    }).catch(() => setIsLoading(false));
+  }, [user?.cityId]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -23,13 +40,21 @@ export default function WhiteLabelSettings() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!user?.cityId) return;
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      await api.saveCityConfig(user.cityId, {
+        primaryColor,
+        secondaryColor,
+        logoUrl: logoPreview || '',
+        useGradient: false,
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    }, 1200);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const predefinedColors = [
@@ -42,6 +67,12 @@ export default function WhiteLabelSettings() {
 
   return (
     <div className="p-8 h-full overflow-y-auto">
+      {isLoading ? (
+        <div className="flex items-center justify-center h-48">
+          <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+        </div>
+      ) : (
+      <>
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h2 className="text-[28px] font-bold text-gray-900 tracking-tight mb-2">
@@ -276,6 +307,8 @@ export default function WhiteLabelSettings() {
         </div>
 
       </div>
+      </>
+      )}
     </div>
   );
 }

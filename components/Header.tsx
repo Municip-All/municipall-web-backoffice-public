@@ -1,8 +1,20 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { LogOut, Building2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const [cityName, setCityName] = useState<string>("");
+
+  useEffect(() => {
+    if (!user?.cityId) return;
+    api.getCityConfig(user.cityId).then(config => {
+      if (config) setCityName(config.name);
+    }).catch(() => {});
+  }, [user?.cityId]);
 
   return (
     <header className="h-[72px] bg-white border-b border-gray-200 px-8 flex items-center justify-between shrink-0 relative z-20">
@@ -15,14 +27,16 @@ export default function Header() {
             Municip&apos;All
           </h1>
           <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">
-            ESPACE MAIRIE
+            {cityName ? cityName.toUpperCase() : "ESPACE MAIRIE"}
           </p>
         </div>
       </div>
       
       <div className="flex items-center gap-5">
         <div className="text-right">
-          <p className="font-bold text-gray-900 text-sm leading-tight">{user?.name || 'Agent'}</p>
+          <p className="font-bold text-gray-900 text-sm leading-tight">
+            {user?.name ? `${user.name} ${user.surname || ''}`.trim() : 'Agent'}
+          </p>
           <p className="text-xs text-gray-500">{user?.role || 'Service Municipal'}</p>
         </div>
         <button 

@@ -49,6 +49,44 @@ async function request<T>(
   }
 }
 
+// --- Interfaces ---
+
+export interface CityConfig {
+  name: string;
+  features: string[];
+  theme: {
+    primaryColor: string;
+    secondaryColor?: string;
+    useGradient: boolean;
+    logoUrl: string;
+  };
+}
+
+export interface CityDashboardStats {
+  satisfaction: number;
+  satisfactionTrend: number;
+  citizensCount: number;
+  activeReportsCount: number;
+  reportsTrend: number;
+  suggestionsCount: number;
+  suggestionsTrend: number;
+  trendData: { name: string; satisfaction: number }[];
+}
+
+export interface Report {
+  id: number;
+  tenantId: string;
+  userId?: number;
+  category: string;
+  status: string;
+  imageUrl?: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- Generic Methods ---
+
 export const api = {
   get: <T>(endpoint: string, headers?: Record<string, string>) => 
     request<T>(endpoint, 'GET', undefined, headers),
@@ -58,7 +96,41 @@ export const api = {
   
   put: <T>(endpoint: string, body: unknown, headers?: Record<string, string>) => 
     request<T>(endpoint, 'PUT', body, headers),
+
+  patch: <T>(endpoint: string, body: unknown, headers?: Record<string, string>) => 
+    request<T>(endpoint, 'PATCH', body, headers),
   
   delete: <T>(endpoint: string, headers?: Record<string, string>) => 
     request<T>(endpoint, 'DELETE', undefined, headers),
+
+  // --- City Config ---
+
+  async getCityConfig(cityId: string): Promise<CityConfig | null> {
+    const response = await request<CityConfig>(`/api/v1/city-config/${cityId}`);
+    return response.data || null;
+  },
+
+  async saveCityConfig(cityId: string, data: Partial<CityConfig['theme']> & { name?: string; features?: string[] }): Promise<boolean> {
+    const response = await request(`/api/v1/admin/cities/${cityId}`, 'PATCH', data);
+    return response.status < 400;
+  },
+
+  // --- Dashboard Stats ---
+
+  async getDashboardStats(cityId: string): Promise<CityDashboardStats | null> {
+    const response = await request<CityDashboardStats>(`/api/v1/city-config/${cityId}/dashboard-stats`);
+    return response.data || null;
+  },
+
+  // --- Reports ---
+
+  async getReports(): Promise<Report[]> {
+    const response = await request<Report[]>('/api/v1/reports');
+    return response.data || [];
+  },
+
+  async updateReportStatus(id: number, status: string): Promise<boolean> {
+    const response = await request(`/api/v1/reports/${id}/status`, 'PATCH', { status });
+    return response.status < 400;
+  },
 };
