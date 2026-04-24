@@ -1,7 +1,21 @@
-import React from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { LogOut, Building2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 
 export default function Header() {
+  const { user, logout } = useAuth();
+  const [cityName, setCityName] = useState<string>("");
+
+  useEffect(() => {
+    if (!user?.cityId) return;
+    api.getCityConfig(user.cityId).then(config => {
+      if (config) setCityName(config.name);
+    }).catch(() => {});
+  }, [user?.cityId]);
+
   return (
     <header className="h-[72px] bg-white border-b border-gray-200 px-8 flex items-center justify-between shrink-0 relative z-20">
       <div className="flex items-center gap-3">
@@ -10,20 +24,26 @@ export default function Header() {
         </div>
         <div>
           <h1 className="text-xl font-extrabold text-municipall-blue tracking-tight leading-none mb-0.5">
-            Municip'All
+            Municip&apos;All
           </h1>
           <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">
-            BACK-OFFICE
+            {cityName ? cityName.toUpperCase() : "ESPACE MAIRIE"}
           </p>
         </div>
       </div>
       
       <div className="flex items-center gap-5">
         <div className="text-right">
-          <p className="font-bold text-gray-900 text-sm leading-tight">Jean Dupont</p>
-          <p className="text-xs text-gray-500">Maire-Adjoint</p>
+          <p className="font-bold text-gray-900 text-sm leading-tight">
+            {user?.name ? `${user.name} ${user.surname || ''}`.trim() : 'Agent'}
+          </p>
+          <p className="text-xs text-gray-500">{user?.role || 'Service Municipal'}</p>
         </div>
-        <button className="text-gray-400 hover:text-gray-700 transition-colors p-1" aria-label="Se déconnecter">
+        <button 
+          onClick={logout}
+          className="text-gray-400 hover:text-red-500 transition-colors p-1" 
+          aria-label="Se déconnecter"
+        >
           <LogOut className="w-5 h-5" />
         </button>
       </div>

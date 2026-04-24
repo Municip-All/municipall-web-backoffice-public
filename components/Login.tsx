@@ -1,20 +1,17 @@
-"use client";
-
 import React, { useState } from "react";
 import { Shield, Lock, Mail, ArrowRight, AlertTriangle } from "lucide-react";
 import clsx from "clsx";
+import { api } from "@/lib/api";
+import { useAuth, User } from "@/context/AuthContext";
 
-interface LoginProps {
-  onLoginSuccess: () => void;
-}
-
-export default function Login({ onLoginSuccess }: LoginProps) {
+export default function Login() {
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -23,21 +20,24 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       return;
     }
 
-    // Vérification de domaine gouvernemental ou municipal (.gouv.fr ou .fr par défaut pour l'exemple strict)
-    const validDomains = [".gouv.fr", "ville-", "mairie-"];
-    const isGovEmail = validDomains.some(domain => email.toLowerCase().includes(domain));
-
-    if (!isGovEmail && !email.toLowerCase().endsWith(".fr")) {
-      setError("Accès restreint. Veuillez utiliser votre adresse e-mail institutionnelle (ex: nom@ville.gouv.fr).");
-      return;
-    }
-
-    // Simulation de chargement
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await api.post('/api/v1/auth/login', { email, password });
+      
+      if (response.error) {
+        setError(response.error);
+        return;
+      }
+
+      if (response.data) {
+        const { access_token, user } = response.data as { access_token: string; user: User };
+        login(access_token, user);
+      }
+    } catch {
+      setError("Impossible de contacter le serveur d'authentification.");
+    } finally {
       setIsLoading(false);
-      onLoginSuccess();
-    }, 1200);
+    }
   };
 
   return (
@@ -51,8 +51,8 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           <div className="w-16 h-16 bg-municipall-blue rounded-2xl flex items-center justify-center shadow-lg shadow-municipall-blue/20 mb-6">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Municip'All</h1>
-          <p className="text-gray-500 font-medium mt-1">Portail d'Administration Sécurisé</p>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Municip&apos;All</h1>
+          <p className="text-gray-500 font-medium mt-1">Espace de Gestion Municipale</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
@@ -116,14 +116,14 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             <div className="flex items-start gap-3 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100/50">
               <Shield className="w-5 h-5 text-municipall-blue shrink-0 mt-0.5" />
               <p className="text-xs text-gray-600 leading-relaxed">
-                Ce portail est <strong>réservé au personnel habilité</strong> des collectivités territoriales. Toute tentative d'accès non autorisée est enregistrée.
+                Ce portail est <strong>réservé au personnel habilité</strong> des collectivités territoriales. Toute tentative d&apos;accès non autorisée est enregistrée.
               </p>
             </div>
           </div>
         </div>
 
         <p className="text-center text-xs text-gray-400 font-medium mt-8">
-          © 2026 Municip'All - Technologies Civiques
+          © 2026 Municip&apos;All - Technologies Civiques
         </p>
       </div>
     </div>

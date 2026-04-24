@@ -1,0 +1,14 @@
+services:
+  backoffice-prod:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/municipall-backoffice-prod:latest
+    container_name: municipall-backoffice-prod
+    restart: always
+    ports:
+      - "4000:3000"
+    networks:
+      - proxy-bridge
+
+networks:
+  proxy-bridge:
+    external: true
+    name: municipall_default

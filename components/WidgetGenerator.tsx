@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CarFront, CloudRainWind, CalendarHeart, Smartphone, MapPin, Radio, CheckCircle2 } from "lucide-react";
+import { CarFront, CloudRainWind, CalendarHeart, MapPin, Radio, CheckCircle2 } from "lucide-react";
 import clsx from "clsx";
 
 interface WidgetItem {
@@ -55,7 +55,7 @@ export default function WidgetGenerator() {
           <h2 className="text-[28px] font-bold text-gray-900 tracking-tight mb-2">
             Gestionnaire de Widgets
           </h2>
-          <p className="text-sm text-gray-500">Activez les services géolocalisés disponibles pour vos citoyens équipés de l'application Municip'All.</p>
+          <p className="text-sm text-gray-500">Activez les services géolocalisés disponibles pour vos citoyens équipés de l&apos;application Municip&apos;All.</p>
         </div>
       </div>
 
@@ -123,7 +123,7 @@ export default function WidgetGenerator() {
             </div>
 
             <p className="text-sm text-gray-600 mb-8 max-w-sm relative z-10">
-              Le back-office est directement relié par GPS à l'application de vos citoyens. Dès qu'un habitant ouvre l'application dans votre commune, les modules activés s'affichent instantanément sans aucune intégration web nécessaire de votre part.
+              Le back-office est directement relié par GPS à l&apos;application de vos citoyens. Dès qu&apos;un habitant ouvre l&apos;application dans votre commune, les modules activés s&apos;affichent instantanément sans aucune intégration web nécessaire de votre part.
             </p>
             
             <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
@@ -150,7 +150,7 @@ export default function WidgetGenerator() {
               <div className="flex-1 w-full flex flex-col items-center">
                 <div className="w-24 h-48 bg-gray-900 rounded-2xl shadow-xl border-4 border-gray-800 p-2 flex flex-col gap-2 relative overflow-hidden">
                   <div className="w-full bg-gray-100 h-6 rounded-md flex items-center px-2">
-                    <span className="text-[6px] font-bold text-gray-800">Municip'All</span>
+                    <span className="text-[6px] font-bold text-gray-800">Municip&apos;All</span>
                   </div>
                   {activeWidgets.length > 0 ? (
                     activeWidgets.map(widget => {

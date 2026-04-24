@@ -1,0 +1,14 @@
+services:
+  backoffice-dev:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/municipall-backoffice-dev:latest
+    container_name: municipall-backoffice-dev
+    restart: always
+    ports:
+      - "4001:3000"
+    networks:
+      - proxy-bridge
+
+networks:
+  proxy-bridge:
+    external: true
+    name: municipall_default

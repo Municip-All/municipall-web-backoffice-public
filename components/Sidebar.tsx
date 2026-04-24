@@ -43,7 +43,7 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
     <aside className="w-72 bg-white border-r border-gray-100 flex flex-col justify-between py-6 shadow-sm z-20 h-full">
       <div className="px-4 space-y-1.5 flex-1">
         <p className="px-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">
-          Outils d'Administration
+          Outils d&apos;Administration
         </p>
 
         {menuItems.map((item) => {

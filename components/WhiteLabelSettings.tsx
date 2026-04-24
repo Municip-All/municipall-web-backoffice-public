@@ -1,16 +1,43 @@
 "use client";
 
-import React, { useState } from "react";
-import { PaintBucket, Image as ImageIcon, Type, Save, CheckCircle2, MapPin, Bell, Calendar, UserRound } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { PaintBucket, Image as ImageIcon, Type, Save, CheckCircle2, MapPin, Bell, Calendar, UserRound, Loader2 } from "lucide-react";
 import clsx from "clsx";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
 
 export default function WhiteLabelSettings() {
-  const [appName, setAppName] = useState("Bouffémont en poche");
-  const [primaryColor, setPrimaryColor] = useState("#0B0080"); // Default navy
-  const [secondaryColor, setSecondaryColor] = useState("#4F46E5"); // Default indigo
+  const { user } = useAuth();
+  const toast = useToast();
+  const [appName, setAppName] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#0B0080");
+  const [secondaryColor, setSecondaryColor] = useState("#4F46E5");
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!user?.cityId) {
+        setIsLoading(false);
+        return;
+      }
+      api.getCityConfig(user.cityId)
+        .then(config => {
+          if (config) {
+            setAppName(config.name || "");
+            setPrimaryColor(config.theme.primaryColor || "#0B0080");
+            setSecondaryColor(config.theme.secondaryColor || "#4F46E5");
+            setLogoPreview(config.theme.logoUrl || null);
+          }
+          setIsLoading(false);
+        })
+        .catch(() => setIsLoading(false));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [user?.cityId]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -23,13 +50,28 @@ export default function WhiteLabelSettings() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!user?.cityId) return;
     setIsSaving(true);
-    setTimeout(() => {
+    try {
+      const ok = await api.saveCityConfig(user.cityId, {
+        primaryColor,
+        secondaryColor,
+        logoUrl: logoPreview || '',
+        useGradient: false,
+      });
+      if (ok) {
+        toast("success", "Paramètres publiés avec succès !");
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        toast("error", "Échec de la mise à jour. Réessayez.");
+      }
+    } catch {
+      toast("error", "Impossible de contacter le serveur.");
+    } finally {
       setIsSaving(false);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    }, 1200);
+    }
   };
 
   const predefinedColors = [
@@ -42,12 +84,18 @@ export default function WhiteLabelSettings() {
 
   return (
     <div className="p-8 h-full overflow-y-auto">
+      {isLoading ? (
+        <div className="flex items-center justify-center h-48">
+          <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+        </div>
+      ) : (
+      <>
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h2 className="text-[28px] font-bold text-gray-900 tracking-tight mb-2">
-            Marque Blanche & Application
+            Marque Blanche &amp; Application
           </h2>
-          <p className="text-sm text-gray-500">Personnalisez l'identité visuelle de l'application citoyenne selon la charte graphique de votre commune.</p>
+          <p className="text-sm text-gray-500">Personnalisez l&apos;identité visuelle de l&apos;application citoyenne selon la charte graphique de votre commune.</p>
         </div>
         
         <button 
@@ -73,12 +121,12 @@ export default function WhiteLabelSettings() {
           <div className="card-panel p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
               <Type className="w-5 h-5 text-municipall-blue" />
-              Identité de l'Application
+              Identité de l&apos;Application
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Nom de l'Application</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Nom de l&apos;Application</label>
                 <input 
                   type="text" 
                   value={appName}
@@ -86,7 +134,7 @@ export default function WhiteLabelSettings() {
                   placeholder="Ex: Ma Ville en poche" 
                   className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg px-4 py-3 focus:ring-1 focus:ring-municipall-blue focus:border-municipall-blue/50 outline-none transition-all"
                 />
-                <p className="text-xs text-gray-500 mt-2">Ce nom sera affiché sur les stores (iOS/Android) et sur l'écran d'accueil du téléphone.</p>
+                <p className="text-xs text-gray-500 mt-2">Ce nom sera affiché sur les stores (iOS/Android) et sur l&apos;écran d&apos;accueil du téléphone.</p>
               </div>
 
               <div>
@@ -94,6 +142,7 @@ export default function WhiteLabelSettings() {
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 relative shrink-0">
                     {logoPreview ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
                     ) : (
                       <ImageIcon className="w-6 h-6 text-gray-400" />
@@ -149,7 +198,7 @@ export default function WhiteLabelSettings() {
                     ))}
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-3">Cette couleur s'appliquera principalement aux boutons d'actions, aux en-têtes et aux icônes principales de l'application citoyenne.</p>
+                <p className="text-xs text-gray-500 mt-3">Cette couleur s&apos;appliquera principalement aux boutons d&apos;actions, aux en-têtes et aux icônes principales de l&apos;application citoyenne.</p>
               </div>
               
               <div className="border-t border-gray-100 pt-5">
@@ -192,6 +241,7 @@ export default function WhiteLabelSettings() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center p-1 shrink-0 overflow-hidden border border-white/30">
                       {logoPreview ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={logoPreview} alt="Logo" className="w-full h-full object-contain drop-shadow" />
                       ) : (
                         <span className="text-white font-bold text-lg">M</span>
@@ -217,7 +267,7 @@ export default function WhiteLabelSettings() {
                     <Bell className="w-4 h-4 mt-0.5" style={{ color: secondaryColor }} />
                     <div>
                       <p className="text-xs font-bold text-gray-900">Nouvelle alerte travaux</p>
-                      <p className="text-[10px] text-gray-600 leading-snug mt-0.5">Route barrée au centre-ville jusqu'à vendredi.</p>
+                      <p className="text-[10px] text-gray-600 leading-snug mt-0.5">Route barrée au centre-ville jusqu&apos;à vendredi.</p>
                     </div>
                   </div>
 
@@ -274,6 +324,8 @@ export default function WhiteLabelSettings() {
         </div>
 
       </div>
+      </>
+      )}
     </div>
   );
 }

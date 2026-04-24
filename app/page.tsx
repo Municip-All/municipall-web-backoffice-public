@@ -9,13 +9,22 @@ import WidgetGenerator from "@/components/WidgetGenerator";
 import TargetedCommunication from "@/components/TargetedCommunication";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import Login from "@/components/Login";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
   const [activeView, setActiveView] = useState<ViewType>("pouls-ai");
 
+  if (isLoading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-gray-50">
+        <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
-    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return <Login />;
   }
 
   return (
