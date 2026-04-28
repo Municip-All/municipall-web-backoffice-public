@@ -3,11 +3,11 @@
 @theme {
   --color-municipall-blue: #0b0080;
   --color-municipall-blue-hover: #070054;
-  --color-bg-app: #f9fafb;
+  --color-bg-app: #F2F2F7;
   --color-panel: #ffffff;
-  --color-text-main: #111827;
-  --color-text-muted: #6b7280;
-  --color-border-subtle: #e5e7eb;
+  --color-text-main: #18181b;
+  --color-text-muted: #71717a;
+  --color-border-subtle: #f4f4f5;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -18,13 +18,13 @@
   .text-municipall-blue { color: var(--color-municipall-blue); }
   
   .card-panel {
-    @apply bg-white border border-gray-200 rounded-xl shadow-sm;
+    @apply bg-white/90 backdrop-blur-3xl border border-white/60 rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden;
   }
   .btn-primary {
-    @apply bg-municipall-blue text-white hover:bg-municipall-blue-hover font-semibold px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2;
+    @apply bg-municipall-blue text-white hover:bg-municipall-blue-hover font-bold px-5 py-2.5 rounded-full shadow-[0_4px_14px_rgba(11,0,128,0.25)] hover:shadow-[0_6px_20px_rgba(11,0,128,0.35)] transition-all duration-300 flex items-center justify-center gap-2;
   }
   .btn-outline {
-    @apply bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2;
+    @apply bg-white/70 backdrop-blur-xl border border-zinc-200/50 text-zinc-800 hover:bg-white font-bold px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center gap-2;
   }
 }
 

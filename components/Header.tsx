@@ -17,10 +17,10 @@ export default function Header() {
   }, [user?.cityId]);
 
   return (
-    <header className="h-[72px] bg-white border-b border-gray-200 px-8 flex items-center justify-between shrink-0 relative z-20">
+    <header className="h-[72px] bg-white/70 backdrop-blur-2xl border-b border-white/50 shadow-[0_2px_10px_rgba(0,0,0,0.02)] px-8 flex items-center justify-between shrink-0 relative z-20">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-municipall-blue rounded-lg flex items-center justify-center shadow-sm border border-blue-900/10">
-          <Building2 className="text-white w-6 h-6" />
+        <div className="w-10 h-10 bg-municipall-blue rounded-xl flex items-center justify-center shadow-[0_4px_14px_rgba(11,0,128,0.25)] border border-white/20">
+          <Building2 className="text-white w-5 h-5" />
         </div>
         <div>
           <h1 className="text-xl font-extrabold text-municipall-blue tracking-tight leading-none mb-0.5">

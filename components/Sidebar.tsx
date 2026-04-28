@@ -40,8 +40,8 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
   ] as const;
 
   return (
-    <aside className="w-72 bg-white border-r border-gray-100 flex flex-col justify-between py-6 shadow-sm z-20 h-full">
-      <div className="px-4 space-y-1.5 flex-1">
+    <aside className="w-72 bg-white/40 backdrop-blur-3xl border-r border-white/60 flex flex-col justify-between py-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 h-full">
+      <div className="px-4 space-y-2 flex-1">
         <p className="px-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">
           Outils d&apos;Administration
         </p>
@@ -55,10 +55,10 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
               key={item.id}
               onClick={() => onViewChange(item.id)}
               className={clsx(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 border-l-4 group outline-none",
+                "w-full flex items-center gap-3 px-4 py-3.5 rounded-[20px] text-sm font-bold transition-all duration-300 group outline-none",
                 isActive 
-                  ? "bg-indigo-50/70 text-municipall-blue border-municipall-blue shadow-sm" 
-                  : "border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] text-municipall-blue" 
+                  : "text-zinc-500 hover:bg-white/60 hover:text-zinc-900"
               )}
             >
               <Icon className={clsx(
@@ -75,10 +75,10 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
         <button
           onClick={() => onViewChange("settings")}
           className={clsx(
-            "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 border-l-4 group outline-none mt-2",
+            "w-full flex items-center gap-3 px-4 py-3.5 rounded-[20px] text-sm font-bold transition-all duration-300 group outline-none mt-2",
             activeView === "settings"
-              ? "bg-indigo-50/70 text-municipall-blue border-municipall-blue shadow-sm" 
-              : "border-transparent text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+              ? "bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] text-municipall-blue" 
+              : "text-zinc-500 hover:bg-white/60 hover:text-zinc-900"
           )}
         >
           <Settings className={clsx(

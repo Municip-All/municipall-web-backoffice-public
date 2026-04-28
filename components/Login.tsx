@@ -41,7 +41,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 relative overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#F2F2F7] relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-50 to-transparent"></div>
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-municipall-blue/5 rounded-full blur-3xl -translate-y-1/4 translate-x-1/4"></div>
@@ -55,7 +55,7 @@ export default function Login() {
           <p className="text-gray-500 font-medium mt-1">Espace de Gestion Municipale</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+        <div className="card-panel p-10">
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             
             {error && (
@@ -97,7 +97,7 @@ export default function Login() {
               type="submit"
               disabled={isLoading}
               className={clsx(
-                "w-full btn-primary py-3.5 text-base rounded-xl mt-2 flex items-center justify-center gap-2",
+                "w-full btn-primary py-3.5 text-base mt-2 flex items-center justify-center gap-2",
                 isLoading && "opacity-75 cursor-wait"
               )}
             >
@@ -113,7 +113,7 @@ export default function Login() {
           </form>
 
           <div className="mt-8 border-t border-gray-100 pt-6">
-            <div className="flex items-start gap-3 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100/50">
+            <div className="flex items-start gap-3 bg-indigo-50/50 p-5 rounded-[24px] border border-indigo-100/50">
               <Shield className="w-5 h-5 text-municipall-blue shrink-0 mt-0.5" />
               <p className="text-xs text-gray-600 leading-relaxed">
                 Ce portail est <strong>réservé au personnel habilité</strong> des collectivités territoriales. Toute tentative d&apos;accès non autorisée est enregistrée.

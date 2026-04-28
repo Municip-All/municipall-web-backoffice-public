@@ -28,7 +28,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[#f9fafb] overflow-hidden text-[#111827] font-sans">
+    <div className="flex flex-col h-screen w-full bg-[#F2F2F7] overflow-hidden text-[#18181b] font-sans">
       <Header />
       
       <div className="flex flex-1 overflow-hidden">
