@@ -18,7 +18,6 @@ const CommuneMap = dynamic(() => import("@/components/CommuneMap"), {
   ),
 });
 
-const DEFAULT_ZONES = ["Centre-Ville", "Quartier Nord", "Quartier Sud", "Zone Est"];
 
 export default function TargetedCommunication() {
   const { user } = useAuth();
@@ -29,6 +28,7 @@ export default function TargetedCommunication() {
   const [alertType, setAlertType] = useState<"info" | "urgent">("info");
   const [selectedZones, setSelectedZones] = useState<Set<string>>(new Set());
   const [cityName, setCityName] = useState<string>("");
+  const [neighborhoods, setNeighborhoods] = useState<any[]>([]);
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
@@ -36,9 +36,16 @@ export default function TargetedCommunication() {
       if (!user?.cityId) return;
       api.getCityConfig(user.cityId)
         .then(config => {
-          if (config) setCityName(config.name);
+          if (config && config.name && config.name !== "Municip'All") {
+            setCityName(config.name);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const customZones = (config as any).neighborhoods || [];
+            setNeighborhoods(customZones);
+          } else {
+            setCityName("Paris");
+          }
         })
-        .catch(() => {});
+        .catch(() => setCityName("Paris"));
     }, 0);
     return () => clearTimeout(timer);
   }, [user?.cityId]);
@@ -53,14 +60,8 @@ export default function TargetedCommunication() {
   };
 
   const totalCitizens = useMemo(() => {
-    // Estimated citizens per zone (would come from real city data in prod)
-    const estimates: Record<string, number> = {
-      "Centre-Ville": 2400,
-      "Quartier Nord": 1800,
-      "Quartier Sud": 1200,
-      "Zone Est": 900,
-    };
-    return Array.from(selectedZones).reduce((acc, z) => acc + (estimates[z] ?? 500), 0);
+    // Estimated citizens per zone based on area or fixed average
+    return selectedZones.size * 1250; // Simple estimate
   }, [selectedZones]);
 
   const handleSend = async () => {
@@ -183,6 +184,7 @@ export default function TargetedCommunication() {
                     cityName={cityName}
                     selectedZones={selectedZones}
                     onZoneToggle={toggleZone}
+                    customNeighborhoods={neighborhoods}
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-100 rounded-xl flex items-center justify-center">
@@ -196,12 +198,12 @@ export default function TargetedCommunication() {
                 <div>
                   <p className="text-sm font-bold text-gray-700 mb-3">Sélectionnez les quartiers :</p>
                   <div className="space-y-2">
-                    {DEFAULT_ZONES.map(zone => {
-                      const isSelected = selectedZones.has(zone);
+                    {neighborhoods.map(zone => {
+                      const isSelected = selectedZones.has(zone.name);
                       return (
                         <button
-                          key={zone}
-                          onClick={() => toggleZone(zone)}
+                          key={zone.id || zone.name}
+                          onClick={() => toggleZone(zone.name)}
                           className={clsx(
                             "w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all focus:outline-none",
                             isSelected 
@@ -212,10 +214,13 @@ export default function TargetedCommunication() {
                           <div className={clsx("w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors", isSelected ? "bg-municipall-blue border-municipall-blue text-white" : "border-gray-300 bg-white")}>
                             {isSelected && <CheckCircle2 className="w-3 h-3" />}
                           </div>
-                          <span className={clsx("text-xs font-semibold", isSelected && "font-bold text-gray-900")}>{zone}</span>
+                          <span className={clsx("text-xs font-semibold", isSelected && "font-bold text-gray-900")}>{zone.name}</span>
                         </button>
                       );
                     })}
+                    {neighborhoods.length === 0 && (
+                      <p className="text-xs text-zinc-400 italic">Aucun quartier défini dans le gestionnaire.</p>
+                    )}
                   </div>
                 </div>
 

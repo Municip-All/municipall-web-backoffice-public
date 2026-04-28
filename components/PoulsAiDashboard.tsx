@@ -42,12 +42,14 @@ export default function PoulsAiDashboard() {
   ];
 
   return (
-    <div className="p-8 h-full overflow-y-auto">
-      <div className="mb-8">
-        <h2 className="text-[28px] font-bold text-gray-900 tracking-tight mb-2">
+    <div className="p-8 h-full overflow-y-auto custom-scrollbar">
+      <div className="mb-10">
+        <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-2">
+          Intelligence Urbaine
+        </p>
+        <h2 className="text-4xl font-black text-zinc-900 tracking-tight">
           Pouls de la Ville
         </h2>
-        <p className="text-sm text-gray-500">Vue d&apos;ensemble du sentiment citoyen et statistiques clés.</p>
       </div>
 
       {isLoading ? (
@@ -57,14 +59,14 @@ export default function PoulsAiDashboard() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="card-panel p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
-                <TrendingUp className="text-indigo-600 w-6 h-6" />
+            <div className="card-panel p-6 flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50/50 flex items-center justify-center shrink-0 border border-indigo-100/50">
+                <TrendingUp className="text-indigo-600 w-7 h-7" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-gray-500 mb-1">Indice de Satisfaction</p>
+                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Satisfaction</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-extrabold text-gray-900">{stats?.satisfaction ?? 0}%</span>
+                  <span className="text-2xl font-black text-zinc-900">{stats?.satisfaction ?? 0}%</span>
                   <span className={`text-xs font-bold ${(stats?.satisfactionTrend ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {(stats?.satisfactionTrend ?? 0) >= 0 ? '+' : ''}{stats?.satisfactionTrend ?? 0}%
                   </span>
@@ -72,28 +74,28 @@ export default function PoulsAiDashboard() {
               </div>
             </div>
 
-            <div className="card-panel p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                <Users className="text-blue-500 w-6 h-6" />
+            <div className="card-panel p-6 flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-blue-50/50 flex items-center justify-center shrink-0 border border-blue-100/50">
+                <Users className="text-blue-500 w-7 h-7" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-gray-500 mb-1">Citoyens Engagés</p>
+                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Engagement</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-extrabold text-gray-900">
+                  <span className="text-2xl font-black text-zinc-900">
                     {(stats?.citizensCount ?? 0).toLocaleString('fr-FR')}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="card-panel p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-yellow-50 flex items-center justify-center shrink-0">
-                <AlertCircle className="text-yellow-600 w-6 h-6" />
+            <div className="card-panel p-6 flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-amber-50/50 flex items-center justify-center shrink-0 border border-amber-100/50">
+                <AlertCircle className="text-amber-600 w-7 h-7" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-gray-500 mb-1">Signalements Actifs</p>
+                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Alertes</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-extrabold text-gray-900">{stats?.activeReportsCount ?? 0}</span>
+                  <span className="text-2xl font-black text-zinc-900">{stats?.activeReportsCount ?? 0}</span>
                   <span className={`text-xs font-bold ${(stats?.reportsTrend ?? 0) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {(stats?.reportsTrend ?? 0) > 0 ? '+' : ''}{stats?.reportsTrend ?? 0}%
                   </span>
@@ -101,14 +103,14 @@ export default function PoulsAiDashboard() {
               </div>
             </div>
 
-            <div className="card-panel p-5 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
-                <MessageSquare className="text-green-500 w-6 h-6" />
+            <div className="card-panel p-6 flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50/50 flex items-center justify-center shrink-0 border border-emerald-100/50">
+                <MessageSquare className="text-emerald-500 w-7 h-7" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-gray-500 mb-1">Suggestions du Mois</p>
+                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Idées</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-extrabold text-gray-900">{stats?.suggestionsCount ?? 0}</span>
+                  <span className="text-2xl font-black text-zinc-900">{stats?.suggestionsCount ?? 0}</span>
                   <span className={`text-xs font-bold ${(stats?.suggestionsTrend ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {(stats?.suggestionsTrend ?? 0) >= 0 ? '+' : ''}{stats?.suggestionsTrend ?? 0}
                   </span>
@@ -118,8 +120,8 @@ export default function PoulsAiDashboard() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 card-panel p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-6">Évolution de la Satisfaction Citoyenne</h3>
+            <div className="lg:col-span-2 card-panel p-8">
+              <h3 className="text-lg font-bold text-zinc-900 mb-8">Évolution de la Satisfaction</h3>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -143,12 +145,12 @@ export default function PoulsAiDashboard() {
             </div>
 
             <div className="flex flex-col gap-6">
-              <div className="card-panel p-6">
-                <h3 className="text-base font-bold text-gray-900 mb-6">Sujets Chauds (IA)</h3>
+              <div className="card-panel p-8">
+                <h3 className="text-base font-bold text-zinc-900 mb-8">Sujets Chauds (IA)</h3>
                 <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-4 px-2">
-                  <span className="text-2xl font-bold text-red-600">Nids-de-poule</span>
+                  <span className="text-2xl font-black text-red-600">Nids-de-poule</span>
                   <span className="text-xl font-bold text-municipall-blue">Stationnement</span>
-                  <span className="text-xl font-bold text-gray-900">Sécurité</span>
+                  <span className="text-xl font-bold text-zinc-900">Sécurité</span>
                   <span className="text-sm text-gray-500">Parcs</span>
                   <span className="text-base font-bold text-green-600">Propreté</span>
                   <span className="text-sm text-gray-500">Pistes cyclables</span>

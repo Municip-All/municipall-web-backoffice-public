@@ -83,6 +83,7 @@ export interface Report {
   description?: string;
   createdAt: string;
   updatedAt: string;
+  isResident?: boolean;
 }
 
 // --- Generic Methods ---
@@ -131,6 +132,18 @@ export const api = {
 
   async updateReportStatus(id: number, status: string): Promise<boolean> {
     const response = await request(`/api/v1/reports/${id}/status`, 'PATCH', { status });
+    return response.status < 400;
+  },
+
+  // --- User Profile ---
+
+  async updateProfile(data: { name?: string; surname?: string; email?: string }): Promise<boolean> {
+    const response = await request('/api/v1/users/profile', 'POST', data);
+    return response.status < 400;
+  },
+
+  async updatePassword(data: { current: string; new: string; confirm: string }): Promise<boolean> {
+    const response = await request('/api/v1/users/password', 'POST', data);
     return response.status < 400;
   },
 };

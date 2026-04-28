@@ -11,6 +11,7 @@ interface CommuneMapProps {
   selectedZones: Set<string>;
   onZoneToggle: (zoneName: string) => void;
   isEditing?: boolean;
+  customNeighborhoods?: { name: string; points: [number, number][] }[];
 }
 
 interface CommuneData {
@@ -60,7 +61,7 @@ function generateSubZones(contour: number[][][], zoneName: string) {
   return zones;
 }
 
-export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEditing }: CommuneMapProps) {
+export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEditing, customNeighborhoods }: CommuneMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<unknown>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -143,19 +144,34 @@ export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEd
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (map as any).fitBounds((communeLayer as any).getBounds(), { padding: [20, 20] });
 
-        // Draw sub-zones
-        const subZones = generateSubZones(commune.contour.coordinates as number[][][], commune.nom);
+        // Draw zones
+        const zonesToDraw = customNeighborhoods && customNeighborhoods.length > 0
+          ? customNeighborhoods 
+          : generateSubZones(commune.contour.coordinates as number[][][], commune.nom);
 
-        subZones.forEach(zone => {
+        zonesToDraw.forEach((zone: any) => {
           const isSelected = selectedZones.has(zone.name);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const rect = (L as any).rectangle(zone.bounds, {
-            color: isSelected ? "#0b0080" : "#6b7280",
-            weight: 2,
-            fillColor: isSelected ? "#0b0080" : "#9ca3af",
-            fillOpacity: isSelected ? 0.35 : 0.1,
-            interactive: !isEditing,
-          });
+          
+          let layer;
+          if (zone.points) {
+            // Custom polygon from NeighborhoodManager
+            layer = (L as any).polygon(zone.points, {
+              color: isSelected ? "#0b0080" : "#6b7280",
+              weight: 2,
+              fillColor: isSelected ? "#0b0080" : "#9ca3af",
+              fillOpacity: isSelected ? 0.35 : 0.1,
+              interactive: !isEditing,
+            });
+          } else {
+            // Fallback rectangle from generator
+            layer = (L as any).rectangle(zone.bounds, {
+              color: isSelected ? "#0b0080" : "#6b7280",
+              weight: 2,
+              fillColor: isSelected ? "#0b0080" : "#9ca3af",
+              fillOpacity: isSelected ? 0.35 : 0.1,
+              interactive: !isEditing,
+            });
+          }
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const label = (L as any).tooltip({
@@ -165,9 +181,9 @@ export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEd
           }).setContent(zone.name);
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          rect.bindTooltip(label).addTo(map as any);
+          layer.bindTooltip(label).addTo(map as any);
 
-          rect.on("click", () => {
+          layer.on("click", () => {
             onZoneToggle(zone.name);
           });
         });
@@ -188,7 +204,7 @@ export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEd
       isMounted = false;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cityName]);
+  }, [cityName, JSON.stringify(customNeighborhoods)]);
 
   return (
     <div className="relative w-full h-full rounded-xl overflow-hidden border-2 border-gray-200">

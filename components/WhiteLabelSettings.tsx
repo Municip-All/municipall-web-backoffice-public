@@ -55,6 +55,7 @@ export default function WhiteLabelSettings() {
     setIsSaving(true);
     try {
       const ok = await api.saveCityConfig(user.cityId, {
+        name: appName,
         primaryColor,
         secondaryColor,
         logoUrl: logoPreview || '',

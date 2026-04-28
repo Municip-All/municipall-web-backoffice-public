@@ -133,7 +133,14 @@ export default function ModerationMatrix() {
                   </td>
                   
                   <td className="py-4 px-6">
-                    <p className="text-sm font-bold text-gray-900 mb-1">INC-{String(report.id).padStart(4, '0')}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-sm font-bold text-gray-900">INC-{String(report.id).padStart(4, '0')}</p>
+                      {report.isResident ? (
+                        <span className="text-[10px] font-black bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase tracking-tighter">Résident</span>
+                      ) : (
+                        <span className="text-[10px] font-black bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full uppercase tracking-tighter">Extérieur</span>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-700 mb-1.5 line-clamp-1">{report.description || "Aucune description."}</p>
                     <p className="text-[11px] text-gray-500">{formatDate(report.createdAt)}</p>
                   </td>

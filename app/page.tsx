@@ -8,6 +8,8 @@ import ModerationMatrix from "@/components/ModerationMatrix";
 import WidgetGenerator from "@/components/WidgetGenerator";
 import TargetedCommunication from "@/components/TargetedCommunication";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
+import ProfileView from "../components/ProfileView";
+import NeighborhoodManager from "@/components/NeighborhoodManager";
 import Login from "@/components/Login";
 import { useAuth } from "@/context/AuthContext";
 
@@ -29,7 +31,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#F2F2F7] overflow-hidden text-[#18181b] font-sans">
-      <Header />
+      <Header onViewChange={setActiveView} />
       
       <div className="flex flex-1 overflow-hidden">
         <Sidebar activeView={activeView} onViewChange={setActiveView} />
@@ -41,6 +43,8 @@ export default function Home() {
             {activeView === "widgets" && <WidgetGenerator />}
             {activeView === "targeted-push" && <TargetedCommunication />}
             {activeView === "settings" && <WhiteLabelSettings />}
+            {activeView === "profile" && <ProfileView />}
+            {activeView === "neighborhoods" && <NeighborhoodManager />}
           </div>
         </main>
       </div>

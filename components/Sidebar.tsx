@@ -4,11 +4,13 @@ import {
   ShieldAlert, 
   Smartphone, 
   Send,
-  Settings
+  Map,
+  Settings,
+  User
 } from "lucide-react";
 import clsx from "clsx";
 
-export type ViewType = "pouls-ai" | "moderation" | "widgets" | "targeted-push" | "settings";
+export type ViewType = "pouls-ai" | "moderation" | "widgets" | "targeted-push" | "neighborhoods" | "settings" | "profile";
 
 interface SidebarProps {
   activeView: ViewType;
@@ -36,6 +38,11 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
       id: "widgets",
       label: "Gestionnaire de Widgets",
       icon: Smartphone,
+    },
+    {
+      id: "neighborhoods",
+      label: "Découpage des Quartiers",
+      icon: Map,
     },
   ] as const;
 
@@ -73,9 +80,25 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
 
       <div className="px-4 mt-auto">
         <button
+          onClick={() => onViewChange("profile")}
+          className={clsx(
+            "w-full flex items-center gap-3 px-4 py-3.5 rounded-[20px] text-sm font-bold transition-all duration-300 group outline-none mt-1",
+            activeView === "profile"
+              ? "bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] text-municipall-blue" 
+              : "text-zinc-500 hover:bg-white/60 hover:text-zinc-900"
+          )}
+        >
+          <User className={clsx(
+            "w-[22px] h-[22px] transition-colors",
+            activeView === "profile" ? "text-municipall-blue drop-shadow-sm" : "text-gray-400 group-hover:text-gray-700"
+          )} strokeWidth={activeView === "profile" ? 2.5 : 2} />
+          Mon Profil Agent
+        </button>
+
+        <button
           onClick={() => onViewChange("settings")}
           className={clsx(
-            "w-full flex items-center gap-3 px-4 py-3.5 rounded-[20px] text-sm font-bold transition-all duration-300 group outline-none mt-2",
+            "w-full flex items-center gap-3 px-4 py-3.5 rounded-[20px] text-sm font-bold transition-all duration-300 group outline-none mt-1",
             activeView === "settings"
               ? "bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] text-municipall-blue" 
               : "text-zinc-500 hover:bg-white/60 hover:text-zinc-900"
@@ -85,7 +108,7 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
             "w-[22px] h-[22px] transition-colors",
             activeView === "settings" ? "text-municipall-blue drop-shadow-sm" : "text-gray-400 group-hover:text-gray-700"
           )} strokeWidth={activeView === "settings" ? 2.5 : 2} />
-          Paramètres Marque Blanche
+          Marque Blanche
         </button>
       </div>
     </aside>
