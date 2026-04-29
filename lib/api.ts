@@ -60,6 +60,15 @@ export interface CityConfig {
     useGradient: boolean;
     logoUrl: string;
   };
+  wasteConfig?: {
+    services: {
+      type: string;
+      icon: string;
+      color: string;
+      days: number[];
+      time: string;
+    }[];
+  };
 }
 
 export interface CityDashboardStats {
