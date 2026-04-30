@@ -25,7 +25,10 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
   const fetchWorks = React.useCallback(async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/construction-works`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'x-tenant-id': cityId
+        }
       });
       const data = await response.json();
       setWorks(data);
@@ -34,7 +37,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [cityId]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -49,13 +52,20 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
       const method = work.id ? 'PATCH' : 'POST';
       const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/construction-works${work.id ? `/${work.id}` : ''}`;
 
+      const body = {
+        ...work,
+        startDate: new Date(work.startDate).toISOString(),
+        endDate: new Date(work.endDate).toISOString(),
+      };
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'x-tenant-id': cityId
         },
-        body: JSON.stringify(work)
+        body: JSON.stringify(body)
       });
 
       if (response.ok) {
@@ -78,7 +88,10 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/construction-works/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'x-tenant-id': cityId
+        }
       });
 
       if (response.ok) {

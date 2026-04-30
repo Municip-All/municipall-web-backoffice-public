@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, X, Clock, Save, Loader2 } from "lucide-react";
+import { Plus, X, Clock, Save, Loader2, Trash2, RefreshCw, Leaf, Archive, FlaskConical } from "lucide-react";
 import { api } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 
@@ -23,7 +23,13 @@ const DAYS = [
   { id: 0, label: "Dim" },
 ];
 
-const ICONS = ["trash", "refresh", "leaf", "archive", "flask"];
+const ICONS = [
+  { id: "trash", icon: Trash2 },
+  { id: "refresh", icon: RefreshCw },
+  { id: "leaf", icon: Leaf },
+  { id: "archive", icon: Archive },
+  { id: "flask", icon: FlaskConical },
+];
 
 export default function WasteManager({ cityId }: { cityId: string }) {
   const toast = useToast();
@@ -197,19 +203,17 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                     Sélecteur d&apos;icône
                   </label>
                   <div className="flex gap-4">
-                    {ICONS.map((icon) => (
+                    {ICONS.map((item) => (
                       <button
-                        key={icon}
-                        onClick={() => updateService(sIndex, { icon })}
+                        key={item.id}
+                        onClick={() => updateService(sIndex, { icon: item.id })}
                         className={`w-14 h-14 rounded-[20px] border-2 transition-all flex items-center justify-center ${
-                          service.icon === icon
+                          service.icon === item.id
                             ? "bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--accent)] shadow-inner"
                             : "bg-zinc-100 dark:bg-zinc-800/50 border-transparent text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
                         }`}
                       >
-                        <div className="w-6 h-6 capitalize text-xs flex items-center justify-center font-black">
-                          {icon[0]}
-                        </div>
+                        <item.icon className="w-6 h-6" />
                       </button>
                     ))}
                   </div>

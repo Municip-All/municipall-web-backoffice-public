@@ -6,11 +6,14 @@ import {
   Send,
   Map,
   Settings,
-  User
+  User,
+  Hammer,
+  Trash2,
+  Calendar
 } from "lucide-react";
 import clsx from "clsx";
 
-export type ViewType = "pouls-ai" | "moderation" | "widgets" | "targeted-push" | "neighborhoods" | "settings" | "profile";
+export type ViewType = "pouls-ai" | "moderation" | "widgets" | "targeted-push" | "neighborhoods" | "settings" | "profile" | "construction" | "waste" | "events";
 
 interface SidebarProps {
   activeView: ViewType;
@@ -44,6 +47,21 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
       id: "neighborhoods",
       label: "Secteurs Géo",
       icon: Map,
+    },
+    {
+      id: "events",
+      label: "Agenda & Événements",
+      icon: Calendar,
+    },
+    {
+      id: "construction",
+      label: "Chantiers & Travaux",
+      icon: Hammer,
+    },
+    {
+      id: "waste",
+      label: "Calendrier Déchets",
+      icon: Trash2,
     },
   ] as const;
 

@@ -11,10 +11,13 @@ import WhiteLabelSettings from "@/components/WhiteLabelSettings";
 import ProfileView from "../components/ProfileView";
 import NeighborhoodManager from "@/components/NeighborhoodManager";
 import Login from "@/components/Login";
+import ConstructionManager from "@/components/ConstructionManager";
+import WasteManager from "@/components/WasteManager";
+import EventManager from "@/components/EventManager";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const [activeView, setActiveView] = useState<ViewType>("pouls-ai");
 
   if (isLoading) {
@@ -45,6 +48,9 @@ export default function Home() {
             {activeView === "settings" && <WhiteLabelSettings />}
             {activeView === "profile" && <ProfileView />}
             {activeView === "neighborhoods" && <NeighborhoodManager />}
+            {activeView === "construction" && user?.cityId && <ConstructionManager cityId={user.cityId} />}
+            {activeView === "waste" && user?.cityId && <WasteManager cityId={user.cityId} />}
+            {activeView === "events" && <EventManager />}
           </div>
         </main>
       </div>
