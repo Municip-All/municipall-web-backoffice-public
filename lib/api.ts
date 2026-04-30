@@ -60,6 +60,15 @@ export interface CityConfig {
     useGradient: boolean;
     logoUrl: string;
   };
+  wasteConfig?: {
+    services: {
+      type: string;
+      icon: string;
+      color: string;
+      days: number[];
+      time: string;
+    }[];
+  };
 }
 
 export interface CityDashboardStats {
@@ -83,6 +92,7 @@ export interface Report {
   description?: string;
   createdAt: string;
   updatedAt: string;
+  isResident?: boolean;
 }
 
 // --- Generic Methods ---
@@ -110,7 +120,7 @@ export const api = {
     return response.data || null;
   },
 
-  async saveCityConfig(cityId: string, data: Partial<CityConfig['theme']> & { name?: string; features?: string[] }): Promise<boolean> {
+  async saveCityConfig(cityId: string, data: Partial<CityConfig> & Partial<CityConfig['theme']>): Promise<boolean> {
     const response = await request(`/api/v1/admin/cities/${cityId}`, 'PATCH', data);
     return response.status < 400;
   },
@@ -131,6 +141,18 @@ export const api = {
 
   async updateReportStatus(id: number, status: string): Promise<boolean> {
     const response = await request(`/api/v1/reports/${id}/status`, 'PATCH', { status });
+    return response.status < 400;
+  },
+
+  // --- User Profile ---
+
+  async updateProfile(data: { name?: string; surname?: string; email?: string }): Promise<boolean> {
+    const response = await request('/api/v1/users/profile', 'POST', data);
+    return response.status < 400;
+  },
+
+  async updatePassword(data: { current: string; new: string; confirm: string }): Promise<boolean> {
+    const response = await request('/api/v1/users/password', 'POST', data);
     return response.status < 400;
   },
 };

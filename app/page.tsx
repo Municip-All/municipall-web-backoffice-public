@@ -8,11 +8,16 @@ import ModerationMatrix from "@/components/ModerationMatrix";
 import WidgetGenerator from "@/components/WidgetGenerator";
 import TargetedCommunication from "@/components/TargetedCommunication";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
+import ProfileView from "../components/ProfileView";
+import NeighborhoodManager from "@/components/NeighborhoodManager";
 import Login from "@/components/Login";
+import ConstructionManager from "@/components/ConstructionManager";
+import WasteManager from "@/components/WasteManager";
+import EventManager from "@/components/EventManager";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const [activeView, setActiveView] = useState<ViewType>("pouls-ai");
 
   if (isLoading) {
@@ -28,8 +33,8 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[#f9fafb] overflow-hidden text-[#111827] font-sans">
-      <Header />
+    <div className="flex flex-col h-screen w-full bg-[var(--background)] overflow-hidden text-[var(--foreground)] font-sans transition-colors duration-500">
+      <Header onViewChange={setActiveView} />
       
       <div className="flex flex-1 overflow-hidden">
         <Sidebar activeView={activeView} onViewChange={setActiveView} />
@@ -41,6 +46,11 @@ export default function Home() {
             {activeView === "widgets" && <WidgetGenerator />}
             {activeView === "targeted-push" && <TargetedCommunication />}
             {activeView === "settings" && <WhiteLabelSettings />}
+            {activeView === "profile" && <ProfileView />}
+            {activeView === "neighborhoods" && <NeighborhoodManager />}
+            {activeView === "construction" && user?.cityId && <ConstructionManager cityId={user.cityId} />}
+            {activeView === "waste" && user?.cityId && <WasteManager cityId={user.cityId} />}
+            {activeView === "events" && <EventManager />}
           </div>
         </main>
       </div>
