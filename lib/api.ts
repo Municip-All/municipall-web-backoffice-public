@@ -120,7 +120,7 @@ export const api = {
     return response.data || null;
   },
 
-  async saveCityConfig(cityId: string, data: Partial<CityConfig['theme']> & { name?: string; features?: string[] }): Promise<boolean> {
+  async saveCityConfig(cityId: string, data: Partial<CityConfig> & Partial<CityConfig['theme']>): Promise<boolean> {
     const response = await request(`/api/v1/admin/cities/${cityId}`, 'PATCH', data);
     return response.status < 400;
   },

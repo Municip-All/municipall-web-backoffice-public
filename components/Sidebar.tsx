@@ -21,36 +21,47 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const menuItems = [
     {
       id: "pouls-ai",
-      label: "Pouls de la Ville (IA)",
+      label: "Pouls de la Ville",
       icon: LayoutDashboard,
+      badge: "IA"
     },
     {
       id: "moderation",
-      label: "Console de Modération",
+      label: "Signalements",
       icon: ShieldAlert,
     },
     {
       id: "targeted-push",
-      label: "Communication Directe",
+      label: "Alertes Directes",
       icon: Send,
     },
     {
       id: "widgets",
-      label: "Gestionnaire de Widgets",
+      label: "Services GPS",
       icon: Smartphone,
     },
     {
       id: "neighborhoods",
-      label: "Découpage des Quartiers",
+      label: "Secteurs Géo",
       icon: Map,
     },
   ] as const;
 
   return (
-    <aside className="w-72 bg-white/40 backdrop-blur-3xl border-r border-white/60 flex flex-col justify-between py-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 h-full">
-      <div className="px-4 space-y-2 flex-1">
-        <p className="px-4 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">
-          Outils d&apos;Administration
+    <aside className="w-80 bg-[var(--card)]/30 backdrop-blur-3xl border-r border-[var(--card-border)] flex flex-col justify-between py-10 shadow-2xl z-20 h-full transition-all duration-500">
+      <div className="px-6 space-y-3 flex-1">
+        <div className="px-5 mb-12 flex items-center gap-3">
+          <div className="w-10 h-10 bg-[var(--accent)] rounded-[14px] flex items-center justify-center shadow-lg shadow-[var(--accent)]/30">
+            <ShieldAlert className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-sm font-black text-[var(--foreground)] tracking-tighter">Municip&apos;All</h1>
+            <p className="text-[9px] font-black text-apple-muted uppercase tracking-[0.2em] opacity-40">Command Center</p>
+          </div>
+        </div>
+
+        <p className="px-5 text-[10px] font-black text-apple-muted mb-6 uppercase tracking-[0.3em] opacity-30">
+          Supervision
         </p>
 
         {menuItems.map((item) => {
@@ -62,54 +73,51 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
               key={item.id}
               onClick={() => onViewChange(item.id)}
               className={clsx(
-                "w-full flex items-center gap-3 px-4 py-3.5 rounded-[20px] text-sm font-bold transition-all duration-300 group outline-none",
+                "w-full flex items-center justify-between px-5 py-4 rounded-[22px] text-sm font-black transition-all duration-500 group outline-none mb-2",
                 isActive 
-                  ? "bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] text-municipall-blue" 
-                  : "text-zinc-500 hover:bg-white/60 hover:text-zinc-900"
+                  ? "bg-[var(--card)] shadow-xl shadow-black/5 text-[var(--foreground)] border border-white/20 dark:border-white/5" 
+                  : "text-apple-muted hover:bg-white/40 dark:hover:bg-zinc-800/40 hover:text-[var(--foreground)]"
               )}
             >
-              <Icon className={clsx(
-                "w-[22px] h-[22px] transition-colors",
-                isActive ? "text-municipall-blue flex-shrink-0 drop-shadow-sm" : "text-gray-400 group-hover:text-gray-700"
-              )} strokeWidth={isActive ? 2.5 : 2} />
-              {item.label}
+              <div className="flex items-center gap-4">
+                <div className={clsx(
+                  "w-11 h-11 rounded-[15px] flex items-center justify-center transition-all duration-500",
+                  isActive ? "bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/30" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700"
+                )}>
+                  <Icon className="w-5 h-5" strokeWidth={2.5} />
+                </div>
+                <span className="tracking-tight">{item.label}</span>
+              </div>
+              {'badge' in item && (
+                <span className="text-[8px] font-black bg-[var(--accent)]/10 text-[var(--accent)] px-2 py-0.5 rounded-full border border-[var(--accent)]/20 uppercase tracking-widest">{item.badge}</span>
+              )}
             </button>
           );
         })}
       </div>
 
-      <div className="px-4 mt-auto">
-        <button
-          onClick={() => onViewChange("profile")}
-          className={clsx(
-            "w-full flex items-center gap-3 px-4 py-3.5 rounded-[20px] text-sm font-bold transition-all duration-300 group outline-none mt-1",
-            activeView === "profile"
-              ? "bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] text-municipall-blue" 
-              : "text-zinc-500 hover:bg-white/60 hover:text-zinc-900"
-          )}
-        >
-          <User className={clsx(
-            "w-[22px] h-[22px] transition-colors",
-            activeView === "profile" ? "text-municipall-blue drop-shadow-sm" : "text-gray-400 group-hover:text-gray-700"
-          )} strokeWidth={activeView === "profile" ? 2.5 : 2} />
-          Mon Profil Agent
-        </button>
-
-        <button
-          onClick={() => onViewChange("settings")}
-          className={clsx(
-            "w-full flex items-center gap-3 px-4 py-3.5 rounded-[20px] text-sm font-bold transition-all duration-300 group outline-none mt-1",
-            activeView === "settings"
-              ? "bg-white shadow-[0_4px_14px_rgba(0,0,0,0.05)] text-municipall-blue" 
-              : "text-zinc-500 hover:bg-white/60 hover:text-zinc-900"
-          )}
-        >
-          <Settings className={clsx(
-            "w-[22px] h-[22px] transition-colors",
-            activeView === "settings" ? "text-municipall-blue drop-shadow-sm" : "text-gray-400 group-hover:text-gray-700"
-          )} strokeWidth={activeView === "settings" ? 2.5 : 2} />
-          Marque Blanche
-        </button>
+      <div className="px-6 pb-6 pt-10 border-t border-[var(--card-border)]/50 space-y-3">
+        {[
+          { id: "profile", label: "Mon Profil Agent", icon: User },
+          { id: "settings", label: "Configuration Ville", icon: Settings },
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onViewChange(item.id as ViewType)}
+            className={clsx(
+              "w-full flex items-center gap-4 px-5 py-3 rounded-[20px] text-[13px] font-black transition-all duration-300 group outline-none",
+              activeView === item.id
+                ? "bg-[var(--card)] shadow-md text-[var(--accent)] border border-[var(--card-border)]" 
+                : "text-apple-muted hover:text-[var(--foreground)]"
+            )}
+          >
+            <item.icon className={clsx(
+              "w-5 h-5 transition-colors",
+              activeView === item.id ? "text-[var(--accent)]" : "text-zinc-400 group-hover:text-zinc-600"
+            )} strokeWidth={2.5} />
+            <span className="tracking-tight">{item.label}</span>
+          </button>
+        ))}
       </div>
     </aside>
   );

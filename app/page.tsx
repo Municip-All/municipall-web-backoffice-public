@@ -30,7 +30,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[#F2F2F7] overflow-hidden text-[#18181b] font-sans">
+    <div className="flex flex-col h-screen w-full bg-[var(--background)] overflow-hidden text-[var(--foreground)] font-sans transition-colors duration-500">
       <Header onViewChange={setActiveView} />
       
       <div className="flex flex-1 overflow-hidden">

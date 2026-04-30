@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Send, AlertCircle, Info, Radio, CheckCircle2 } from "lucide-react";
+import { Send, AlertCircle, Info, Radio, CheckCircle2, Loader2 } from "lucide-react";
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/context/AuthContext";
@@ -28,7 +28,7 @@ export default function TargetedCommunication() {
   const [alertType, setAlertType] = useState<"info" | "urgent">("info");
   const [selectedZones, setSelectedZones] = useState<Set<string>>(new Set());
   const [cityName, setCityName] = useState<string>("");
-  const [neighborhoods, setNeighborhoods] = useState<any[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<{ id: string, name: string, points: [number, number][] }[]>([]);
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
@@ -92,93 +92,97 @@ export default function TargetedCommunication() {
   };
 
   return (
-    <div className="p-8 h-full overflow-y-auto">
-      <div className="mb-6">
-        <h2 className="text-[28px] font-bold text-gray-900 tracking-tight mb-2">
-          Communication Directe
-        </h2>
-        <p className="text-sm text-gray-500">Envoyez des alertes push ciblées directement sur le smartphone des citoyens selon leur position GPS.</p>
+    <div className="p-10 h-full overflow-y-auto custom-scrollbar bg-[var(--background)] transition-colors duration-500">
+      <div className="mb-10">
+        <p className="text-apple-muted mb-3 opacity-60">Diffusion Géolocalisée</p>
+        <h2 className="text-apple-title">Communication Directe</h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          <div className="card-panel p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Rédiger le message</h3>
-            
-            <div className="mb-5">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Titre de l&apos;alerte</label>
-              <input 
-                type="text" 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+        <div className="lg:col-span-2 flex flex-col gap-8">
+          <div className="card-premium p-10">
+            <h3 className="text-xl font-black text-[var(--foreground)] mb-8 tracking-tight flex items-center gap-3">
+              <div className="w-8 h-8 bg-[var(--accent)]/10 text-[var(--accent)] rounded-xl flex items-center justify-center">
+                <Send className="w-4 h-4" />
+              </div>
+              Rédiger le message
+            </h3>
+
+            <div className="mb-8">
+              <label className="block text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 opacity-60">Titre de l&apos;alerte</label>
+              <input
+                type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ex: Travaux sur le réseau d&apos;eau" 
-                className="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg px-4 py-2.5 focus:ring-1 focus:ring-municipall-blue focus:border-municipall-blue outline-none transition-all shadow-sm"
+                placeholder="Ex: Travaux sur le réseau d&apos;eau"
+                className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
               />
             </div>
 
-            <div className="mb-2">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Message (Push)</label>
-              <textarea 
+            <div className="mb-3">
+              <label className="block text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 opacity-60">Message (Notification Push)</label>
+              <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Détaillez votre message ici..."
                 maxLength={250}
-                className="w-full bg-white border border-gray-300 text-gray-900 text-sm rounded-lg px-4 py-3 h-28 resize-none focus:ring-1 focus:ring-municipall-blue focus:border-municipall-blue outline-none transition-all shadow-sm"
+                className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 h-40 resize-none outline-none transition-all font-bold shadow-sm leading-relaxed"
               />
             </div>
-            
-            <div className="flex justify-between items-center text-xs text-gray-500 mb-6">
-              <span>Le message doit être concis et aller à l&apos;essentiel.</span>
-              <span>{message.length}/250 caractères</span>
+
+            <div className="flex justify-between items-center text-[10px] font-bold text-apple-muted mb-10 opacity-50 uppercase tracking-widest">
+              <span>Impact immédiat sur les smartphones</span>
+              <span>{message.length}/250</span>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-3">Type d&apos;alerte</label>
-              <div className="grid grid-cols-2 gap-4">
-                <button 
+              <label className="block text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-5 opacity-60">Priorité de diffusion</label>
+              <div className="grid grid-cols-2 gap-6">
+                <button
                   onClick={() => setAlertType("info")}
                   className={clsx(
-                    "flex items-center justify-center gap-2 py-3 rounded-lg border text-sm font-bold transition-all",
-                    alertType === "info" 
-                      ? "border-gray-900 bg-white shadow-sm text-gray-900" 
-                      : "border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100"
+                    "flex items-center justify-center gap-3 py-5 rounded-[22px] border-2 text-xs font-black uppercase tracking-widest transition-all",
+                    alertType === "info"
+                      ? "border-[var(--accent)] bg-[var(--accent)]/5 text-[var(--accent)] shadow-lg shadow-[var(--accent)]/10 scale-[1.02]"
+                      : "border-transparent bg-zinc-100 dark:bg-zinc-800/50 text-zinc-400 opacity-60 hover:opacity-100"
                   )}
                 >
-                  <Info className="w-4 h-4" />
+                  <Info className="w-5 h-5" />
                   Information
                 </button>
-                <button 
+                <button
                   onClick={() => setAlertType("urgent")}
                   className={clsx(
-                    "flex items-center justify-center gap-2 py-3 rounded-lg border text-sm font-bold transition-all",
-                    alertType === "urgent" 
-                      ? "border-red-500 bg-red-50 text-red-600 shadow-sm" 
-                      : "border-gray-200 bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200"
+                    "flex items-center justify-center gap-3 py-5 rounded-[22px] border-2 text-xs font-black uppercase tracking-widest transition-all",
+                    alertType === "urgent"
+                      ? "border-red-500 bg-red-500/5 text-red-500 shadow-lg shadow-red-500/10 scale-[1.02]"
+                      : "border-transparent bg-zinc-100 dark:bg-zinc-800/50 text-zinc-400 opacity-60 hover:opacity-100"
                   )}
                 >
-                  <AlertCircle className="w-4 h-4" />
+                  <AlertCircle className="w-5 h-5" />
                   Urgence
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="card-panel p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <Radio className="w-5 h-5 text-municipall-blue" />
-              Ciblage Géographique GPS
+          <div className="card-premium p-10">
+            <h3 className="text-xl font-black text-[var(--foreground)] mb-3 tracking-tight flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center">
+                <Radio className="w-4 h-4" />
+              </div>
+              Ciblage Géographique
             </h3>
             {cityName && (
-              <p className="text-xs text-gray-400 mb-4 font-medium">
-                Carte officielle IGN • <span className="text-municipall-blue font-bold">{cityName}</span>
-                {" "}• Cliquez sur un quartier pour le sélectionner
+              <p className="text-[10px] font-black text-apple-muted mb-8 uppercase tracking-[0.2em] opacity-40">
+                IGN Carto • <span className="text-[var(--accent)]">{cityName}</span> • Sélection par zones
               </p>
             )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
               {/* Real map - takes 3/5 of the grid */}
-              <div className="md:col-span-3 h-72">
+              <div className="md:col-span-3 h-[400px] rounded-[32px] overflow-hidden border border-[var(--card-border)] shadow-inner relative group">
                 {cityName ? (
                   <CommuneMap
                     cityName={cityName}
@@ -187,17 +191,19 @@ export default function TargetedCommunication() {
                     customNeighborhoods={neighborhoods}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-100 rounded-xl flex items-center justify-center">
-                    <p className="text-xs text-gray-400">Connexion en cours…</p>
+                  <div className="w-full h-full bg-zinc-100 dark:bg-zinc-800/50 flex flex-col items-center justify-center gap-4">
+                    <Loader2 className="w-8 h-8 text-[var(--accent)] animate-spin opacity-40" />
+                    <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest opacity-40">Initialisation...</p>
                   </div>
                 )}
+                <div className="absolute top-4 left-4 z-[1000] bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest text-zinc-500 border border-white/20 shadow-lg group-hover:opacity-0 transition-opacity pointer-events-none">Interactif</div>
               </div>
-              
+
               {/* Zone list - takes 2/5 */}
               <div className="md:col-span-2 flex flex-col justify-between">
                 <div>
-                  <p className="text-sm font-bold text-gray-700 mb-3">Sélectionnez les quartiers :</p>
-                  <div className="space-y-2">
+                  <p className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-5 opacity-60">SÉLECTION DES QUARTIERS :</p>
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
                     {neighborhoods.map(zone => {
                       const isSelected = selectedZones.has(zone.name);
                       return (
@@ -205,28 +211,35 @@ export default function TargetedCommunication() {
                           key={zone.id || zone.name}
                           onClick={() => toggleZone(zone.name)}
                           className={clsx(
-                            "w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all focus:outline-none",
-                            isSelected 
-                              ? "bg-indigo-50 border-municipall-blue/30 text-municipall-blue" 
-                              : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                            "w-full flex items-center justify-between px-5 py-4 rounded-[18px] border transition-all text-left group",
+                            isSelected
+                              ? "bg-[var(--accent)]/5 border-[var(--accent)] shadow-sm"
+                              : "bg-zinc-50 dark:bg-zinc-800/20 border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
                           )}
                         >
-                          <div className={clsx("w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors", isSelected ? "bg-municipall-blue border-municipall-blue text-white" : "border-gray-300 bg-white")}>
-                            {isSelected && <CheckCircle2 className="w-3 h-3" />}
+                          <div className="flex items-center gap-4">
+                            <div className={clsx("w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all", isSelected ? "bg-[var(--accent)] border-[var(--accent)] text-white" : "border-zinc-300 dark:border-zinc-700 group-hover:border-[var(--accent)]/50")}>
+                              {isSelected && <CheckCircle2 className="w-4 h-4" />}
+                            </div>
+                            <span className={clsx("text-sm font-bold tracking-tight", isSelected ? "text-[var(--foreground)]" : "text-[var(--muted)]")}>{zone.name}</span>
                           </div>
-                          <span className={clsx("text-xs font-semibold", isSelected && "font-bold text-gray-900")}>{zone.name}</span>
                         </button>
                       );
                     })}
                     {neighborhoods.length === 0 && (
-                      <p className="text-xs text-zinc-400 italic">Aucun quartier défini dans le gestionnaire.</p>
+                      <div className="py-10 text-center">
+                        <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest opacity-30">Aucun quartier défini</p>
+                      </div>
                     )}
                   </div>
                 </div>
 
                 {selectedZones.size > 0 && (
-                  <div className="bg-blue-50/80 border border-blue-100 rounded-lg p-3 text-sm text-municipall-blue flex items-center justify-center font-medium mt-4">
-                    ~<span className="font-bold mx-1 text-gray-900">{totalCitizens.toLocaleString('fr-FR')}</span> citoyens recevront cette alerte.
+                  <div className="bg-[var(--accent)]/5 border border-[var(--accent)]/10 rounded-[22px] p-5 text-center mt-6 animate-in slide-in-from-bottom-2 duration-300">
+                    <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest mb-1 opacity-60">Audience Estimée</p>
+                    <div className="text-2xl font-black text-[var(--foreground)] tracking-tighter">
+                      ~ {totalCitizens.toLocaleString('fr-FR')} <span className="text-xs text-apple-muted opacity-60 ml-1">CITOYENS</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -234,31 +247,31 @@ export default function TargetedCommunication() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <div className="card-panel p-6 flex flex-col items-center">
-            <h3 className="text-sm font-bold text-gray-600 mb-6 uppercase tracking-wider text-center">Aperçu du Mobile</h3>
-            
-            <div className="w-[280px] h-[560px] bg-gray-900 rounded-[40px] p-3 shadow-xl relative border-4 border-gray-800 shrink-0">
-              <div className="w-full h-full bg-gray-50 rounded-[28px] overflow-hidden relative flex flex-col pt-12">
-                <div className="absolute top-0 inset-x-0 h-6 bg-gray-900 rounded-b-2xl mx-16 z-20"></div>
-                
-                <div className="flex-1 px-4 relative z-10 pt-8">
-                  <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-100 pb-5">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-5 h-5 bg-municipall-blue rounded flex items-center justify-center shrink-0">
-                          <span className="text-white text-[8px] font-bold">M</span>
+        <div className="flex flex-col gap-10">
+          <div className="card-premium p-10 flex flex-col items-center">
+            <h3 className="text-[10px] font-black text-apple-muted mb-10 uppercase tracking-[0.3em] text-center opacity-40">Aperçu Smartphone</h3>
+
+            <div className="w-[300px] h-[610px] bg-zinc-900 dark:bg-black rounded-[54px] p-3 shadow-2xl relative border-8 border-zinc-800 dark:border-zinc-900 shrink-0 shadow-[var(--accent)]/10">
+              <div className="w-full h-full bg-zinc-50 dark:bg-zinc-900 rounded-[42px] overflow-hidden relative flex flex-col pt-12 border border-white/5">
+                <div className="absolute top-0 inset-x-0 h-7 bg-zinc-900 dark:bg-black rounded-b-[24px] mx-18 z-20"></div>
+
+                <div className="flex-1 px-4 relative z-10 pt-10">
+                  <div className="bg-white/80 dark:bg-zinc-800/90 backdrop-blur-xl rounded-[24px] shadow-2xl p-6 border border-white/20 pb-7 transform hover:scale-[1.02] transition-transform">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-7 h-7 bg-[var(--accent)] rounded-lg flex items-center justify-center shrink-0 shadow-lg shadow-[var(--accent)]/20">
+                          <span className="text-white text-[10px] font-black">M</span>
                         </div>
-                        <span className="text-[10px] font-bold text-gray-900 tracking-wide">MUNICIP&apos;ALL</span>
+                        <span className="text-[10px] font-black text-zinc-900 dark:text-white tracking-[0.2em]">MUNICIP&apos;ALL</span>
                       </div>
-                      <span className="text-[10px] text-gray-400">à l&apos;instant</span>
+                      <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Maintenant</span>
                     </div>
                     <div className="mt-2">
-                      <h4 className={clsx("text-sm font-bold leading-tight mb-1", alertType === "urgent" ? "text-red-600" : "text-gray-900")}>
-                        {title || "Titre de l'alerte"}
+                      <h4 className={clsx("text-lg font-black leading-tight mb-2 tracking-tight", alertType === "urgent" ? "text-red-500" : "text-zinc-900 dark:text-white")}>
+                        {title || "Objet de l'alerte..."}
                       </h4>
-                      <p className="text-[11px] text-gray-600 leading-snug line-clamp-4" style={{ wordBreak: 'break-word' }}>
-                        {message || "Détaillez votre message ici... (Aperçu en temps réel pour validation avant envoi)."}
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium line-clamp-6" style={{ wordBreak: 'break-word' }}>
+                        {message || "Votre message s'affichera ici en temps réel. Validez l'aperçu avant la diffusion massive."}
                       </p>
                     </div>
                   </div>
@@ -267,13 +280,19 @@ export default function TargetedCommunication() {
             </div>
           </div>
 
-          <button 
+          <button
             onClick={handleSend}
             disabled={!title || !message || selectedZones.size === 0 || isSending}
-            className="w-full btn-primary py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-municipall-blue/20 transition-all flex items-center justify-center gap-2"
+            className="w-full bg-[var(--accent)] text-white py-6 rounded-[32px] font-black text-sm uppercase tracking-[0.3em] disabled:opacity-30 disabled:cursor-not-allowed shadow-2xl shadow-[var(--accent)]/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-4 group"
           >
-            <Send className="w-5 h-5" />
-            {isSending ? "Envoi en cours…" : "Envoyer l'alerte via GPS"}
+            {isSending ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <>
+                <Send className="w-6 h-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                Diffuser
+              </>
+            )}
           </button>
         </div>
 

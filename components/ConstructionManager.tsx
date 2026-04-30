@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Hammer, Plus, X, Calendar, MapPin, Check, Save, Loader2, AlertTriangle, Trash2 } from "lucide-react";
-import { api } from "@/lib/api";
+import { Hammer, Plus, X, Calendar, MapPin, Save, Loader2, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 
 interface ConstructionWork {
@@ -23,11 +22,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
   const [isSaving, setIsSaving] = useState(false);
   const [editingWork, setEditingWork] = useState<ConstructionWork | null>(null);
 
-  useEffect(() => {
-    fetchWorks();
-  }, [cityId]);
-
-  const fetchWorks = async () => {
+  const fetchWorks = React.useCallback(async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/construction-works`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
@@ -39,17 +34,24 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchWorks();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [cityId, fetchWorks]);
 
   const handleSave = async (work: ConstructionWork) => {
     setIsSaving(true);
     try {
       const method = work.id ? 'PATCH' : 'POST';
       const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/construction-works${work.id ? `/${work.id}` : ''}`;
-      
+
       const response = await fetch(url, {
         method,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
@@ -57,13 +59,13 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
       });
 
       if (response.ok) {
-        toast("success", `Chantier ${work.id ? 'mis à jour' : 'ajouté'} avec succès !`);
+        toast("success", `Chantier ${work.id ? 'mis à jour' : 'ajouté'} !`);
         setEditingWork(null);
         fetchWorks();
       } else {
         toast("error", "Erreur lors de l'enregistrement.");
       }
-    } catch (error) {
+    } catch {
       toast("error", "Une erreur est survenue.");
     } finally {
       setIsSaving(false);
@@ -72,7 +74,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
 
   const handleDelete = async (id: number) => {
     if (!confirm("Voulez-vous vraiment supprimer ce chantier ?")) return;
-    
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/construction-works/${id}`, {
         method: 'DELETE',
@@ -83,19 +85,24 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
         toast("success", "Chantier supprimé.");
         fetchWorks();
       }
-    } catch (error) {
+    } catch {
       toast("error", "Erreur lors de la suppression.");
     }
   };
 
-  if (isLoading) return <div className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" /></div>;
+  if (isLoading) return (
+    <div className="p-20 text-center flex flex-col items-center justify-center gap-4">
+      <Loader2 className="w-10 h-10 animate-spin text-[var(--accent)]" />
+      <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest">Chargement...</p>
+    </div>
+  );
 
   return (
-    <div className="p-8 max-w-5xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-10 max-w-6xl mx-auto bg-[var(--background)] transition-colors duration-500 overflow-hidden">
+      <div className="flex items-center justify-between mb-12">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestion des Chantiers</h2>
-          <p className="text-gray-500 text-sm mt-1">Informez les citoyens des travaux de voirie en temps réel.</p>
+          <p className="text-apple-muted mb-3 opacity-60">Voirie & Urbanisme</p>
+          <h2 className="text-apple-title">Gestion des Chantiers</h2>
         </div>
         <button
           onClick={() => setEditingWork({
@@ -107,83 +114,83 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
             status: "Programmé",
             impactType: "Circulation alternée"
           })}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200"
+          className="flex items-center gap-3 bg-[var(--accent)] hover:scale-105 active:scale-95 text-white px-8 py-4 rounded-[24px] font-black transition-all shadow-xl shadow-[var(--accent)]/20 text-xs uppercase tracking-widest"
         >
-          <Plus className="w-4 h-4" />
-          Nouveau chantier
+          <Plus className="w-5 h-5" />
+          Déclarer un chantier
         </button>
       </div>
 
       {editingWork && (
-        <div className="bg-white border-2 border-blue-100 rounded-2xl p-6 mb-8 shadow-xl shadow-blue-50/50">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-lg">{editingWork.id ? 'Modifier le chantier' : 'Nouveau chantier'}</h3>
-            <button onClick={() => setEditingWork(null)}><X className="w-5 h-5 text-gray-400" /></button>
+        <div className="card-premium p-10 mb-12 relative border-2 border-[var(--accent)]/20 shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className="flex justify-between items-center mb-10">
+            <h3 className="text-2xl font-black text-[var(--foreground)] tracking-tight">{editingWork.id ? 'Modifier le chantier' : 'Déclaration de travaux'}</h3>
+            <button onClick={() => setEditingWork(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"><X className="w-6 h-6 text-zinc-400" /></button>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+            <div className="space-y-8">
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Titre du chantier</label>
-                <input 
-                  type="text" 
+                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Objet des travaux</label>
+                <input
+                  type="text"
                   value={editingWork.title}
-                  onChange={(e) => setEditingWork({...editingWork, title: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-400"
+                  onChange={(e) => setEditingWork({ ...editingWork, title: e.target.value })}
+                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
                   placeholder="ex: Réfection Avenue République"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Description / Impact</label>
-                <textarea 
+                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Description & Impact</label>
+                <textarea
                   value={editingWork.description}
-                  onChange={(e) => setEditingWork({...editingWork, description: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-400 h-24"
+                  onChange={(e) => setEditingWork({ ...editingWork, description: e.target.value })}
+                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 h-32 resize-none outline-none transition-all font-bold shadow-sm leading-relaxed"
                   placeholder="Détails des travaux..."
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Lieu</label>
+                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Localisation</label>
                 <div className="relative">
-                  <MapPin className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                  <input 
-                    type="text" 
+                  <MapPin className="w-5 h-5 absolute left-6 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
+                  <input
+                    type="text"
                     value={editingWork.locationName}
-                    onChange={(e) => setEditingWork({...editingWork, locationName: e.target.value})}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-400"
+                    onChange={(e) => setEditingWork({ ...editingWork, locationName: e.target.value })}
+                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] pl-16 pr-7 py-5 outline-none transition-all font-bold shadow-sm"
                     placeholder="Adresse ou quartier"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-8">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Début</label>
-                  <input 
-                    type="date" 
+                  <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Date de début</label>
+                  <input
+                    type="date"
                     value={editingWork.startDate.split('T')[0]}
-                    onChange={(e) => setEditingWork({...editingWork, startDate: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-400"
+                    onChange={(e) => setEditingWork({ ...editingWork, startDate: e.target.value })}
+                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Fin prévue</label>
-                  <input 
-                    type="date" 
+                  <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Fin prévisionnelle</label>
+                  <input
+                    type="date"
                     value={editingWork.endDate.split('T')[0]}
-                    onChange={(e) => setEditingWork({...editingWork, endDate: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-400"
+                    onChange={(e) => setEditingWork({ ...editingWork, endDate: e.target.value })}
+                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Statut</label>
-                <select 
+                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">État du chantier</label>
+                <select
                   value={editingWork.status}
-                  onChange={(e) => setEditingWork({...editingWork, status: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-400 bg-white"
+                  onChange={(e) => setEditingWork({ ...editingWork, status: e.target.value })}
+                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm appearance-none"
                 >
                   <option>Programmé</option>
                   <option>En cours</option>
@@ -192,11 +199,11 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Type d'impact</label>
-                <select 
+                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Contraintes de circulation</label>
+                <select
                   value={editingWork.impactType}
-                  onChange={(e) => setEditingWork({...editingWork, impactType: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:border-blue-400 bg-white"
+                  onChange={(e) => setEditingWork({ ...editingWork, impactType: e.target.value })}
+                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm appearance-none"
                 >
                   <option>Circulation alternée</option>
                   <option>Rue barrée</option>
@@ -208,69 +215,76 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-end gap-3">
-            <button 
+          <div className="mt-12 flex justify-end gap-6">
+            <button
               onClick={() => setEditingWork(null)}
-              className="px-6 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-all"
+              className="px-8 py-4 rounded-[22px] font-black text-apple-muted hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all uppercase tracking-widest text-xs"
             >
               Annuler
             </button>
-            <button 
+            <button
               onClick={() => handleSave(editingWork)}
               disabled={isSaving}
-              className="bg-blue-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg shadow-blue-100 flex items-center gap-2"
+              className="bg-[var(--accent)] text-white px-10 py-4 rounded-[24px] font-black shadow-xl shadow-[var(--accent)]/20 flex items-center gap-3 hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-widest"
             >
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
               Enregistrer le chantier
             </button>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-6">
         {works.length === 0 ? (
-          <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-            <Hammer className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 font-medium">Aucun chantier enregistré pour le moment.</p>
+          <div className="text-center py-32 card-premium !bg-transparent border-4 border-dashed border-zinc-100 dark:border-zinc-800">
+            <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800 rounded-[28px] flex items-center justify-center mb-8 mx-auto opacity-50">
+              <Hammer className="w-10 h-10 text-[var(--muted)]" />
+            </div>
+            <p className="text-[10px] font-black text-apple-muted uppercase tracking-[0.4em] opacity-40">Aucun chantier actif</p>
           </div>
         ) : (
           works.map((work) => (
-            <div key={work.id} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex items-center justify-between group">
-              <div className="flex items-center gap-5">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-                  work.status === 'En cours' ? 'bg-orange-100 text-orange-600' : 
-                  work.status === 'Annulé' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
-                }`}>
-                  <Hammer className="w-6 h-6" />
+            <div key={work.id} className="card-premium p-6 flex items-center justify-between group hover:border-[var(--accent)]/30 transition-all">
+              <div className="flex items-center gap-8">
+                <div className={`w-16 h-16 rounded-[22px] flex items-center justify-center shadow-sm ${work.status === 'En cours' ? 'bg-orange-500/10 text-orange-500' :
+                  work.status === 'Annulé' ? 'bg-red-500/10 text-red-500' : 'bg-[var(--accent)]/10 text-[var(--accent)]'
+                  }`}>
+                  <Hammer className="w-8 h-8" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-bold text-gray-900">{work.title}</h4>
-                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                      work.status === 'En cours' ? 'bg-orange-50 text-orange-700' : 
-                      work.status === 'Annulé' ? 'bg-red-50 text-red-700' : 
-                      work.status === 'Terminé' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'
-                    }`}>
+                  <div className="flex items-center gap-4 mb-2">
+                    <h4 className="text-xl font-black text-[var(--foreground)] tracking-tight">{work.title}</h4>
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${work.status === 'En cours' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
+                      work.status === 'Annulé' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                        work.status === 'Terminé' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-[var(--accent)]/10 border-[var(--accent)]/20 text-[var(--accent)]'
+                      }`}>
                       {work.status}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {work.locationName} • <Calendar className="w-3.5 h-3.5 ml-1" /> du {new Date(work.startDate).toLocaleDateString()} au {new Date(work.endDate).toLocaleDateString()}
-                  </p>
+                  <div className="flex items-center gap-4 text-xs font-bold text-apple-muted opacity-60 uppercase tracking-widest">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-[var(--accent)]" />
+                      {work.locationName}
+                    </div>
+                    <div className="w-1 h-1 rounded-full bg-zinc-300"></div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-[var(--accent)]" />
+                      Du {new Date(work.startDate).toLocaleDateString()} au {new Date(work.endDate).toLocaleDateString()}
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
+
+              <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+                <button
                   onClick={() => setEditingWork(work)}
-                  className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                  className="p-4 text-zinc-400 hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 rounded-[18px] transition-all"
                 >
-                  <Save className="w-5 h-5" />
+                  <Pencil className="w-5 h-5" />
                 </button>
-                <button 
+                <button
                   onClick={() => work.id && handleDelete(work.id)}
-                  className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                  className="p-4 text-zinc-400 hover:text-red-500 hover:bg-red-500/5 rounded-[18px] transition-all"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>

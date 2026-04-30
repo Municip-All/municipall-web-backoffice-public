@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { Loader2, Plus, Trash2, Map as MapIcon, Save, MousePointer2, Pencil, Check, X, RefreshCcw } from "lucide-react";
-import { api, CityConfig } from "@/lib/api";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { Loader2, Plus, Trash2, Map as MapIcon, Save, Pencil, Check, X, RefreshCcw } from "lucide-react";
+import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import clsx from "clsx";
@@ -37,10 +37,12 @@ export default function NeighborhoodManager() {
   const tempLayer = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const neighborhoodLayers = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const communeContourRef = useRef<any>(null);
 
   // Helper: Point in Polygon (Ray Casting)
-  const isPointInPolygon = (lat: number, lng: number, contour: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isPointInPolygon = useCallback((lat: number, lng: number, contour: any) => {
     if (!contour) return true;
     
     // Convert contour to an array of polygons (MultiPolygon support)
@@ -48,7 +50,8 @@ export default function NeighborhoodManager() {
     
     for (const polygon of polygons) {
       // Each polygon has one or more rings (outer + holes)
-      const outerRing = polygon[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const outerRing = polygon[0] as any[];
       
       let inside = false;
       for (let i = 0, j = outerRing.length - 1; i < outerRing.length; j = i++) {
@@ -62,7 +65,7 @@ export default function NeighborhoodManager() {
       if (inside) return true;
     }
     return false;
-  };
+  }, []);
 
   // Use a ref for isDrawing to prevent map re-initialization while allowing the click handler to see the current state
   const isDrawingRef = useRef(isDrawing);
@@ -90,7 +93,7 @@ export default function NeighborhoodManager() {
         toast("error", "Erreur API. Mode démo activé.");
       })
       .finally(() => setIsLoading(false));
-  }, [user?.cityId]);
+  }, [user?.cityId, toast]);
 
   useEffect(() => {
     if (!mapRef.current || !cityName) return;
@@ -123,19 +126,21 @@ export default function NeighborhoodManager() {
           maxZoom: 18,
         }).addTo(map);
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         L.geoJSON({ type: "Feature", geometry: commune.contour, properties: {} } as any, {
-          style: { color: "#0b0080", weight: 2, fillColor: "#0b0080", fillOpacity: 0.05, dashArray: "5 5" }
+          style: { color: "var(--accent)", weight: 3, fillColor: "var(--accent)", fillOpacity: 0.05, dashArray: "10 10" }
         }).addTo(map);
 
         // Initialize Layer Group for neighborhoods
         neighborhoodLayers.current = L.layerGroup().addTo(map);
 
         // Click handler for drawing - uses the ref to always have the latest state
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         map.on("click", (e: any) => {
           if (isDrawingRef.current) {
             const isInside = isPointInPolygon(e.latlng.lat, e.latlng.lng, communeContourRef.current);
             if (!isInside) {
-              toast("error", "Vous ne pouvez pas placer de point en dehors des limites de la ville.");
+              toast("error", "Point hors limites de la ville.");
               return;
             }
             setTempPoints(prev => [...prev, [e.latlng.lat, e.latlng.lng]]);
@@ -149,7 +154,7 @@ export default function NeighborhoodManager() {
 
     initMap();
     return () => { isMounted = false; };
-  }, [cityName]); 
+  }, [cityName, isPointInPolygon, toast]); 
 
   // Handle Temp Points rendering
   useEffect(() => {
@@ -162,11 +167,11 @@ export default function NeighborhoodManager() {
       if (tempLayer.current) tempLayer.current.remove();
       
       const poly = L.polygon(tempPoints, {
-        color: "#0b0080",
+        color: "var(--accent)",
         weight: 3,
-        fillColor: "#0b0080",
-        fillOpacity: 0.2,
-        dashArray: "5 5"
+        fillColor: "var(--accent)",
+        fillOpacity: 0.3,
+        dashArray: "10 10"
       }).addTo(mapInstance.current);
       
       tempLayer.current = poly;
@@ -183,10 +188,10 @@ export default function NeighborhoodManager() {
     loadLeaflet().then(L => {
       neighborhoods.forEach(n => {
         L.polygon(n.points, {
-          color: "#0b0080",
+          color: "var(--accent)",
           weight: 2,
-          fillColor: "#0b0080",
-          fillOpacity: 0.15
+          fillColor: "var(--accent)",
+          fillOpacity: 0.2
         }).addTo(neighborhoodLayers.current)
           .bindTooltip(n.name, { permanent: true, direction: "center", className: "neighborhood-label" });
       });
@@ -196,12 +201,12 @@ export default function NeighborhoodManager() {
   const startDrawing = () => {
     setIsDrawing(true);
     setTempPoints([]);
-    toast("info", "Cliquez sur la carte pour définir les points du quartier.");
+    toast("info", "Tracez le contour sur la carte.");
   };
 
   const finishDrawing = () => {
     if (tempPoints.length < 3) {
-      toast("error", "Un quartier doit avoir au moins 3 points.");
+      toast("error", "Minimum 3 points requis.");
       return;
     }
     setIsNaming(true);
@@ -225,12 +230,12 @@ export default function NeighborhoodManager() {
     setIsDrawing(false);
     setTempPoints([]);
     setNewName("");
-    toast("success", `Quartier "${newName}" créé ! N'oubliez pas d'enregistrer.`);
+    toast("success", `Quartier "${newName}" créé !`);
   };
 
   const deleteNeighborhood = (id: string) => {
     setNeighborhoods(prev => prev.filter(n => n.id !== id));
-    toast("info", "Quartier supprimé de la liste temporaire.");
+    toast("info", "Quartier supprimé.");
   };
 
   const saveAll = async () => {
@@ -239,68 +244,70 @@ export default function NeighborhoodManager() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const success = await api.saveCityConfig(user.cityId, { neighborhoods } as any);
     if (success) {
-      toast("success", "Découpage des quartiers enregistré avec succès !");
+      toast("success", "Configuration enregistrée !");
     } else {
-      toast("error", "Erreur lors de l'enregistrement.");
+      toast("error", "Erreur d'enregistrement.");
     }
     setIsSaving(false);
   };
 
   return (
-    <div className="flex h-full bg-[#F2F2F7]">
+    <div className="flex h-full bg-[var(--background)] transition-colors duration-500 overflow-hidden">
       {/* Sidebar List */}
-      <div className="w-80 h-full bg-white/60 backdrop-blur-2xl border-r border-white/50 flex flex-col p-6 shadow-xl relative z-20">
-        <header className="mb-8">
-          <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Aménagement Urbain</p>
-          <h2 className="text-2xl font-black text-zinc-900 tracking-tight">Quartiers</h2>
+      <div className="w-[380px] h-full bg-[var(--card)]/80 backdrop-blur-3xl border-r border-[var(--card-border)] flex flex-col p-10 shadow-2xl relative z-20">
+        <header className="mb-12">
+          <p className="text-apple-muted mb-3 opacity-60">Aménagement Urbain</p>
+          <h2 className="text-apple-title">Quartiers</h2>
         </header>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 mb-6">
+        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 mb-10 pr-2">
           {neighborhoods.length === 0 ? (
-            <div className="text-center py-12">
-              <MapIcon className="w-12 h-12 text-zinc-200 mx-auto mb-4" />
-              <p className="text-sm text-zinc-400 font-medium px-4">Aucun quartier défini. Commencez à dessiner sur la carte.</p>
+            <div className="text-center py-20 flex flex-col items-center">
+              <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800 rounded-[28px] flex items-center justify-center mb-6 border border-[var(--card-border)] opacity-50">
+                <MapIcon className="w-10 h-10 text-[var(--muted)]" />
+              </div>
+              <p className="text-xs font-black text-apple-muted opacity-40 uppercase tracking-widest px-8">Aucun quartier défini</p>
             </div>
           ) : (
             neighborhoods.map(n => (
-              <div key={n.id} className="card-panel !rounded-2xl p-4 flex items-center justify-between group hover:border-municipall-blue/30 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-municipall-blue" />
-                  <span className="font-bold text-zinc-800 text-sm truncate max-w-[140px]">{n.name}</span>
+              <div key={n.id} className="card-premium !rounded-[24px] p-5 flex items-center justify-between group hover:border-[var(--accent)] transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]" />
+                  <span className="font-black text-[var(--foreground)] text-sm tracking-tight truncate max-w-[160px]">{n.name}</span>
                 </div>
-                <button onClick={() => deleteNeighborhood(n.id)} className="text-zinc-300 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100">
-                  <Trash2 className="w-4 h-4" />
+                <button onClick={() => deleteNeighborhood(n.id)} className="text-zinc-300 hover:text-red-500 transition-colors p-2 opacity-0 group-hover:opacity-100">
+                  <Trash2 className="w-5 h-5" />
                 </button>
               </div>
             ))
           )}
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {!isDrawing ? (
-            <button onClick={startDrawing} className="w-full btn-primary flex items-center justify-center gap-2 py-4 shadow-lg">
+            <button onClick={startDrawing} className="w-full bg-[var(--accent)] text-white font-black py-5 rounded-[28px] flex items-center justify-center gap-3 shadow-xl shadow-[var(--accent)]/20 hover:scale-105 active:scale-95 transition-all text-sm uppercase tracking-widest">
               <Plus className="w-5 h-5" />
-              Dessiner un quartier
+              Nouveau Quartier
             </button>
           ) : (
-            <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2">
-              <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4">
+              <div className="grid grid-cols-2 gap-3">
                 <button 
                   onClick={() => setTempPoints(prev => prev.slice(0, -1))}
                   disabled={tempPoints.length === 0}
-                  className="w-full bg-white text-zinc-500 font-bold py-3 rounded-full flex items-center justify-center gap-2 border border-zinc-200 hover:bg-zinc-50 transition-all disabled:opacity-50"
+                  className="w-full bg-[var(--card)] text-[var(--foreground)] font-black py-4 rounded-[22px] flex items-center justify-center gap-2 border border-[var(--card-border)] hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all disabled:opacity-50 text-xs uppercase tracking-widest"
                 >
                   <RefreshCcw className="w-4 h-4" />
                   Undo
                 </button>
-                <button onClick={finishDrawing} className="w-full bg-emerald-500 text-white font-bold py-3 rounded-full flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all shadow-lg">
+                <button onClick={finishDrawing} className="w-full bg-emerald-500 text-white font-black py-4 rounded-[22px] flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all shadow-lg text-xs uppercase tracking-widest">
                   <Check className="w-4 h-4" />
-                  Valider ({tempPoints.length})
+                  Terminer ({tempPoints.length})
                 </button>
               </div>
-              <button onClick={cancelDrawing} className="w-full bg-white text-red-500 font-bold py-4 rounded-full flex items-center justify-center gap-2 border border-red-50 hover:bg-red-50 transition-all">
+              <button onClick={cancelDrawing} className="w-full bg-red-500/10 text-red-500 font-black py-5 rounded-[28px] flex items-center justify-center gap-3 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all text-xs uppercase tracking-widest">
                 <X className="w-5 h-5" />
-                Annuler tout
+                Abandonner
               </button>
             </div>
           )}
@@ -309,12 +316,12 @@ export default function NeighborhoodManager() {
             onClick={saveAll} 
             disabled={isSaving || isDrawing}
             className={clsx(
-              "w-full flex items-center justify-center gap-2 py-4 rounded-full font-bold text-sm transition-all",
-              isSaving ? "bg-zinc-100 text-zinc-400" : "bg-white text-municipall-blue border-2 border-municipall-blue/20 hover:border-municipall-blue/40 shadow-sm"
+              "w-full flex items-center justify-center gap-3 py-5 rounded-[28px] font-black text-xs uppercase tracking-widest transition-all border-2 shadow-sm",
+              isSaving ? "bg-zinc-100 text-zinc-400 border-transparent" : "bg-[var(--card)] text-[var(--accent)] border-[var(--accent)]/20 hover:border-[var(--accent)]/40"
             )}
           >
             {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-            Enregistrer en base
+            Publier les quartiers
           </button>
         </div>
       </div>
@@ -325,21 +332,21 @@ export default function NeighborhoodManager() {
         
         {/* Floating Tool Indicator */}
         {isDrawing && (
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[1000] bg-white/90 backdrop-blur-xl border border-white shadow-2xl rounded-full px-6 py-3 flex items-center gap-3 animate-bounce">
-            <div className="w-2 h-2 rounded-full bg-municipall-blue animate-pulse" />
-            <span className="text-sm font-black text-municipall-blue uppercase tracking-widest">Mode Dessin Actif</span>
+          <div className="absolute top-10 left-1/2 -translate-x-1/2 z-[1000] bg-white/90 dark:bg-zinc-900/90 backdrop-blur-2xl border border-white dark:border-white/10 shadow-2xl rounded-[28px] px-8 py-4 flex items-center gap-4 animate-bounce">
+            <div className="w-3 h-3 rounded-full bg-[var(--accent)] animate-pulse shadow-[0_0_12px_var(--accent)]" />
+            <span className="text-sm font-black text-[var(--accent)] uppercase tracking-[0.2em]">Outil de tracé actif</span>
           </div>
         )}
 
         {/* Naming Modal */}
         {isNaming && (
-          <div className="absolute inset-0 z-[2000] bg-zinc-900/40 backdrop-blur-sm flex items-center justify-center p-6">
-            <div className="card-panel !rounded-[40px] p-10 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
-              <div className="w-16 h-16 bg-blue-50 text-municipall-blue rounded-[24px] flex items-center justify-center mb-6 mx-auto">
-                <Pencil className="w-8 h-8" />
+          <div className="absolute inset-0 z-[2000] bg-zinc-900/60 backdrop-blur-md flex items-center justify-center p-8">
+            <div className="card-premium !rounded-[48px] p-12 max-w-lg w-full shadow-[0_32px_120px_rgba(0,0,0,0.4)] animate-in zoom-in-95 duration-300">
+              <div className="w-20 h-20 bg-[var(--accent)]/10 text-[var(--accent)] rounded-[32px] flex items-center justify-center mb-8 mx-auto border border-[var(--accent)]/20 shadow-inner">
+                <Pencil className="w-10 h-10" />
               </div>
-              <h3 className="text-2xl font-black text-center text-zinc-900 mb-2">Nommer ce quartier</h3>
-              <p className="text-zinc-500 text-center text-sm mb-8 px-4">Ce nom sera visible par tous les citoyens sur l'application mobile.</p>
+              <h3 className="text-3xl font-black text-center text-[var(--foreground)] mb-3 tracking-tight">Nommer ce quartier</h3>
+              <p className="text-[var(--muted)] text-center text-sm mb-10 px-6 font-medium leading-relaxed">Le nom apparaîtra sur l&apos;application mobile et le site web pour tous les citoyens.</p>
               
               <input 
                 autoFocus
@@ -347,22 +354,25 @@ export default function NeighborhoodManager() {
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 placeholder="Ex: Quartier de la Mairie"
-                className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-[22px] px-6 py-4 focus:bg-white focus:ring-4 focus:ring-municipall-blue/10 focus:border-municipall-blue outline-none transition-all font-bold text-lg mb-6"
+                className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[26px] px-8 py-5 outline-none transition-all font-black text-xl mb-10 shadow-sm text-center"
                 onKeyDown={e => e.key === 'Enter' && saveNewNeighborhood()}
               />
               
-              <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => setIsNaming(false)} className="py-4 rounded-full font-bold text-zinc-500 hover:bg-zinc-50 transition-all">Annuler</button>
-                <button onClick={saveNewNeighborhood} disabled={!newName} className="btn-primary py-4">Valider</button>
+              <div className="grid grid-cols-2 gap-6">
+                <button onClick={() => setIsNaming(false)} className="py-5 rounded-[22px] font-black text-apple-muted hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all uppercase tracking-widest text-xs">Annuler</button>
+                <button onClick={saveNewNeighborhood} disabled={!newName} className="bg-[var(--accent)] text-white py-5 rounded-[26px] font-black shadow-xl shadow-[var(--accent)]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest text-xs">Valider</button>
               </div>
             </div>
           </div>
         )}
 
         {isLoading && (
-          <div className="absolute inset-0 bg-zinc-50/50 backdrop-blur-md z-[3000] flex flex-col items-center justify-center gap-4">
-            <Loader2 className="w-10 h-10 text-municipall-blue animate-spin" />
-            <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Chargement de la carte IGN...</p>
+          <div className="absolute inset-0 bg-[var(--background)]/80 backdrop-blur-xl z-[3000] flex flex-col items-center justify-center gap-6">
+            <div className="relative">
+              <Loader2 className="w-16 h-16 text-[var(--accent)] animate-spin opacity-40" />
+              <MapIcon className="w-6 h-6 text-[var(--accent)] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+            </div>
+            <p className="text-[10px] font-black text-apple-muted uppercase tracking-[0.4em] opacity-60">Synchronisation IGN Carto</p>
           </div>
         )}
       </div>
@@ -371,17 +381,24 @@ export default function NeighborhoodManager() {
         .neighborhood-label {
           background: rgba(255,255,255,0.95) !important;
           border: 1px solid #e5e7eb !important;
-          border-radius: 12px !important;
-          padding: 6px 14px !important;
-          font-size: 11px !important;
-          font-weight: 800 !important;
+          border-radius: 16px !important;
+          padding: 8px 18px !important;
+          font-size: 10px !important;
+          font-weight: 900 !important;
           color: #111827 !important;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.12) !important;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.1em;
+        }
+        .dark .neighborhood-label {
+          background: rgba(24,24,27,0.95) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          color: #f4f4f5 !important;
         }
         .leaflet-tooltip-center::before { display: none !important; }
         .leaflet-container { font-family: inherit; }
+        .leaflet-tile { filter: grayscale(0.5) opacity(0.8); transition: filter 0.5s; }
+        .dark .leaflet-tile { filter: invert(1) hue-rotate(180deg) brightness(0.9) grayscale(0.2) contrast(1.2); }
       `}</style>
     </div>
   );

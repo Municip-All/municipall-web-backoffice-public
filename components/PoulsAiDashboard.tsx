@@ -42,135 +42,111 @@ export default function PoulsAiDashboard() {
   ];
 
   return (
-    <div className="p-8 h-full overflow-y-auto custom-scrollbar">
-      <div className="mb-10">
-        <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-2">
-          Intelligence Urbaine
+    <div className="p-10 h-full overflow-y-auto custom-scrollbar">
+      <div className="mb-12">
+        <p className="text-apple-muted mb-3 opacity-60">
+          Intelligence Urbaine • Municip&apos;All Pulse
         </p>
-        <h2 className="text-4xl font-black text-zinc-900 tracking-tight">
+        <h2 className="text-apple-title">
           Pouls de la Ville
         </h2>
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-48">
-          <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-10 h-10 text-[var(--accent)] animate-spin opacity-40" />
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="card-panel p-6 flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-indigo-50/50 flex items-center justify-center shrink-0 border border-indigo-100/50">
-                <TrendingUp className="text-indigo-600 w-7 h-7" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Satisfaction</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-zinc-900">{stats?.satisfaction ?? 0}%</span>
-                  <span className={`text-xs font-bold ${(stats?.satisfactionTrend ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {(stats?.satisfactionTrend ?? 0) >= 0 ? '+' : ''}{stats?.satisfactionTrend ?? 0}%
-                  </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            {[
+              { label: 'Satisfaction', value: `${stats?.satisfaction ?? 0}%`, trend: stats?.satisfactionTrend ?? 0, icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50/50 dark:bg-indigo-900/10' },
+              { label: 'Engagement', value: (stats?.citizensCount ?? 0).toLocaleString('fr-FR'), icon: Users, color: 'text-blue-500', bg: 'bg-blue-50/50 dark:bg-blue-900/10' },
+              { label: 'Alertes', value: stats?.activeReportsCount ?? 0, trend: stats?.reportsTrend ?? 0, icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50/50 dark:bg-amber-900/10', reverse: true },
+              { label: 'Idées', value: stats?.suggestionsCount ?? 0, trend: stats?.suggestionsTrend ?? 0, icon: MessageSquare, color: 'text-emerald-500', bg: 'bg-emerald-50/50 dark:bg-emerald-900/10' },
+            ].map((card, i) => (
+              <div key={i} className="card-premium p-8 flex items-center gap-6 hover:scale-[1.02] transition-transform">
+                <div className={`w-16 h-16 rounded-[22px] ${card.bg} flex items-center justify-center shrink-0 border border-white/20`}>
+                  <card.icon className={`${card.color} w-8 h-8`} />
+                </div>
+                <div>
+                  <p className="text-apple-muted mb-1 opacity-60">{card.label}</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-[var(--foreground)]">{card.value}</span>
+                    {card.trend !== undefined && (
+                      <span className={`text-[10px] font-black ${(card.trend >= 0 ? !card.reverse : card.reverse) ? 'text-green-500' : 'text-red-500'}`}>
+                        {card.trend >= 0 ? '↑' : '↓'} {Math.abs(card.trend)}%
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="card-panel p-6 flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-blue-50/50 flex items-center justify-center shrink-0 border border-blue-100/50">
-                <Users className="text-blue-500 w-7 h-7" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Engagement</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-zinc-900">
-                    {(stats?.citizensCount ?? 0).toLocaleString('fr-FR')}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="card-panel p-6 flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-amber-50/50 flex items-center justify-center shrink-0 border border-amber-100/50">
-                <AlertCircle className="text-amber-600 w-7 h-7" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Alertes</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-zinc-900">{stats?.activeReportsCount ?? 0}</span>
-                  <span className={`text-xs font-bold ${(stats?.reportsTrend ?? 0) <= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {(stats?.reportsTrend ?? 0) > 0 ? '+' : ''}{stats?.reportsTrend ?? 0}%
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="card-panel p-6 flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-50/50 flex items-center justify-center shrink-0 border border-emerald-100/50">
-                <MessageSquare className="text-emerald-500 w-7 h-7" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Idées</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-zinc-900">{stats?.suggestionsCount ?? 0}</span>
-                  <span className={`text-xs font-bold ${(stats?.suggestionsTrend ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {(stats?.suggestionsTrend ?? 0) >= 0 ? '+' : ''}{stats?.suggestionsTrend ?? 0}
-                  </span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 card-panel p-8">
-              <h3 className="text-lg font-bold text-zinc-900 mb-8">Évolution de la Satisfaction</h3>
-              <div className="h-[300px] w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 card-premium p-10">
+              <div className="flex items-center justify-between mb-10">
+                <h3 className="text-xl font-black text-[var(--foreground)]">Évolution de la Satisfaction</h3>
+                <div className="flex gap-2">
+                  <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-800 px-3 py-1.5 rounded-full border border-[var(--card-border)]">
+                    <div className="w-2 h-2 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]"></div>
+                    <span className="text-[10px] font-black text-[var(--muted)]">ACTUEL</span>
+                  </div>
+                </div>
+              </div>
+              <div className="h-[340px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorSatisfaction" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0b0080" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#0b0080" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#5e5ce6" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#5e5ce6" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} dy={10} />
-                    <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} ticks={[0, 25, 50, 75, 100]} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-zinc-100 dark:text-zinc-800" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#86868b', fontSize: 11, fontWeight: 700}} dy={15} />
+                    <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#86868b', fontSize: 11, fontWeight: 700}} ticks={[0, 25, 50, 75, 100]} />
                     <Tooltip 
-                      contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
-                      itemStyle={{ color: '#111827', fontWeight: 600 }}
+                      contentStyle={{ backgroundColor: 'var(--card)', borderRadius: '16px', border: '1px solid var(--card-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', color: 'var(--foreground)' }}
+                      itemStyle={{ color: 'var(--foreground)', fontWeight: 800 }}
                     />
-                    <Area type="monotone" dataKey="satisfaction" stroke="#0b0080" strokeWidth={3} fillOpacity={1} fill="url(#colorSatisfaction)" />
+                    <Area type="monotone" dataKey="satisfaction" stroke="#5e5ce6" strokeWidth={4} fillOpacity={1} fill="url(#colorSatisfaction)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="flex flex-col gap-6">
-              <div className="card-panel p-8">
-                <h3 className="text-base font-bold text-zinc-900 mb-8">Sujets Chauds (IA)</h3>
-                <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-4 px-2">
-                  <span className="text-2xl font-black text-red-600">Nids-de-poule</span>
-                  <span className="text-xl font-bold text-municipall-blue">Stationnement</span>
-                  <span className="text-xl font-bold text-zinc-900">Sécurité</span>
-                  <span className="text-sm text-gray-500">Parcs</span>
-                  <span className="text-base font-bold text-green-600">Propreté</span>
-                  <span className="text-sm text-gray-500">Pistes cyclables</span>
-                  <span className="text-lg font-bold text-orange-500">Éclairage</span>
-                  <span className="text-xs text-gray-400">Bruit</span>
-                  <span className="text-xl font-bold text-blue-500">Transports</span>
+            <div className="flex flex-col gap-8">
+              <div className="card-premium p-10 flex-1">
+                <h3 className="text-base font-black text-[var(--foreground)] mb-8 opacity-80 uppercase tracking-widest">Sujets Chauds (IA)</h3>
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-6">
+                  <span className="text-3xl font-black text-red-500 drop-shadow-sm">Nids-de-poule</span>
+                  <span className="text-xl font-bold text-[var(--accent)]">Stationnement</span>
+                  <span className="text-2xl font-black text-[var(--foreground)]">Sécurité</span>
+                  <span className="text-sm text-[var(--muted)] font-bold">Parcs</span>
+                  <span className="text-lg font-bold text-green-500">Propreté</span>
+                  <span className="text-sm text-[var(--muted)] font-bold">Pistes cyclables</span>
+                  <span className="text-2xl font-bold text-orange-500">Éclairage</span>
+                  <span className="text-xs text-[var(--muted)]">Bruit</span>
+                  <span className="text-xl font-black text-blue-500">Transports</span>
                 </div>
               </div>
 
-              <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-6 relative">
-                <h3 className="text-base font-bold text-municipall-blue mb-4 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-municipall-blue"></span>
+              <div className="bg-[var(--accent)] rounded-[32px] p-8 relative overflow-hidden shadow-2xl shadow-[var(--accent)]/20">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                <h3 className="text-base font-black text-white mb-4 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
                   Synthèse de la Semaine
                 </h3>
-                <p className="text-sm text-gray-700 leading-relaxed relative z-10">
+                <p className="text-sm text-white/90 leading-relaxed font-medium">
                   {stats && stats.activeReportsCount > 0
-                    ? `L'IA note ${stats.activeReportsCount} signalement${stats.activeReportsCount > 1 ? 's' : ''} actif${stats.activeReportsCount > 1 ? 's' : ''} en attente de traitement. La satisfaction citoyenne est à ${stats.satisfaction}%.`
-                    : "Aucun signalement actif pour le moment. La ville fonctionne normalement."}
+                    ? `L'IA note ${stats.activeReportsCount} signalement${stats.activeReportsCount > 1 ? 's' : ''} actif${stats.activeReportsCount > 1 ? 's' : ''} en attente de traitement. La satisfaction citoyenne est stable à ${stats.satisfaction}%.`
+                    : "Aucun signalement actif pour le moment. La ville fonctionne normalement. Bel engagement citoyen constaté."}
                 </p>
-                <div className="absolute right-4 top-4 w-12 h-12 border-2 border-indigo-100/50 rounded-lg bg-white/50"></div>
+                <div className="mt-6 flex justify-end">
+                  <div className="text-[10px] font-black text-white/40 uppercase tracking-tighter">AI AGENT ANALYTICS v2.0</div>
+                </div>
               </div>
             </div>
           </div>

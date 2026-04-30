@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Trash2, Plus, X, Clock, Calendar, Check, Save, Loader2 } from "lucide-react";
-import { api, CityConfig } from "@/lib/api";
+import { Plus, X, Clock, Save, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 
 interface WasteService {
@@ -27,14 +27,12 @@ const ICONS = ["trash", "refresh", "leaf", "archive", "flask"];
 
 export default function WasteManager({ cityId }: { cityId: string }) {
   const toast = useToast();
-  const [config, setConfig] = useState<CityConfig | null>(null);
   const [services, setServices] = useState<WasteService[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     api.getCityConfig(cityId).then((data) => {
-      setConfig(data);
       if (data?.wasteConfig?.services) {
         setServices(data.wasteConfig.services);
       } else {
@@ -78,90 +76,95 @@ export default function WasteManager({ cityId }: { cityId: string }) {
     try {
       const ok = await api.saveCityConfig(cityId, {
         wasteConfig: { services }
-      } as any);
+      });
       
       if (ok) {
-        toast("success", "Calendrier de collecte mis à jour avec succès !");
+        toast("success", "Configuration enregistrée !");
       } else {
         toast("error", "Erreur lors de l'enregistrement.");
       }
-    } catch (error) {
+    } catch {
       toast("error", "Une erreur est survenue.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (isLoading) return <div className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" /></div>;
+  if (isLoading) return (
+    <div className="p-20 text-center flex flex-col items-center justify-center gap-4">
+      <Loader2 className="w-10 h-10 animate-spin text-[var(--accent)]" />
+      <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest">Chargement...</p>
+    </div>
+  );
 
   return (
-    <div className="p-8 max-w-4xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-10 max-w-6xl mx-auto bg-[var(--background)] transition-colors duration-500 overflow-hidden">
+      <div className="flex items-center justify-between mb-12">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestion des Déchets</h2>
-          <p className="text-gray-500 text-sm mt-1">Configurez les types de collecte et les horaires pour vos citoyens.</p>
+          <p className="text-apple-muted mb-3 opacity-60">Services Municipaux</p>
+          <h2 className="text-apple-title">Gestion des Déchets</h2>
         </div>
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-200 disabled:opacity-50"
+          className="flex items-center gap-3 bg-[var(--accent)] hover:scale-105 active:scale-95 text-white px-8 py-4 rounded-[24px] font-black transition-all shadow-xl shadow-[var(--accent)]/20 disabled:opacity-50 text-xs uppercase tracking-widest"
         >
-          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Enregistrer les modifications
+          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+          Enregistrer
         </button>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         {services.map((service, sIndex) => (
-          <div key={sIndex} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm relative group">
+          <div key={sIndex} className="card-premium p-10 relative group border-2 border-transparent hover:border-[var(--accent)]/10">
             <button
               onClick={() => handleRemoveService(sIndex)}
-              className="absolute top-4 right-4 p-2 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+              className="absolute top-6 right-6 p-3 text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
             >
-              <X className="w-4 h-4" />
+              <X className="w-6 h-6" />
             </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
               {/* Info de base */}
-              <div className="space-y-4">
+              <div className="space-y-8">
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
-                    Nom du service
+                  <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
+                    Type de collecte
                   </label>
                   <input
                     type="text"
                     value={service.type}
                     onChange={(e) => updateService(sIndex, { type: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
                   />
                 </div>
 
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
-                      Couleur
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
+                      Identifiant Couleur
                     </label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-4 bg-zinc-100 dark:bg-zinc-800/50 p-3 rounded-[22px] border border-transparent">
                       <input
                         type="color"
                         value={service.color}
                         onChange={(e) => updateService(sIndex, { color: e.target.value })}
-                        className="h-10 w-10 p-0 border-none rounded cursor-pointer"
+                        className="h-12 w-12 p-0 border-none rounded-[14px] cursor-pointer bg-transparent overflow-hidden"
                       />
-                      <span className="text-sm font-mono text-gray-500 uppercase">{service.color}</span>
+                      <span className="text-sm font-black text-[var(--foreground)] uppercase tracking-widest">{service.color}</span>
                     </div>
                   </div>
-                  <div className="flex-1">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
+                  <div>
+                    <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
                       Heure de passage
                     </label>
                     <div className="relative">
-                      <Clock className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                      <Clock className="w-5 h-5 absolute left-6 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
                       <input
                         type="time"
                         value={service.time}
                         onChange={(e) => updateService(sIndex, { time: e.target.value })}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-100 outline-none"
+                        className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] pl-16 pr-7 py-5 outline-none transition-all font-bold shadow-sm"
                       />
                     </div>
                   </div>
@@ -169,19 +172,19 @@ export default function WasteManager({ cityId }: { cityId: string }) {
               </div>
 
               {/* Jours de passage */}
-              <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">
-                  Jours de collecte
+              <div className="flex flex-col h-full">
+                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-5 block opacity-60">
+                  Calendrier hebdomadaire
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-7 gap-3 mb-10">
                   {DAYS.map((day) => (
                     <button
                       key={day.id}
                       onClick={() => toggleDay(sIndex, day.id)}
-                      className={`w-10 h-10 rounded-xl font-bold text-xs transition-all border ${
+                      className={`h-14 rounded-[18px] font-black text-[10px] uppercase tracking-tighter transition-all border-2 ${
                         service.days.includes(day.id)
-                          ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100"
-                          : "bg-gray-50 border-gray-100 text-gray-400 hover:border-blue-200"
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20"
+                          : "bg-zinc-100 dark:bg-zinc-800/50 border-transparent text-zinc-400 hover:border-[var(--accent)]/30"
                       }`}
                     >
                       {day.label}
@@ -189,23 +192,22 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                   ))}
                 </div>
                 
-                <div className="mt-6">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">
-                    Icône
+                <div className="mt-auto">
+                  <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-5 block opacity-60">
+                    Sélecteur d&apos;icône
                   </label>
-                  <div className="flex gap-3">
+                  <div className="flex gap-4">
                     {ICONS.map((icon) => (
                       <button
                         key={icon}
                         onClick={() => updateService(sIndex, { icon })}
-                        className={`p-3 rounded-xl border transition-all ${
+                        className={`w-14 h-14 rounded-[20px] border-2 transition-all flex items-center justify-center ${
                           service.icon === icon
-                            ? "bg-gray-100 border-blue-400 text-blue-600"
-                            : "bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-200"
+                            ? "bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--accent)] shadow-inner"
+                            : "bg-zinc-100 dark:bg-zinc-800/50 border-transparent text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
                         }`}
                       >
-                        {/* Mocking icons display for now */}
-                        <div className="w-5 h-5 capitalize text-[10px] flex items-center justify-center font-bold">
+                        <div className="w-6 h-6 capitalize text-xs flex items-center justify-center font-black">
                           {icon[0]}
                         </div>
                       </button>
@@ -219,10 +221,12 @@ export default function WasteManager({ cityId }: { cityId: string }) {
 
         <button
           onClick={handleAddService}
-          className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-gray-400 font-bold hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50/30 transition-all flex items-center justify-center gap-2"
+          className="w-full py-8 border-4 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[40px] text-zinc-400 font-black text-sm uppercase tracking-[0.3em] hover:border-[var(--accent)]/50 hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 transition-all flex items-center justify-center gap-4 group"
         >
-          <Plus className="w-5 h-5" />
-          Ajouter un type de collecte
+          <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 group-hover:bg-[var(--accent)]/20 flex items-center justify-center transition-colors">
+            <Plus className="w-6 h-6" />
+          </div>
+          Nouveau Service
         </button>
       </div>
     </div>

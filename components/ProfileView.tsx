@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { 
   User as UserIcon, 
   Mail, 
@@ -10,7 +11,6 @@ import {
   Camera, 
   LogOut,
   Building,
-  Key,
   Globe,
   ArrowLeft,
   Lock,
@@ -91,28 +91,28 @@ export default function ProfileView() {
   };
 
   const renderHeader = (title: string, subtitle: string, showBack = true) => (
-    <header className="mb-10 flex items-center justify-between">
+    <header className="mb-12 flex items-center justify-between">
       <div>
-        <div className="flex items-center gap-4 mb-2">
+        <div className="flex items-center gap-4 mb-3">
           {showBack && (
             <button 
               onClick={() => setActiveSubView("main")}
-              className="w-10 h-10 rounded-full bg-white shadow-sm border border-zinc-100 flex items-center justify-center text-zinc-500 hover:text-zinc-900 transition-colors"
+              className="w-11 h-11 rounded-2xl bg-[var(--card)] border border-[var(--card-border)] flex items-center justify-center text-[var(--muted)] hover:text-[var(--foreground)] transition-all shadow-sm"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
-          <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.2em]">
+          <p className="text-apple-muted opacity-60">
             {subtitle}
           </p>
         </div>
-        <h1 className="text-4xl font-black text-zinc-900 tracking-tight">{title}</h1>
+        <h1 className="text-apple-title">{title}</h1>
       </div>
       {activeSubView !== "main" && (
         <button 
           onClick={activeSubView === "identity" ? handleUpdateIdentity : handleUpdatePassword}
           disabled={isSaving}
-          className="btn-primary px-8 py-3 shadow-lg flex items-center gap-2"
+          className="bg-[var(--accent)] text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-[var(--accent)]/30 flex items-center gap-2 hover:scale-105 active:scale-95 transition-all"
         >
           {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
           Enregistrer
@@ -122,180 +122,188 @@ export default function ProfileView() {
   );
 
   return (
-    <div className="h-full overflow-y-auto p-8 custom-scrollbar bg-[#F2F2F7]">
+    <div className="h-full overflow-y-auto p-10 custom-scrollbar bg-[var(--background)] transition-colors duration-500">
       <div className="max-w-4xl mx-auto">
         
         {activeSubView === "main" && (
-          <>
-            {renderHeader("Mon Profil Agent", "Paramètres Personnel", false)}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="md:col-span-1 space-y-6">
-                <div className="card-panel p-8 flex flex-col items-center">
-                  <div className="relative group mb-6">
-                    <div className="w-32 h-32 rounded-full bg-zinc-100 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center">
+          <div className="animate-in fade-in duration-500">
+            {renderHeader("Mon Profil Agent", "Paramètres Personnels", false)}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              <div className="md:col-span-1 space-y-8">
+                <div className="card-premium p-10 flex flex-col items-center">
+                  <div className="relative group mb-8">
+                    <div className="w-36 h-36 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-[var(--card)] shadow-2xl overflow-hidden relative flex items-center justify-center group-hover:scale-105 transition-transform">
                       {user?.avatar_url ? (
-                        <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                        <Image src={user.avatar_url} alt="Profile" fill className="object-cover" />
                       ) : (
-                        <UserIcon className="w-16 h-16 text-zinc-300" />
+                        <UserIcon className="w-20 h-20 text-zinc-300 dark:text-zinc-600" />
                       )}
                     </div>
-                    <button className="absolute bottom-1 right-1 w-10 h-10 bg-municipall-blue text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white transform hover:scale-110 transition-transform">
+                    <button className="absolute bottom-2 right-2 w-11 h-11 bg-[var(--accent)] text-white rounded-[18px] flex items-center justify-center shadow-xl border-4 border-[var(--card)] transform hover:scale-110 transition-transform">
                       <Camera className="w-5 h-5" />
                     </button>
                   </div>
-                  <h2 className="text-xl font-bold text-zinc-900 mb-1">{user?.name} {user?.surname}</h2>
-                  <p className="text-sm font-medium text-zinc-400 mb-4">{user?.role || "Agent Municipal"}</p>
-                  <div className="w-full pt-6 border-t border-zinc-100/50 space-y-3">
-                    <div className="flex items-center gap-3 text-zinc-500"><Building className="w-4 h-4" /><span className="text-xs font-semibold uppercase tracking-wider">{user?.cityId}</span></div>
-                    <div className="flex items-center gap-3 text-zinc-500"><Mail className="w-4 h-4" /><span className="text-xs font-semibold">{user?.email}</span></div>
+                  <h2 className="text-2xl font-black text-[var(--foreground)] mb-1">{user?.name} {user?.surname}</h2>
+                  <p className="text-[10px] font-black text-apple-muted opacity-60 uppercase tracking-[0.2em] mb-6">{user?.role || "Agent Municipal"}</p>
+                  <div className="w-full pt-8 border-t border-[var(--card-border)] space-y-4">
+                    <div className="flex items-center gap-4 text-[var(--muted)]"><Building className="w-5 h-5 opacity-40" /><span className="text-[11px] font-black uppercase tracking-widest">{user?.cityId}</span></div>
+                    <div className="flex items-center gap-4 text-[var(--muted)]"><Mail className="w-5 h-5 opacity-40" /><span className="text-xs font-bold">{user?.email}</span></div>
                   </div>
                 </div>
-                <button onClick={logout} className="w-full flex items-center justify-center gap-3 py-4 rounded-[24px] bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-colors border border-red-100/50"><LogOut className="w-5 h-5" />Se déconnecter</button>
+                <button onClick={logout} className="w-full flex items-center justify-center gap-3 py-5 rounded-[28px] bg-red-500/10 text-red-500 font-black text-sm hover:bg-red-500 hover:text-white transition-all border border-red-500/20 shadow-lg shadow-red-500/10 group">
+                  <LogOut className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+                  Se déconnecter
+                </button>
               </div>
 
-              <div className="md:col-span-2 space-y-6">
-                <div className="card-panel p-2">
+              <div className="md:col-span-2 space-y-8">
+                <div className="card-premium p-4">
                   {[
-                    { id: "identity" as SubView, label: "Informations Personnelles", icon: UserIcon, color: "text-blue-500", bg: "bg-blue-50" },
-                    { id: "security" as SubView, label: "Sécurité & Mot de passe", icon: Shield, color: "text-emerald-500", bg: "bg-emerald-50" },
-                    { id: "notifications" as SubView, label: "Préférences de Notifications", icon: Bell, color: "text-amber-500", bg: "bg-amber-50" },
-                    { id: "help" as SubView, label: "Centre d'Aide & Support", icon: HelpCircle, color: "text-purple-500", bg: "bg-purple-50" },
+                    { id: "identity" as SubView, label: "Informations Personnelles", icon: UserIcon, color: "text-blue-500", bg: "bg-blue-500/10" },
+                    { id: "security" as SubView, label: "Sécurité & Accès", icon: Shield, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                    { id: "notifications" as SubView, label: "Préférences Alertes", icon: Bell, color: "text-amber-500", bg: "bg-amber-500/10" },
+                    { id: "help" as SubView, label: "Assistance Municip'All", icon: HelpCircle, color: "text-purple-500", bg: "bg-purple-500/10" },
                   ].map((item, i, arr) => (
                     <button 
                       key={item.id}
                       onClick={() => setActiveSubView(item.id)}
                       className={clsx(
-                        "w-full flex items-center justify-between p-5 hover:bg-zinc-50/50 transition-colors group rounded-[24px]",
-                        i !== arr.length - 1 && "border-b border-zinc-50/50"
+                        "w-full flex items-center justify-between p-6 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-all group rounded-[28px]",
+                        i !== arr.length - 1 && "border-b border-[var(--card-border)] mb-1"
                       )}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl ${item.bg} ${item.color} flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm`}><item.icon className="w-6 h-6" /></div>
-                        <span className="font-bold text-zinc-800 text-lg">{item.label}</span>
+                      <div className="flex items-center gap-5">
+                        <div className={`w-14 h-14 rounded-[22px] ${item.bg} ${item.color} flex items-center justify-center transition-all group-hover:scale-110 shadow-sm border border-white/20`}><item.icon className="w-7 h-7" /></div>
+                        <span className="font-black text-[var(--foreground)] text-lg tracking-tight">{item.label}</span>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-zinc-500 transition-colors" />
+                      <ChevronRight className="w-6 h-6 text-zinc-300 group-hover:text-[var(--accent)] group-hover:translate-x-1 transition-all" />
                     </button>
                   ))}
                 </div>
-                <div className="bg-municipall-blue rounded-[32px] p-8 text-white relative overflow-hidden shadow-xl">
+                <div className="bg-[var(--accent)] rounded-[38px] p-10 text-white relative overflow-hidden shadow-2xl shadow-[var(--accent)]/30">
                   <div className="relative z-10">
-                    <h3 className="text-xl font-bold mb-2">Besoin d'aide ?</h3>
-                    <p className="text-white/70 text-sm mb-6 leading-relaxed">Consultez notre documentation complète ou contactez le support technique de Municip'All.</p>
-                    <button className="bg-white text-municipall-blue px-6 py-3 rounded-full font-bold text-sm shadow-lg hover:bg-zinc-100 transition-colors flex items-center gap-2"><Globe className="w-4 h-4" />Documentation</button>
+                    <h3 className="text-2xl font-black mb-3">Besoin d&apos;aide ?</h3>
+                    <p className="text-white/70 text-sm mb-8 leading-relaxed font-medium max-w-sm">Consultez notre base de connaissance ou contactez notre support technique dédié.</p>
+                    <button className="bg-white text-[var(--accent)] px-8 py-4 rounded-2xl font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
+                      <Globe className="w-5 h-5" />
+                      Documentation
+                    </button>
                   </div>
-                  <HelpCircle className="absolute -right-8 -bottom-8 w-48 h-48 text-white/10 rotate-12" />
+                  <HelpCircle className="absolute -right-12 -bottom-12 w-64 h-64 text-white/10 rotate-12" />
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {activeSubView === "identity" && (
-          <>
+          <div className="animate-in fade-in slide-in-from-right-8 duration-500">
             {renderHeader("Informations", "Profil Agent")}
-            <div className="card-panel p-10 space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="card-premium p-12 space-y-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div>
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-3 ml-1">Prénom</label>
-                  <input type="text" value={identityForm.name} onChange={e => setIdentityForm({...identityForm, name: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-[22px] px-6 py-4 focus:bg-white focus:ring-4 focus:ring-municipall-blue/10 focus:border-municipall-blue outline-none transition-all font-bold text-lg" />
+                  <label className="block text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 opacity-60">PRÉNOM</label>
+                  <input type="text" value={identityForm.name} onChange={e => setIdentityForm({...identityForm, name: e.target.value})} className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm" />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-3 ml-1">Nom de famille</label>
-                  <input type="text" value={identityForm.surname} onChange={e => setIdentityForm({...identityForm, surname: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-[22px] px-6 py-4 focus:bg-white focus:ring-4 focus:ring-municipall-blue/10 focus:border-municipall-blue outline-none transition-all font-bold text-lg" />
+                  <label className="block text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 opacity-60">NOM DE FAMILLE</label>
+                  <input type="text" value={identityForm.surname} onChange={e => setIdentityForm({...identityForm, surname: e.target.value})} className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm" />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-3 ml-1">Email Institutionnel</label>
-                  <input type="email" value={identityForm.email} onChange={e => setIdentityForm({...identityForm, email: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-[22px] px-6 py-4 focus:bg-white focus:ring-4 focus:ring-municipall-blue/10 focus:border-municipall-blue outline-none transition-all font-bold text-lg" />
+                  <label className="block text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 opacity-60">EMAIL INSTITUTIONNEL</label>
+                  <input type="email" value={identityForm.email} onChange={e => setIdentityForm({...identityForm, email: e.target.value})} className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm" />
                 </div>
               </div>
-              <div className="p-6 bg-blue-50/50 rounded-[28px] border border-blue-100/50 flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0"><Building className="w-5 h-5 text-municipall-blue" /></div>
-                <p className="text-sm text-zinc-600 leading-relaxed">Votre <strong>CityID</strong> est lié à votre collectivité territoriale. Seul un administrateur système peut modifier cette information.</p>
+              <div className="p-8 bg-blue-500/10 rounded-[32px] border border-blue-500/20 flex gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/30"><Building className="w-6 h-6" /></div>
+                <div>
+                  <p className="text-sm text-[var(--foreground)] leading-relaxed font-medium">Votre <strong>CityID</strong> est lié à votre collectivité territoriale. Seul un administrateur système peut modifier cette information critique.</p>
+                </div>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {activeSubView === "security" && (
-          <>
-            {renderHeader("Sécurité", "Mot de passe")}
-            <div className="card-panel p-10 space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 max-w-2xl mx-auto">
-              <div className="space-y-6">
-                <div className="relative">
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-3 ml-1">Mot de passe actuel</label>
-                  <input type={showPass ? "text" : "password"} value={passwordForm.current} onChange={e => setPasswordForm({...passwordForm, current: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-[22px] px-6 py-4 focus:bg-white focus:ring-4 focus:ring-municipall-blue/10 focus:border-municipall-blue outline-none transition-all font-bold text-lg" />
-                  <button onClick={() => setShowPass(!showPass)} className="absolute right-6 top-12 text-zinc-400">{showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}</button>
+          <div className="animate-in fade-in slide-in-from-right-8 duration-500">
+            {renderHeader("Sécurité", "Authentification")}
+            <div className="card-premium p-12 space-y-10 max-w-2xl mx-auto">
+              <div className="space-y-8">
+                <div className="relative group">
+                  <label className="block text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 opacity-60">MOT DE PASSE ACTUEL</label>
+                  <input type={showPass ? "text" : "password"} value={passwordForm.current} onChange={e => setPasswordForm({...passwordForm, current: e.target.value})} className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm" />
+                  <button onClick={() => setShowPass(!showPass)} className="absolute right-7 top-[52px] text-zinc-400 hover:text-[var(--accent)] transition-colors">{showPass ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}</button>
                 </div>
-                <div className="h-px bg-zinc-100 mx-10"></div>
+                <div className="h-px bg-[var(--card-border)] mx-10 opacity-50"></div>
                 <div>
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-3 ml-1">Nouveau mot de passe</label>
-                  <input type={showPass ? "text" : "password"} value={passwordForm.new} onChange={e => setPasswordForm({...passwordForm, new: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-[22px] px-6 py-4 focus:bg-white focus:ring-4 focus:ring-municipall-blue/10 focus:border-municipall-blue outline-none transition-all font-bold text-lg" />
+                  <label className="block text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 opacity-60">NOUVEAU MOT DE PASSE</label>
+                  <input type={showPass ? "text" : "password"} value={passwordForm.new} onChange={e => setPasswordForm({...passwordForm, new: e.target.value})} className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm" />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-widest mb-3 ml-1">Confirmer le nouveau mot de passe</label>
-                  <input type={showPass ? "text" : "password"} value={passwordForm.confirm} onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-[22px] px-6 py-4 focus:bg-white focus:ring-4 focus:ring-municipall-blue/10 focus:border-municipall-blue outline-none transition-all font-bold text-lg" />
+                  <label className="block text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 opacity-60">CONFIRMATION</label>
+                  <input type={showPass ? "text" : "password"} value={passwordForm.confirm} onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})} className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm" />
                 </div>
               </div>
-              <div className="p-6 bg-amber-50/50 rounded-[28px] border border-amber-100/50 flex gap-4">
-                <Lock className="w-6 h-6 text-amber-600 shrink-0 mt-1" />
+              <div className="p-8 bg-amber-500/10 rounded-[32px] border border-amber-500/20 flex gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30"><Lock className="w-6 h-6" /></div>
                 <div>
-                  <p className="font-bold text-amber-900 text-sm mb-1">Conseil de sécurité</p>
-                  <p className="text-xs text-amber-800 leading-relaxed">Utilisez au moins 8 caractères, incluant des majuscules, des chiffres et des symboles pour une protection maximale.</p>
+                  <p className="font-black text-amber-500 text-xs mb-2 uppercase tracking-widest">Conseil de sécurité</p>
+                  <p className="text-[11px] text-[var(--muted)] font-medium leading-relaxed">Utilisez au moins 8 caractères, incluant des majuscules, des chiffres et des symboles.</p>
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {activeSubView === "notifications" && (
-          <>
+          <div className="animate-in fade-in slide-in-from-right-8 duration-500">
             {renderHeader("Notifications", "Préférences")}
-            <div className="card-panel p-4 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="card-premium overflow-hidden p-2">
               {[
-                { title: "Alertes de Modération", desc: "Être notifié lorsqu'un nouveau signalement nécessite une attention immédiate.", active: true },
-                { title: "Rapports hebdomadaires", desc: "Recevoir par mail la synthèse IA de la satisfaction citoyenne chaque lundi.", active: true },
-                { title: "Nouveaux inscrits", desc: "Recevoir une notification lors de l'inscription d'un nouveau citoyen dans la ville.", active: false },
-                { title: "Alertes Système", desc: "Maintenance prévue, mises à jour critiques et sécurité du backoffice.", active: true },
+                { title: "Alertes de Modération", desc: "Nouveaux signalements nécessitant une attention immédiate.", active: true },
+                { title: "Rapports Hebdomadaires", desc: "Synthèse IA de la satisfaction citoyenne chaque lundi.", active: true },
+                { title: "Engagement Citoyen", desc: "Notifications lors de nouvelles suggestions d'idées.", active: false },
+                { title: "Maintenance & Système", desc: "Mises à jour critiques et sécurité du backoffice.", active: true },
               ].map((item, i, arr) => (
-                <div key={i} className={clsx("flex items-center justify-between p-6", i !== arr.length -1 && "border-b border-zinc-50")}>
+                <div key={i} className={clsx("flex items-center justify-between p-8 rounded-[32px] hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-all", i !== arr.length -1 && "border-b border-[var(--card-border)] mb-1")}>
                   <div className="max-w-md">
-                    <h4 className="font-bold text-zinc-900 mb-1">{item.title}</h4>
-                    <p className="text-sm text-zinc-500 leading-snug">{item.desc}</p>
+                    <h4 className="font-black text-[var(--foreground)] text-lg mb-1 tracking-tight">{item.title}</h4>
+                    <p className="text-sm text-[var(--muted)] font-medium leading-relaxed opacity-70">{item.desc}</p>
                   </div>
-                  <button className={clsx("w-14 h-8 rounded-full relative transition-colors duration-300", item.active ? "bg-municipall-blue" : "bg-zinc-200")}>
-                    <div className={clsx("absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300", item.active ? "left-7" : "left-1")} />
+                  <button className={clsx("w-16 h-9 rounded-full relative transition-all duration-500 shadow-inner", item.active ? "bg-[var(--accent)]" : "bg-zinc-200 dark:bg-zinc-700")}>
+                    <div className={clsx("absolute top-1 w-7 h-7 bg-white rounded-full shadow-lg transition-all duration-500 transform", item.active ? "left-8" : "left-1")} />
                   </button>
                 </div>
               ))}
             </div>
-          </>
+          </div>
         )}
 
         {activeSubView === "help" && (
-          <>
+          <div className="animate-in fade-in slide-in-from-right-8 duration-500">
             {renderHeader("Support", "Centre d'aide")}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[
-                { title: "Guide de Modération", icon: Shield, desc: "Apprenez à utiliser la console de modération efficacement." },
-                { title: "Configuration Widgets", icon: Smartphone, desc: "Comment intégrer les widgets sur votre site web communal." },
-                { title: "Gestion de l'IA", icon: Loader2, desc: "Comprendre comment l'IA analyse le sentiment citoyen." },
-                { title: "Contact Support", icon: Mail, desc: "Ouvrir un ticket pour un problème technique ou administratif." },
+                { title: "Guide de Modération", icon: Shield, desc: "Maîtrisez la console de modération IA.", color: "text-blue-500", bg: "bg-blue-500/10" },
+                { title: "Configuration App", icon: Smartphone, desc: "Personnalisez votre application mobile.", color: "text-emerald-500", bg: "bg-emerald-500/10" },
+                { title: "Analyse Municip'All Pulse", icon: Loader2, desc: "Comprendre les indicateurs de satisfaction.", color: "text-purple-500", bg: "bg-purple-500/10" },
+                { title: "Contactez-nous", icon: Mail, desc: "Support technique disponible 24/7.", color: "text-amber-500", bg: "bg-amber-500/10" },
               ].map((item, i) => (
-                <button key={i} className="card-panel p-8 text-left hover:scale-[1.02] transition-all group">
-                  <div className="w-12 h-12 rounded-2xl bg-zinc-50 text-zinc-400 flex items-center justify-center mb-6 group-hover:bg-municipall-blue group-hover:text-white transition-colors">
-                    <item.icon className="w-6 h-6" />
+                <button key={i} className="card-premium p-10 text-left hover:scale-[1.02] transition-all group flex flex-col items-start h-full">
+                  <div className={`w-16 h-16 rounded-[24px] ${item.bg} ${item.color} flex items-center justify-center mb-8 group-hover:scale-110 transition-all border border-white/20 shadow-sm`}>
+                    <item.icon className="w-8 h-8" />
                   </div>
-                  <h4 className="font-bold text-zinc-900 mb-2 text-lg">{item.title}</h4>
-                  <p className="text-sm text-zinc-500 mb-6">{item.desc}</p>
-                  <span className="text-municipall-blue font-bold text-sm flex items-center gap-2">Consulter l'article <ExternalLink className="w-4 h-4" /></span>
+                  <h4 className="font-black text-[var(--foreground)] mb-3 text-xl tracking-tight">{item.title}</h4>
+                  <p className="text-sm text-[var(--muted)] font-medium leading-relaxed mb-10 flex-1">{item.desc}</p>
+                  <span className="text-[var(--accent)] font-black text-xs uppercase tracking-widest flex items-center gap-2 group-hover:gap-3 transition-all">Consulter <ExternalLink className="w-4 h-4" /></span>
                 </button>
               ))}
             </div>
-          </>
+          </div>
         )}
 
-        <p className="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-[0.3em] mt-12 pb-10">
-          Municip'All Core v1.4.2 • Session Sécurisée
+        <p className="text-center text-[10px] font-black text-apple-muted opacity-40 uppercase tracking-[0.4em] mt-20 pb-12">
+          Municip&apos;All Core v1.5.0 • Session Sécurisée AES-256
         </p>
       </div>
     </div>
