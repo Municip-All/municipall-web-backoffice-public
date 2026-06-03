@@ -73,7 +73,12 @@ export default function Header({ onViewChange }: HeaderProps) {
           </div>
           <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-zinc-100 ring-1 ring-[var(--card-border)] dark:bg-zinc-800">
             {user?.avatar_url ? (
-              <Image src={user.avatar_url} alt="Avatar" fill className="object-cover" />
+              <Image
+                src={user.avatar_url}
+                alt="Avatar"
+                fill
+                className="object-cover"
+              />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-[var(--accent)]">
                 {(user?.name?.[0] || "A").toUpperCase()}

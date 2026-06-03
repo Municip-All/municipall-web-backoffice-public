@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export interface ApiResponse<T = unknown> {
   data?: T;
@@ -8,15 +8,16 @@ export interface ApiResponse<T = unknown> {
 
 async function request<T>(
   endpoint: string,
-  method: string = 'GET',
+  method: string = "GET",
   body?: unknown,
-  headers: Record<string, string> = {}
+  headers: Record<string, string> = {},
 ): Promise<ApiResponse<T>> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-  
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+
   const defaultHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...headers,
   };
 
@@ -31,7 +32,7 @@ async function request<T>(
 
     if (!response.ok) {
       return {
-        error: data.message || 'Une erreur est survenue',
+        error: data.message || "Une erreur est survenue",
         status: response.status,
       };
     }
@@ -43,7 +44,7 @@ async function request<T>(
   } catch (error) {
     console.error(`API Error (${method} ${endpoint}):`, error);
     return {
-      error: 'Impossible de contacter le serveur',
+      error: "Impossible de contacter le serveur",
       status: 500,
     };
   }
@@ -98,20 +99,26 @@ export interface Report {
 // --- Generic Methods ---
 
 export const api = {
-  get: <T>(endpoint: string, headers?: Record<string, string>) => 
-    request<T>(endpoint, 'GET', undefined, headers),
-  
-  post: <T>(endpoint: string, body: unknown, headers?: Record<string, string>) => 
-    request<T>(endpoint, 'POST', body, headers),
-  
-  put: <T>(endpoint: string, body: unknown, headers?: Record<string, string>) => 
-    request<T>(endpoint, 'PUT', body, headers),
+  get: <T>(endpoint: string, headers?: Record<string, string>) =>
+    request<T>(endpoint, "GET", undefined, headers),
 
-  patch: <T>(endpoint: string, body: unknown, headers?: Record<string, string>) => 
-    request<T>(endpoint, 'PATCH', body, headers),
-  
-  delete: <T>(endpoint: string, headers?: Record<string, string>) => 
-    request<T>(endpoint, 'DELETE', undefined, headers),
+  post: <T>(
+    endpoint: string,
+    body: unknown,
+    headers?: Record<string, string>,
+  ) => request<T>(endpoint, "POST", body, headers),
+
+  put: <T>(endpoint: string, body: unknown, headers?: Record<string, string>) =>
+    request<T>(endpoint, "PUT", body, headers),
+
+  patch: <T>(
+    endpoint: string,
+    body: unknown,
+    headers?: Record<string, string>,
+  ) => request<T>(endpoint, "PATCH", body, headers),
+
+  delete: <T>(endpoint: string, headers?: Record<string, string>) =>
+    request<T>(endpoint, "DELETE", undefined, headers),
 
   // --- City Config ---
 
@@ -120,39 +127,58 @@ export const api = {
     return response.data || null;
   },
 
-  async saveCityConfig(cityId: string, data: Partial<CityConfig> & Partial<CityConfig['theme']>): Promise<boolean> {
-    const response = await request(`/api/v1/admin/cities/${cityId}`, 'PATCH', data);
+  async saveCityConfig(
+    cityId: string,
+    data: Partial<CityConfig> & Partial<CityConfig["theme"]>,
+  ): Promise<boolean> {
+    const response = await request(
+      `/api/v1/admin/cities/${cityId}`,
+      "PATCH",
+      data,
+    );
     return response.status < 400;
   },
 
   // --- Dashboard Stats ---
 
   async getDashboardStats(cityId: string): Promise<CityDashboardStats | null> {
-    const response = await request<CityDashboardStats>(`/api/v1/city-config/${cityId}/dashboard-stats`);
+    const response = await request<CityDashboardStats>(
+      `/api/v1/city-config/${cityId}/dashboard-stats`,
+    );
     return response.data || null;
   },
 
   // --- Reports ---
 
   async getReports(): Promise<Report[]> {
-    const response = await request<Report[]>('/api/v1/reports');
+    const response = await request<Report[]>("/api/v1/reports");
     return response.data || [];
   },
 
   async updateReportStatus(id: number, status: string): Promise<boolean> {
-    const response = await request(`/api/v1/reports/${id}/status`, 'PATCH', { status });
+    const response = await request(`/api/v1/reports/${id}/status`, "PATCH", {
+      status,
+    });
     return response.status < 400;
   },
 
   // --- User Profile ---
 
-  async updateProfile(data: { name?: string; surname?: string; email?: string }): Promise<boolean> {
-    const response = await request('/api/v1/users/profile', 'POST', data);
+  async updateProfile(data: {
+    name?: string;
+    surname?: string;
+    email?: string;
+  }): Promise<boolean> {
+    const response = await request("/api/v1/users/profile", "POST", data);
     return response.status < 400;
   },
 
-  async updatePassword(data: { current: string; new: string; confirm: string }): Promise<boolean> {
-    const response = await request('/api/v1/users/password', 'POST', data);
+  async updatePassword(data: {
+    current: string;
+    new: string;
+    confirm: string;
+  }): Promise<boolean> {
+    const response = await request("/api/v1/users/password", "POST", data);
     return response.status < 400;
   },
 };

@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 
 export interface User {
   id: number;
@@ -49,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // On utilise eslint-disable car c'est la seule façon propre de réhydrater 
+    // On utilise eslint-disable car c'est la seule façon propre de réhydrater
     // le localStorage dans Next.js sans provoquer de décalage d'hydratation.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAuthState({
@@ -70,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateUser = useCallback((updatedUser: Partial<User>) => {
-    setAuthState(prev => {
+    setAuthState((prev) => {
       if (!prev.user) return prev;
       const newUser = { ...prev.user, ...updatedUser };
       localStorage.setItem("auth_user", JSON.stringify(newUser));
@@ -88,15 +95,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const value = useMemo(() => ({
-    user: authState.user,
-    token: authState.token,
-    isAuthenticated: !!authState.token,
-    isLoading: authState.isLoading,
-    login,
-    updateUser,
-    logout,
-  }), [authState, login, updateUser, logout]);
+  const value = useMemo(
+    () => ({
+      user: authState.user,
+      token: authState.token,
+      isAuthenticated: !!authState.token,
+      isLoading: authState.isLoading,
+      login,
+      updateUser,
+      logout,
+    }),
+    [authState, login, updateUser, logout],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

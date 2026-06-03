@@ -48,7 +48,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               t.type === "error" &&
                 "border-red-200/80 bg-[var(--card)] text-red-800 dark:text-red-300",
               t.type === "info" &&
-                "border-[var(--card-border)] bg-[var(--card)] text-[var(--foreground)]"
+                "border-[var(--card-border)] bg-[var(--card)] text-[var(--foreground)]",
             )}
           >
             {t.type === "success" && (

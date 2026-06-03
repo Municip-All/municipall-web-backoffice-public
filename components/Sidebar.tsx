@@ -36,7 +36,12 @@ interface SidebarProps {
 
 export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const menuItems = [
-    { id: "pouls-ai" as const, label: "Pouls de la ville", icon: LayoutDashboard, badge: "IA" },
+    {
+      id: "pouls-ai" as const,
+      label: "Pouls de la ville",
+      icon: LayoutDashboard,
+      badge: "IA",
+    },
     { id: "moderation" as const, label: "Signalements", icon: ShieldAlert },
     { id: "targeted-push" as const, label: "Alertes directes", icon: Send },
     { id: "widgets" as const, label: "Services GPS", icon: Smartphone },
@@ -60,7 +65,9 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
             <h1 className="text-[15px] font-semibold leading-tight text-[var(--foreground)]">
               Municip&apos;All Panel
             </h1>
-            <p className="text-[11px] font-medium text-[var(--muted)]">Espace mairie</p>
+            <p className="text-[11px] font-medium text-[var(--muted)]">
+              Espace mairie
+            </p>
           </div>
         </div>
 
@@ -80,14 +87,14 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                   "flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium transition-all outline-none",
                   isActive
                     ? "bg-[var(--accent)]/[0.08] text-[var(--accent)]"
-                    : "text-[var(--muted)] hover:bg-zinc-50 hover:text-[var(--foreground)] dark:hover:bg-zinc-800/60"
+                    : "text-[var(--muted)] hover:bg-zinc-50 hover:text-[var(--foreground)] dark:hover:bg-zinc-800/60",
                 )}
               >
                 <span className="flex min-w-0 items-center gap-3">
                   <Icon
                     className={clsx(
                       "h-[18px] w-[18px] shrink-0",
-                      isActive ? "text-[var(--accent)]" : "text-zinc-400"
+                      isActive ? "text-[var(--accent)]" : "text-zinc-400",
                     )}
                     strokeWidth={isActive ? 2.25 : 2}
                   />
@@ -120,13 +127,13 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                 "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all outline-none",
                 isActive
                   ? "bg-[var(--accent)]/[0.08] text-[var(--accent)]"
-                  : "text-[var(--muted)] hover:bg-zinc-50 hover:text-[var(--foreground)] dark:hover:bg-zinc-800/60"
+                  : "text-[var(--muted)] hover:bg-zinc-50 hover:text-[var(--foreground)] dark:hover:bg-zinc-800/60",
               )}
             >
               <Icon
                 className={clsx(
                   "h-[18px] w-[18px]",
-                  isActive ? "text-[var(--accent)]" : "text-zinc-400"
+                  isActive ? "text-[var(--accent)]" : "text-zinc-400",
                 )}
                 strokeWidth={2}
               />

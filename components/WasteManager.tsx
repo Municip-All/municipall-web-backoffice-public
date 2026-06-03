@@ -1,7 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, X, Clock, Save, Loader2, Trash2, RefreshCw, Leaf, Archive, FlaskConical } from "lucide-react";
+import {
+  Plus,
+  X,
+  Clock,
+  Save,
+  Loader2,
+  Trash2,
+  RefreshCw,
+  Leaf,
+  Archive,
+  FlaskConical,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
@@ -46,8 +57,20 @@ export default function WasteManager({ cityId }: { cityId: string }) {
       } else {
         // Default services if none exist
         setServices([
-          { type: "Ordures Ménagères", icon: "trash", color: "#333333", days: [1, 4], time: "19:00" },
-          { type: "Recyclage", icon: "refresh", color: "#FFCC00", days: [3], time: "08:00" },
+          {
+            type: "Ordures Ménagères",
+            icon: "trash",
+            color: "#333333",
+            days: [1, 4],
+            time: "19:00",
+          },
+          {
+            type: "Recyclage",
+            icon: "refresh",
+            color: "#FFCC00",
+            days: [3],
+            time: "08:00",
+          },
         ]);
       }
       setIsLoading(false);
@@ -57,7 +80,13 @@ export default function WasteManager({ cityId }: { cityId: string }) {
   const handleAddService = () => {
     setServices([
       ...services,
-      { type: "Nouveau Service", icon: "trash", color: "#666666", days: [], time: "08:00" },
+      {
+        type: "Nouveau Service",
+        icon: "trash",
+        color: "#666666",
+        days: [],
+        time: "08:00",
+      },
     ]);
   };
 
@@ -83,9 +112,9 @@ export default function WasteManager({ cityId }: { cityId: string }) {
     setIsSaving(true);
     try {
       const ok = await api.saveCityConfig(cityId, {
-        wasteConfig: { services }
+        wasteConfig: { services },
       });
-      
+
       if (ok) {
         toast("success", "Configuration enregistrée !");
       } else {
@@ -98,12 +127,15 @@ export default function WasteManager({ cityId }: { cityId: string }) {
     }
   };
 
-  if (isLoading) return (
-    <div className="p-20 text-center flex flex-col items-center justify-center gap-4">
-      <Loader2 className="w-10 h-10 animate-spin text-[var(--accent)]" />
-      <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest">Chargement...</p>
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="p-20 text-center flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-[var(--accent)]" />
+        <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest">
+          Chargement...
+        </p>
+      </div>
+    );
 
   return (
     <PageShell>
@@ -111,8 +143,17 @@ export default function WasteManager({ cityId }: { cityId: string }) {
         title="Calendrier déchets"
         description="Services municipaux"
         actions={
-          <button type="button" onClick={handleSave} disabled={isSaving} className="btn-primary">
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="btn-primary"
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
             Enregistrer
           </button>
         }
@@ -120,7 +161,10 @@ export default function WasteManager({ cityId }: { cityId: string }) {
 
       <div className="space-y-8">
         {services.map((service, sIndex) => (
-          <div key={sIndex} className="card-premium p-10 relative group border-2 border-transparent hover:border-[var(--accent)]/10">
+          <div
+            key={sIndex}
+            className="card-premium p-10 relative group border-2 border-transparent hover:border-[var(--accent)]/10"
+          >
             <button
               onClick={() => handleRemoveService(sIndex)}
               className="absolute top-6 right-6 p-3 text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
@@ -138,7 +182,9 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                   <input
                     type="text"
                     value={service.type}
-                    onChange={(e) => updateService(sIndex, { type: e.target.value })}
+                    onChange={(e) =>
+                      updateService(sIndex, { type: e.target.value })
+                    }
                     className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
                   />
                 </div>
@@ -152,10 +198,14 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                       <input
                         type="color"
                         value={service.color}
-                        onChange={(e) => updateService(sIndex, { color: e.target.value })}
+                        onChange={(e) =>
+                          updateService(sIndex, { color: e.target.value })
+                        }
                         className="h-12 w-12 p-0 border-none rounded-[14px] cursor-pointer bg-transparent overflow-hidden"
                       />
-                      <span className="text-sm font-black text-[var(--foreground)] uppercase tracking-widest">{service.color}</span>
+                      <span className="text-sm font-black text-[var(--foreground)] uppercase tracking-widest">
+                        {service.color}
+                      </span>
                     </div>
                   </div>
                   <div>
@@ -167,7 +217,9 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                       <input
                         type="time"
                         value={service.time}
-                        onChange={(e) => updateService(sIndex, { time: e.target.value })}
+                        onChange={(e) =>
+                          updateService(sIndex, { time: e.target.value })
+                        }
                         className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] pl-16 pr-7 py-5 outline-none transition-all font-bold shadow-sm"
                       />
                     </div>
@@ -195,7 +247,7 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                     </button>
                   ))}
                 </div>
-                
+
                 <div className="mt-auto">
                   <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-5 block opacity-60">
                     Sélecteur d&apos;icône

@@ -21,7 +21,7 @@ export default function BrandLogo({ size = "md", className }: BrandLogoProps) {
       className={clsx(
         s.box,
         "relative shrink-0 overflow-hidden rounded-xl bg-[var(--card)] ring-1 ring-[var(--card-border)] shadow-sm",
-        className
+        className,
       )}
     >
       <Image

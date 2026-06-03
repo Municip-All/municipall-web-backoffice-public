@@ -58,7 +58,10 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      const response = await api.post("/api/v1/auth/login", { email, password });
+      const response = await api.post("/api/v1/auth/login", {
+        email,
+        password,
+      });
 
       if (response.error) {
         setError(response.error);
@@ -105,10 +108,15 @@ export default function Login() {
           <div>
             <div className="mb-10 flex items-center gap-4">
               <div className="rounded-2xl bg-white/95 p-2.5 shadow-lg ring-1 ring-white/20">
-                <BrandLogo size="lg" className="!h-12 !w-12 !rounded-xl !bg-transparent !ring-0 !shadow-none" />
+                <BrandLogo
+                  size="lg"
+                  className="!h-12 !w-12 !rounded-xl !bg-transparent !ring-0 !shadow-none"
+                />
               </div>
               <div>
-                <p className="text-lg font-semibold text-white">Municip&apos;All Panel</p>
+                <p className="text-lg font-semibold text-white">
+                  Municip&apos;All Panel
+                </p>
                 <p className="text-sm text-white/70">Espace mairie</p>
               </div>
             </div>
@@ -117,8 +125,8 @@ export default function Login() {
               Pilotez votre commune au quotidien
             </h2>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/75">
-              Un seul portail pour superviser l&apos;activité citoyenne, modérer les
-              signalements et diffuser vos services municipaux.
+              Un seul portail pour superviser l&apos;activité citoyenne, modérer
+              les signalements et diffuser vos services municipaux.
             </p>
           </div>
 
@@ -134,7 +142,9 @@ export default function Login() {
                     <Icon className="h-4 w-4 text-white" strokeWidth={2} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white">{item.title}</p>
+                    <p className="text-sm font-medium text-white">
+                      {item.title}
+                    </p>
                     <p className="text-xs leading-relaxed text-white/65">
                       {item.description}
                     </p>
@@ -177,7 +187,8 @@ export default function Login() {
               Connexion
             </h1>
             <p className="mt-1.5 text-sm text-[var(--muted)]">
-              Accédez à votre espace agent avec vos identifiants institutionnels.
+              Accédez à votre espace agent avec vos identifiants
+              institutionnels.
             </p>
           </div>
 
@@ -201,7 +212,10 @@ export default function Login() {
               )}
 
               <div>
-                <label htmlFor="login-email" className="section-title mb-2 block">
+                <label
+                  htmlFor="login-email"
+                  className="section-title mb-2 block"
+                >
                   Email institutionnel
                 </label>
                 <div className="relative">
@@ -219,7 +233,10 @@ export default function Login() {
               </div>
 
               <div>
-                <label htmlFor="login-password" className="section-title mb-2 block">
+                <label
+                  htmlFor="login-password"
+                  className="section-title mb-2 block"
+                >
                   Mot de passe
                 </label>
                 <div className="relative">
@@ -239,7 +256,10 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={clsx("btn-primary w-full py-3", isLoading && "opacity-75")}
+                className={clsx(
+                  "btn-primary w-full py-3",
+                  isLoading && "opacity-75",
+                )}
               >
                 {isLoading ? (
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -253,8 +273,8 @@ export default function Login() {
             </form>
 
             <p className="mt-6 text-center text-[11px] leading-relaxed text-[var(--muted)]">
-              Toute tentative d&apos;accès non autorisée est enregistrée et peut faire
-              l&apos;objet de poursuites.
+              Toute tentative d&apos;accès non autorisée est enregistrée et peut
+              faire l&apos;objet de poursuites.
             </p>
           </div>
 

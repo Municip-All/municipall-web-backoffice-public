@@ -2,7 +2,18 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { Calendar, Plus, X, MapPin, Save, Loader2, Pencil, Trash2, Tag, Clock } from "lucide-react";
+import {
+  Calendar,
+  Plus,
+  X,
+  MapPin,
+  Save,
+  Loader2,
+  Pencil,
+  Trash2,
+  Tag,
+  Clock,
+} from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
@@ -29,12 +40,15 @@ export default function EventManager() {
 
   const fetchEvents = React.useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/events`, {
-        headers: { 
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'x-tenant-id': user?.cityId || ''
-        }
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/events`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+            "x-tenant-id": user?.cityId || "",
+          },
+        },
+      );
       const data = await response.json();
       setEvents(data);
     } catch (error) {
@@ -54,8 +68,8 @@ export default function EventManager() {
   const handleSave = async (event: Event) => {
     setIsSaving(true);
     try {
-      const method = event.id ? 'PATCH' : 'POST';
-      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/events${event.id ? `/${event.id}` : ''}`;
+      const method = event.id ? "PATCH" : "POST";
+      const url = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/events${event.id ? `/${event.id}` : ""}`;
 
       const body = {
         ...event,
@@ -66,15 +80,15 @@ export default function EventManager() {
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'x-tenant-id': user?.cityId || ''
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          "x-tenant-id": user?.cityId || "",
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
-        toast("success", `Événement ${event.id ? 'mis à jour' : 'ajouté'} !`);
+        toast("success", `Événement ${event.id ? "mis à jour" : "ajouté"} !`);
         setEditingEvent(null);
         fetchEvents();
       } else {
@@ -91,13 +105,16 @@ export default function EventManager() {
     if (!confirm("Voulez-vous vraiment supprimer cet événement ?")) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/v1/events/${id}`, {
-        method: 'DELETE',
-        headers: { 
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'x-tenant-id': user?.cityId || ''
-        }
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/events/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+            "x-tenant-id": user?.cityId || "",
+          },
+        },
+      );
 
       if (response.ok) {
         toast("success", "Événement supprimé.");
@@ -108,12 +125,15 @@ export default function EventManager() {
     }
   };
 
-  if (isLoading) return (
-    <div className="p-20 text-center flex flex-col items-center justify-center gap-4">
-      <Loader2 className="w-10 h-10 animate-spin text-[var(--accent)]" />
-      <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest">Chargement de l&apos;agenda...</p>
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="p-20 text-center flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-[var(--accent)]" />
+        <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest">
+          Chargement de l&apos;agenda...
+        </p>
+      </div>
+    );
 
   return (
     <PageShell>
@@ -123,18 +143,20 @@ export default function EventManager() {
         actions={
           <button
             type="button"
-            onClick={() => setEditingEvent({
-            title: "",
-            description: "",
-            location: "",
-            startDate: new Date().toISOString().split('T')[0] + "T14:00",
-            endDate: new Date().toISOString().split('T')[0] + "T18:00",
-            category: "Culture",
-          })}
+            onClick={() =>
+              setEditingEvent({
+                title: "",
+                description: "",
+                location: "",
+                startDate: new Date().toISOString().split("T")[0] + "T14:00",
+                endDate: new Date().toISOString().split("T")[0] + "T18:00",
+                category: "Culture",
+              })
+            }
             className="btn-primary"
           >
-          <Plus className="h-4 w-4" />
-          Ajouter un événement
+            <Plus className="h-4 w-4" />
+            Ajouter un événement
           </button>
         }
       />
@@ -142,39 +164,66 @@ export default function EventManager() {
       {editingEvent && (
         <div className="card-premium p-10 mb-12 relative border-2 border-[var(--accent)]/20 shadow-2xl animate-in zoom-in-95 duration-300">
           <div className="flex justify-between items-center mb-10">
-            <h3 className="text-2xl font-black text-[var(--foreground)] tracking-tight">{editingEvent.id ? 'Modifier l&apos;événement' : 'Nouvel Événement'}</h3>
-            <button onClick={() => setEditingEvent(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"><X className="w-6 h-6 text-zinc-400" /></button>
+            <h3 className="text-2xl font-black text-[var(--foreground)] tracking-tight">
+              {editingEvent.id
+                ? "Modifier l&apos;événement"
+                : "Nouvel Événement"}
+            </h3>
+            <button
+              onClick={() => setEditingEvent(null)}
+              className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+            >
+              <X className="w-6 h-6 text-zinc-400" />
+            </button>
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
             <div className="space-y-8">
               <div>
-                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Titre de l&apos;événement</label>
+                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
+                  Titre de l&apos;événement
+                </label>
                 <input
                   type="text"
                   value={editingEvent.title}
-                  onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
+                  onChange={(e) =>
+                    setEditingEvent({ ...editingEvent, title: e.target.value })
+                  }
                   className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
                   placeholder="ex: Fête de la Musique"
                 />
               </div>
               <div>
-                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Description</label>
+                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
+                  Description
+                </label>
                 <textarea
                   value={editingEvent.description}
-                  onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
+                  onChange={(e) =>
+                    setEditingEvent({
+                      ...editingEvent,
+                      description: e.target.value,
+                    })
+                  }
                   className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 h-32 resize-none outline-none transition-all font-bold shadow-sm leading-relaxed"
                   placeholder="Détails de l'événement..."
                 />
               </div>
               <div>
-                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Lieu / Salle</label>
+                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
+                  Lieu / Salle
+                </label>
                 <div className="relative">
                   <MapPin className="w-5 h-5 absolute left-6 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
                   <input
                     type="text"
                     value={editingEvent.location}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })}
+                    onChange={(e) =>
+                      setEditingEvent({
+                        ...editingEvent,
+                        location: e.target.value,
+                      })
+                    }
                     className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] pl-16 pr-7 py-5 outline-none transition-all font-bold shadow-sm"
                     placeholder="ex: Place de la Mairie"
                   />
@@ -185,31 +234,52 @@ export default function EventManager() {
             <div className="space-y-8">
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Début</label>
+                  <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
+                    Début
+                  </label>
                   <input
                     type="datetime-local"
                     value={editingEvent.startDate.slice(0, 16)}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, startDate: e.target.value })}
+                    onChange={(e) =>
+                      setEditingEvent({
+                        ...editingEvent,
+                        startDate: e.target.value,
+                      })
+                    }
                     className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Fin</label>
+                  <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
+                    Fin
+                  </label>
                   <input
                     type="datetime-local"
                     value={editingEvent.endDate.slice(0, 16)}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, endDate: e.target.value })}
+                    onChange={(e) =>
+                      setEditingEvent({
+                        ...editingEvent,
+                        endDate: e.target.value,
+                      })
+                    }
                     className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">Catégorie</label>
+                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
+                  Catégorie
+                </label>
                 <div className="relative">
                   <Tag className="w-5 h-5 absolute left-6 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
                   <select
                     value={editingEvent.category}
-                    onChange={(e) => setEditingEvent({ ...editingEvent, category: e.target.value })}
+                    onChange={(e) =>
+                      setEditingEvent({
+                        ...editingEvent,
+                        category: e.target.value,
+                      })
+                    }
                     className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] pl-16 pr-7 py-5 outline-none transition-all font-bold shadow-sm appearance-none"
                   >
                     <option>Culture</option>
@@ -221,11 +291,18 @@ export default function EventManager() {
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">URL de l&apos;image (optionnel)</label>
+                <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
+                  URL de l&apos;image (optionnel)
+                </label>
                 <input
                   type="text"
                   value={editingEvent.imageUrl || ""}
-                  onChange={(e) => setEditingEvent({ ...editingEvent, imageUrl: e.target.value })}
+                  onChange={(e) =>
+                    setEditingEvent({
+                      ...editingEvent,
+                      imageUrl: e.target.value,
+                    })
+                  }
                   className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
                   placeholder="https://..."
                 />
@@ -245,7 +322,11 @@ export default function EventManager() {
               disabled={isSaving}
               className="bg-[var(--accent)] text-white px-10 py-4 rounded-[24px] font-black shadow-xl shadow-[var(--accent)]/20 flex items-center gap-3 hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-widest"
             >
-              {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+              {isSaving ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Save className="w-5 h-5" />
+              )}
               Enregistrer l&apos;événement
             </button>
           </div>
@@ -258,14 +339,25 @@ export default function EventManager() {
             <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800 rounded-[28px] flex items-center justify-center mb-8 mx-auto opacity-50">
               <Calendar className="w-10 h-10 text-[var(--muted)]" />
             </div>
-            <p className="text-[10px] font-black text-apple-muted uppercase tracking-[0.4em] opacity-40">Agenda vide pour le moment</p>
+            <p className="text-[10px] font-black text-apple-muted uppercase tracking-[0.4em] opacity-40">
+              Agenda vide pour le moment
+            </p>
           </div>
         ) : (
           events.map((event) => (
-            <div key={event.id} className="card-premium overflow-hidden group hover:border-[var(--accent)]/30 transition-all">
+            <div
+              key={event.id}
+              className="card-premium overflow-hidden group hover:border-[var(--accent)]/30 transition-all"
+            >
               {event.imageUrl && (
                 <div className="h-48 w-full relative overflow-hidden">
-                  <Image src={event.imageUrl} alt={event.title} fill className="object-cover group-hover:scale-110 transition-transform duration-700" unoptimized />
+                  <Image
+                    src={event.imageUrl}
+                    alt={event.title}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                    unoptimized
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                   <div className="absolute bottom-4 left-6">
                     <span className="bg-[var(--accent)] text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
@@ -277,10 +369,16 @@ export default function EventManager() {
               <div className="p-8">
                 <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h4 className="text-xl font-black text-[var(--foreground)] tracking-tight mb-2">{event.title}</h4>
+                    <h4 className="text-xl font-black text-[var(--foreground)] tracking-tight mb-2">
+                      {event.title}
+                    </h4>
                     <div className="flex items-center gap-3 text-apple-muted opacity-60 text-[11px] font-bold uppercase tracking-widest">
                       <Clock className="w-3.5 h-3.5 text-[var(--accent)]" />
-                      {new Date(event.startDate).toLocaleDateString()} • {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(event.startDate).toLocaleDateString()} •{" "}
+                      {new Date(event.startDate).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -298,7 +396,7 @@ export default function EventManager() {
                     </button>
                   </div>
                 </div>
-                
+
                 <p className="text-sm text-[var(--muted)] leading-relaxed mb-8 line-clamp-3 font-medium">
                   {event.description}
                 </p>

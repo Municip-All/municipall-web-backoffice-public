@@ -10,7 +10,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, Users, AlertCircle, MessageSquare, Loader2 } from "lucide-react";
+import {
+  TrendingUp,
+  Users,
+  AlertCircle,
+  MessageSquare,
+  Loader2,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { api, CityDashboardStats } from "@/lib/api";
 import PageHeader from "@/components/PageHeader";
@@ -113,9 +119,23 @@ export default function PoulsAiDashboard() {
                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                   >
                     <defs>
-                      <linearGradient id="colorSatisfaction" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
+                      <linearGradient
+                        id="colorSatisfaction"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="var(--accent)"
+                          stopOpacity={0.25}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="var(--accent)"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
                     </defs>
                     <CartesianGrid
@@ -162,12 +182,24 @@ export default function PoulsAiDashboard() {
                 <h3 className="section-title mb-4">Sujets chauds (IA)</h3>
                 <div className="flex flex-wrap gap-x-4 gap-y-3">
                   {[
-                    { label: "Nids-de-poule", size: "text-lg font-semibold text-red-500" },
-                    { label: "Stationnement", size: "text-sm font-medium text-[var(--accent)]" },
+                    {
+                      label: "Nids-de-poule",
+                      size: "text-lg font-semibold text-red-500",
+                    },
+                    {
+                      label: "Stationnement",
+                      size: "text-sm font-medium text-[var(--accent)]",
+                    },
                     { label: "Sécurité", size: "text-base font-semibold" },
                     { label: "Parcs", size: "text-xs text-[var(--muted)]" },
-                    { label: "Propreté", size: "text-sm font-medium text-emerald-600" },
-                    { label: "Éclairage", size: "text-sm font-medium text-amber-600" },
+                    {
+                      label: "Propreté",
+                      size: "text-sm font-medium text-emerald-600",
+                    },
+                    {
+                      label: "Éclairage",
+                      size: "text-sm font-medium text-amber-600",
+                    },
                   ].map((tag) => (
                     <span
                       key={tag.label}

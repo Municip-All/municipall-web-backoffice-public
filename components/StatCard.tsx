@@ -30,7 +30,7 @@ export default function StatCard({
           <span
             className={clsx(
               "rounded-md px-2 py-0.5 text-[11px] font-semibold tabular-nums",
-              trendPositive ? "text-emerald-600" : "text-red-500"
+              trendPositive ? "text-emerald-600" : "text-red-500",
             )}
           >
             {trendUp ? "↑" : "↓"} {Math.abs(trend)}%

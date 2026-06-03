@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { ShieldAlert, Clock, Wrench, Check, Loader2, RefreshCcw } from "lucide-react";
+import {
+  ShieldAlert,
+  Clock,
+  Wrench,
+  Check,
+  Loader2,
+  RefreshCcw,
+} from "lucide-react";
 import { api, Report } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
@@ -25,9 +32,15 @@ function formatDate(dateStr: string): string {
   const now = new Date();
   const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
   if (diff < 3600) return `Il y a ${Math.floor(diff / 60)}min`;
-  if (diff < 86400) return `Aujourd'hui, ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
-  if (diff < 172800) return `Hier, ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  if (diff < 86400)
+    return `Aujourd'hui, ${date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
+  if (diff < 172800)
+    return `Hier, ${date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
+  return date.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 }
 
 export default function ModerationMatrix() {
@@ -37,14 +50,17 @@ export default function ModerationMatrix() {
   const [search, setSearch] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const fetchReports = () => setRefreshKey(k => k + 1);
+  const fetchReports = () => setRefreshKey((k) => k + 1);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(true);
-      api.getReports()
-        .then(data => {
-          setReports(data.map(r => ({ ...r, priority: getPriority(r.category) })));
+      api
+        .getReports()
+        .then((data) => {
+          setReports(
+            data.map((r) => ({ ...r, priority: getPriority(r.category) })),
+          );
           setIsLoading(false);
         })
         .catch(() => setIsLoading(false));
@@ -55,16 +71,19 @@ export default function ModerationMatrix() {
   const assignReport = async (id: number) => {
     const ok = await api.updateReportStatus(id, "En cours");
     if (ok) {
-      setReports(current =>
-        current.map(r => (r.id === id ? { ...r, status: "En cours" } : r))
+      setReports((current) =>
+        current.map((r) => (r.id === id ? { ...r, status: "En cours" } : r)),
       );
-      toast("success", `Signalement #${String(id).padStart(4,'0')} assigné aux services.`);
+      toast(
+        "success",
+        `Signalement #${String(id).padStart(4, "0")} assigné aux services.`,
+      );
     } else {
       toast("error", "Impossible de mettre à jour le signalement.");
     }
   };
 
-  const filtered = reports.filter(r => {
+  const filtered = reports.filter((r) => {
     const q = search.toLowerCase();
     return (
       String(r.id).includes(q) ||
@@ -107,7 +126,9 @@ export default function ModerationMatrix() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-zinc-400">
             <ShieldAlert className="w-12 h-12 mb-4 opacity-20" />
-            <p className="text-sm font-black opacity-40 uppercase tracking-widest">Aucun signalement{search ? " trouvé" : " actif"}</p>
+            <p className="text-sm font-black opacity-40 uppercase tracking-widest">
+              Aucun signalement{search ? " trouvé" : " actif"}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -123,14 +144,17 @@ export default function ModerationMatrix() {
               </thead>
               <tbody className="divide-y divide-[var(--card-border)]">
                 {filtered.map((report) => (
-                  <tr key={report.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors group">
+                  <tr
+                    key={report.id}
+                    className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors group"
+                  >
                     <td className="py-6 px-8">
                       <div className="relative">
                         {report.imageUrl ? (
                           <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-[var(--card-border)] shadow-sm group-hover:scale-105 transition-transform bg-zinc-100 dark:bg-zinc-800">
-                            <Image 
-                              src={report.imageUrl} 
-                              alt="Photo" 
+                            <Image
+                              src={report.imageUrl}
+                              alt="Photo"
                               fill
                               className="object-cover"
                             />
@@ -142,50 +166,64 @@ export default function ModerationMatrix() {
                         )}
                       </div>
                     </td>
-                    
+
                     <td className="py-6 px-8">
                       <div className="flex items-center gap-3 mb-2">
-                        <p className="text-sm font-black text-[var(--foreground)] tracking-tight">INCIDENT #{String(report.id).padStart(4, '0')}</p>
+                        <p className="text-sm font-black text-[var(--foreground)] tracking-tight">
+                          INCIDENT #{String(report.id).padStart(4, "0")}
+                        </p>
                         {report.isResident ? (
-                          <span className="text-[9px] font-black bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full uppercase tracking-tighter border border-emerald-500/20">Résident</span>
+                          <span className="text-[9px] font-black bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full uppercase tracking-tighter border border-emerald-500/20">
+                            Résident
+                          </span>
                         ) : (
-                          <span className="text-[9px] font-black bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full uppercase tracking-tighter border border-amber-500/20">Extérieur</span>
+                          <span className="text-[9px] font-black bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full uppercase tracking-tighter border border-amber-500/20">
+                            Extérieur
+                          </span>
                         )}
                       </div>
-                      <p className="text-sm text-[var(--foreground)] opacity-70 mb-2 line-clamp-2 leading-relaxed max-w-lg font-medium">{report.description || "Aucune description détaillée."}</p>
+                      <p className="text-sm text-[var(--foreground)] opacity-70 mb-2 line-clamp-2 leading-relaxed max-w-lg font-medium">
+                        {report.description || "Aucune description détaillée."}
+                      </p>
                       <div className="flex items-center gap-2 text-[10px] font-bold text-apple-muted opacity-60">
                         <Clock className="w-3.5 h-3.5" />
                         {formatDate(report.createdAt)}
                       </div>
                     </td>
-                    
+
                     <td className="py-6 px-8">
                       <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-[var(--foreground)] text-[11px] font-black uppercase tracking-wider border border-[var(--card-border)] shadow-sm">
                         {report.category}
                       </span>
                     </td>
-                    
+
                     <td className="py-6 px-8">
                       {report.priority === "Haute" && (
                         <div className="flex items-center gap-2 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.2)]">
                           <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                          <span className="text-xs font-black uppercase tracking-widest">Haute</span>
+                          <span className="text-xs font-black uppercase tracking-widest">
+                            Haute
+                          </span>
                         </div>
                       )}
                       {report.priority === "Moyenne" && (
                         <div className="flex items-center gap-2 text-amber-500">
                           <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                          <span className="text-xs font-black uppercase tracking-widest">Moyenne</span>
+                          <span className="text-xs font-black uppercase tracking-widest">
+                            Moyenne
+                          </span>
                         </div>
                       )}
                       {report.priority === "Basse" && (
                         <div className="flex items-center gap-2 text-zinc-400">
                           <div className="w-2 h-2 rounded-full bg-zinc-400"></div>
-                          <span className="text-xs font-black uppercase tracking-widest opacity-60">Basse</span>
+                          <span className="text-xs font-black uppercase tracking-widest opacity-60">
+                            Basse
+                          </span>
                         </div>
                       )}
                     </td>
-                    
+
                     <td className="py-6 px-8 text-right">
                       <div className="flex justify-end">
                         {report.status === "En attente" ? (
