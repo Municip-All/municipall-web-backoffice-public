@@ -52,9 +52,16 @@ async function request<T>(
 
 // --- Interfaces ---
 
+export interface CityNeighborhood {
+  id: string;
+  name: string;
+  points: [number, number][];
+}
+
 export interface CityConfig {
   name: string;
   features: string[];
+  neighborhoods?: CityNeighborhood[];
   theme: {
     primaryColor: string;
     secondaryColor?: string;

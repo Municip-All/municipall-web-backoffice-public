@@ -12,16 +12,20 @@ import {
   X,
   RefreshCcw,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, CityNeighborhood } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import clsx from "clsx";
+import type { LayerGroup, LeafletMouseEvent, Map, Polygon } from "leaflet";
+import type {
+  Feature,
+  MultiPolygon,
+  Polygon as GeoJsonPolygon,
+  Position,
+} from "geojson";
 
-interface Neighborhood {
-  id: string;
-  name: string;
-  points: [number, number][]; // [lat, lng]
-}
+/** Contour communal renvoyé par geo.api.gouv.fr (Polygon ou MultiPolygon) */
+type CommuneContour = GeoJsonPolygon | MultiPolygon;
 
 async function loadLeaflet() {
   const L = (await import("leaflet")).default;
@@ -33,39 +37,31 @@ export default function NeighborhoodManager() {
   const { user } = useAuth();
   const toast = useToast();
   const mapRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mapInstance = useRef<any>(null);
+  const mapInstance = useRef<Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [cityName, setCityName] = useState("");
-  const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([]);
+  const [neighborhoods, setNeighborhoods] = useState<CityNeighborhood[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tempPoints, setTempPoints] = useState<[number, number][]>([]);
   const [isNaming, setIsNaming] = useState(false);
   const [newName, setNewName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tempLayer = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const neighborhoodLayers = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const communeContourRef = useRef<any>(null);
+  const tempLayer = useRef<Polygon | null>(null);
+  const neighborhoodLayers = useRef<LayerGroup | null>(null);
+  const communeContourRef = useRef<CommuneContour | null>(null);
 
-  // Helper: Point in Polygon (Ray Casting)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isPointInPolygon = useCallback(
-    (lat: number, lng: number, contour: any) => {
+    (lat: number, lng: number, contour: CommuneContour | null) => {
       if (!contour) return true;
 
-      // Convert contour to an array of polygons (MultiPolygon support)
-      const polygons =
+      const polygons: Position[][][] =
         contour.type === "Polygon"
           ? [contour.coordinates]
           : contour.coordinates;
 
       for (const polygon of polygons) {
-        // Each polygon has one or more rings (outer + holes)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const outerRing = polygon[0] as any[];
+        const outerRing = polygon[0];
+        if (!outerRing?.length) continue;
 
         let inside = false;
         for (
@@ -73,10 +69,10 @@ export default function NeighborhoodManager() {
           i < outerRing.length;
           j = i++
         ) {
-          const xi = outerRing[i][0],
-            yi = outerRing[i][1]; // xi = Longitude, yi = Latitude
-          const xj = outerRing[j][0],
-            yj = outerRing[j][1];
+          const xi = outerRing[i]![0],
+            yi = outerRing[i]![1];
+          const xj = outerRing[j]![0],
+            yj = outerRing[j]![1];
 
           const intersect =
             yi > lat !== yj > lat &&
@@ -104,9 +100,7 @@ export default function NeighborhoodManager() {
       .then((config) => {
         if (config && config.name && config.name !== "Municip'All") {
           setCityName(config.name);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const savedNeighborhoods = (config as any).neighborhoods || [];
-          setNeighborhoods(savedNeighborhoods);
+          setNeighborhoods(config.neighborhoods ?? []);
         } else {
           setCityName("Paris");
           toast("info", "Ville non reconnue. Affichage de Paris par défaut.");
@@ -134,7 +128,10 @@ export default function NeighborhoodManager() {
         const data = await resp.json();
         if (!data || data.length === 0) return;
 
-        const commune = data[0];
+        const commune = data[0] as {
+          centre: { coordinates: [number, number] };
+          contour: CommuneContour;
+        };
         const [lng, lat] = commune.centre.coordinates;
         communeContourRef.current = commune.contour;
 
@@ -155,26 +152,24 @@ export default function NeighborhoodManager() {
           },
         ).addTo(map);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        L.geoJSON(
-          { type: "Feature", geometry: commune.contour, properties: {} } as any,
-          {
-            style: {
-              color: "var(--accent)",
-              weight: 3,
-              fillColor: "var(--accent)",
-              fillOpacity: 0.05,
-              dashArray: "10 10",
-            },
+        const communeFeature: Feature = {
+          type: "Feature",
+          geometry: commune.contour,
+          properties: {},
+        };
+        L.geoJSON(communeFeature, {
+          style: {
+            color: "var(--accent)",
+            weight: 3,
+            fillColor: "var(--accent)",
+            fillOpacity: 0.05,
+            dashArray: "10 10",
           },
-        ).addTo(map);
+        }).addTo(map);
 
-        // Initialize Layer Group for neighborhoods
         neighborhoodLayers.current = L.layerGroup().addTo(map);
 
-        // Click handler for drawing - uses the ref to always have the latest state
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        map.on("click", (e: any) => {
+        map.on("click", (e: LeafletMouseEvent) => {
           if (isDrawingRef.current) {
             const isInside = isPointInPolygon(
               e.latlng.lat,
@@ -206,7 +201,9 @@ export default function NeighborhoodManager() {
       return;
     }
 
+    const map = mapInstance.current;
     loadLeaflet().then((L) => {
+      if (!map) return;
       if (tempLayer.current) tempLayer.current.remove();
 
       const poly = L.polygon(tempPoints, {
@@ -215,7 +212,7 @@ export default function NeighborhoodManager() {
         fillColor: "var(--accent)",
         fillOpacity: 0.3,
         dashArray: "10 10",
-      }).addTo(mapInstance.current);
+      }).addTo(map);
 
       tempLayer.current = poly;
     });
@@ -228,7 +225,9 @@ export default function NeighborhoodManager() {
     // Clear previous layers
     neighborhoodLayers.current.clearLayers();
 
+    const layers = neighborhoodLayers.current;
     loadLeaflet().then((L) => {
+      if (!layers) return;
       neighborhoods.forEach((n) => {
         L.polygon(n.points, {
           color: "var(--accent)",
@@ -236,7 +235,7 @@ export default function NeighborhoodManager() {
           fillColor: "var(--accent)",
           fillOpacity: 0.2,
         })
-          .addTo(neighborhoodLayers.current)
+          .addTo(layers)
           .bindTooltip(n.name, {
             permanent: true,
             direction: "center",
@@ -268,7 +267,7 @@ export default function NeighborhoodManager() {
 
   const saveNewNeighborhood = () => {
     if (!newName) return;
-    const newQuartier: Neighborhood = {
+    const newQuartier: CityNeighborhood = {
       id: Date.now().toString(),
       name: newName,
       points: tempPoints,
@@ -289,10 +288,10 @@ export default function NeighborhoodManager() {
   const saveAll = async () => {
     if (!user?.cityId) return;
     setIsSaving(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const success = await api.saveCityConfig(user.cityId, {
       neighborhoods,
-    } as any);
+    });
     if (success) {
       toast("success", "Configuration enregistrée !");
     } else {
