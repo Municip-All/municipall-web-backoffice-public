@@ -7,6 +7,8 @@ import clsx from "clsx";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
+import PageHeader from "@/components/PageHeader";
+import PageShell from "@/components/PageShell";
 
 export default function WhiteLabelSettings() {
   const { user } = useAuth();
@@ -85,24 +87,23 @@ export default function WhiteLabelSettings() {
   ];
 
   return (
-    <div className="p-10 h-full overflow-y-auto custom-scrollbar">
+    <PageShell>
       {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-10 h-10 text-[var(--accent)] animate-spin opacity-40" />
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)] opacity-40" />
         </div>
       ) : (
         <>
-          <div className="mb-10 flex items-start justify-between">
-            <div>
-              <p className="text-apple-muted mb-3 opacity-60">Identité Visuelle</p>
-              <h2 className="text-apple-title">Marque Blanche</h2>
-            </div>
-
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-[var(--accent)] text-white px-8 py-4 rounded-[22px] font-black shadow-xl shadow-[var(--accent)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3"
-            >
+          <PageHeader
+            title="Configuration ville"
+            description="Identité visuelle · Marque blanche"
+            actions={
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="btn-primary"
+              >
               {isSaving ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : saved ? (
@@ -111,7 +112,8 @@ export default function WhiteLabelSettings() {
                 <><Save className="w-5 h-5" /> Publier les changements</>
               )}
             </button>
-          </div>
+            }
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
             <div className="lg:col-span-3 space-y-8">
@@ -283,6 +285,6 @@ export default function WhiteLabelSettings() {
           </div>
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

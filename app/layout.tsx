@@ -16,8 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Espace Mairie | Municip'All",
-  description: "Portail de gestion citoyenne et administrative pour les mairies",
+  title: "Municip'All Panel | Espace mairie",
+  description:
+    "Portail de gestion citoyenne et administrative pour les mairies",
 };
 
 export default function RootLayout({
@@ -31,12 +32,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col">
         <ThemeProvider>
           <AuthProvider>
-            <ToastProvider>
-              {children}
-            </ToastProvider>
+            <ToastProvider>{children}</ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

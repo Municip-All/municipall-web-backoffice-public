@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { CarFront, CloudRainWind, CalendarHeart, MapPin, Radio, CheckCircle2 } from "lucide-react";
 import clsx from "clsx";
+import PageHeader from "@/components/PageHeader";
+import PageShell from "@/components/PageShell";
 
 interface WidgetItem {
   id: string;
@@ -49,11 +51,11 @@ export default function WidgetGenerator() {
   const activeWidgets = widgets.filter(w => w.enabled);
 
   return (
-    <div className="p-10 h-full overflow-y-auto custom-scrollbar bg-[var(--background)] transition-colors duration-500">
-      <div className="mb-10">
-        <p className="text-apple-muted mb-3 opacity-60">Services Connectés</p>
-        <h2 className="text-apple-title">Gestionnaire de Widgets</h2>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Services GPS"
+        description="Services connectés · Gestionnaire de widgets"
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
         <div className="space-y-8">
@@ -179,6 +181,6 @@ export default function WidgetGenerator() {
           </div>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

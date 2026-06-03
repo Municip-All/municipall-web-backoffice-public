@@ -5,6 +5,8 @@ import Image from "next/image";
 import { ShieldAlert, Clock, Wrench, Check, Loader2, RefreshCcw } from "lucide-react";
 import { api, Report } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
+import PageHeader from "@/components/PageHeader";
+import PageShell from "@/components/PageShell";
 
 interface DisplayReport extends Report {
   priority: "Haute" | "Moyenne" | "Basse";
@@ -72,33 +74,32 @@ export default function ModerationMatrix() {
   });
 
   return (
-    <div className="p-10 h-full overflow-y-auto custom-scrollbar">
-      <div className="mb-10 flex items-start justify-between">
-        <div>
-          <p className="text-apple-muted mb-3 opacity-60">Gestion Citoyenne</p>
-          <h2 className="text-apple-title">Console de Modération</h2>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative group">
-            <input 
-              type="text" 
-              placeholder="Filtrer les signalements..."
+    <PageShell>
+      <PageHeader
+        title="Signalements"
+        description="Gestion citoyenne · Console de modération"
+        actions={
+          <>
+            <input
+              type="text"
+              placeholder="Filtrer…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-5 pr-12 py-3 bg-zinc-100 dark:bg-zinc-800/50 border border-transparent dark:border-zinc-700/50 text-[var(--foreground)] text-sm rounded-2xl w-80 focus:bg-white dark:focus:bg-zinc-800 border-zinc-200 focus:border-[var(--accent)] outline-none transition-all font-bold shadow-sm" 
+              className="input-field w-56"
             />
-          </div>
-          <button
-            onClick={() => fetchReports()}
-            className="w-11 h-11 flex items-center justify-center text-zinc-400 hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-all border border-[var(--card-border)] rounded-2xl bg-[var(--card)]"
-            aria-label="Rafraîchir"
-          >
-            <RefreshCcw className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
+            <button
+              type="button"
+              onClick={() => fetchReports()}
+              className="btn-secondary !px-3"
+              aria-label="Rafraîchir"
+            >
+              <RefreshCcw className="h-4 w-4" />
+            </button>
+          </>
+        }
+      />
 
-      <div className="card-premium overflow-hidden border-0 shadow-2xl">
+      <div className="card-panel overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-10 h-10 text-[var(--accent)] animate-spin opacity-40" />
@@ -210,6 +211,6 @@ export default function ModerationMatrix() {
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

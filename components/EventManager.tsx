@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Calendar, Plus, X, MapPin, Save, Loader2, Pencil, Trash2, Tag, Clock } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
+import PageHeader from "@/components/PageHeader";
+import PageShell from "@/components/PageShell";
 import { useAuth } from "@/context/AuthContext";
 
 interface Event {
@@ -114,14 +116,14 @@ export default function EventManager() {
   );
 
   return (
-    <div className="p-10 max-w-6xl mx-auto bg-[var(--background)] transition-colors duration-500 overflow-hidden">
-      <div className="flex items-center justify-between mb-12">
-        <div>
-          <p className="text-apple-muted mb-3 opacity-60">Culture & Vie Locale</p>
-          <h2 className="text-apple-title">Agenda Municipal</h2>
-        </div>
-        <button
-          onClick={() => setEditingEvent({
+    <PageShell>
+      <PageHeader
+        title="Agenda & événements"
+        description="Culture & vie locale"
+        actions={
+          <button
+            type="button"
+            onClick={() => setEditingEvent({
             title: "",
             description: "",
             location: "",
@@ -129,12 +131,13 @@ export default function EventManager() {
             endDate: new Date().toISOString().split('T')[0] + "T18:00",
             category: "Culture",
           })}
-          className="flex items-center gap-3 bg-[var(--accent)] hover:scale-105 active:scale-95 text-white px-8 py-4 rounded-[24px] font-black transition-all shadow-xl shadow-[var(--accent)]/20 text-xs uppercase tracking-widest"
-        >
-          <Plus className="w-5 h-5" />
+            className="btn-primary"
+          >
+          <Plus className="h-4 w-4" />
           Ajouter un événement
-        </button>
-      </div>
+          </button>
+        }
+      />
 
       {editingEvent && (
         <div className="card-premium p-10 mb-12 relative border-2 border-[var(--accent)]/20 shadow-2xl animate-in zoom-in-95 duration-300">
@@ -311,6 +314,6 @@ export default function EventManager() {
           ))
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

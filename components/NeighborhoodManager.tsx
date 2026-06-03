@@ -255,9 +255,9 @@ export default function NeighborhoodManager() {
     <div className="flex h-full bg-[var(--background)] transition-colors duration-500 overflow-hidden">
       {/* Sidebar List */}
       <div className="w-[380px] h-full bg-[var(--card)]/80 backdrop-blur-3xl border-r border-[var(--card-border)] flex flex-col p-10 shadow-2xl relative z-20">
-        <header className="mb-12">
-          <p className="text-apple-muted mb-3 opacity-60">Aménagement Urbain</p>
-          <h2 className="text-apple-title">Quartiers</h2>
+        <header className="mb-8">
+          <p className="section-title mb-2">Aménagement urbain</p>
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">Secteurs géo</h2>
         </header>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 mb-10 pr-2">

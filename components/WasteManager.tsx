@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { Plus, X, Clock, Save, Loader2, Trash2, RefreshCw, Leaf, Archive, FlaskConical } from "lucide-react";
 import { api } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
+import PageHeader from "@/components/PageHeader";
+import PageShell from "@/components/PageShell";
 
 interface WasteService {
   type: string;
@@ -104,21 +106,17 @@ export default function WasteManager({ cityId }: { cityId: string }) {
   );
 
   return (
-    <div className="p-10 max-w-6xl mx-auto bg-[var(--background)] transition-colors duration-500 overflow-hidden">
-      <div className="flex items-center justify-between mb-12">
-        <div>
-          <p className="text-apple-muted mb-3 opacity-60">Services Municipaux</p>
-          <h2 className="text-apple-title">Gestion des Déchets</h2>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex items-center gap-3 bg-[var(--accent)] hover:scale-105 active:scale-95 text-white px-8 py-4 rounded-[24px] font-black transition-all shadow-xl shadow-[var(--accent)]/20 disabled:opacity-50 text-xs uppercase tracking-widest"
-        >
-          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-          Enregistrer
-        </button>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Calendrier déchets"
+        description="Services municipaux"
+        actions={
+          <button type="button" onClick={handleSave} disabled={isSaving} className="btn-primary">
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Enregistrer
+          </button>
+        }
+      />
 
       <div className="space-y-8">
         {services.map((service, sIndex) => (
@@ -233,6 +231,6 @@ export default function WasteManager({ cityId }: { cityId: string }) {
           Nouveau Service
         </button>
       </div>
-    </div>
+    </PageShell>
   );
 }

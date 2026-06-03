@@ -7,6 +7,8 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
+import PageHeader from "@/components/PageHeader";
+import PageShell from "@/components/PageShell";
 
 // Load map dynamically (client-only — Leaflet needs window)
 const CommuneMap = dynamic(() => import("@/components/CommuneMap"), {
@@ -92,11 +94,11 @@ export default function TargetedCommunication() {
   };
 
   return (
-    <div className="p-10 h-full overflow-y-auto custom-scrollbar bg-[var(--background)] transition-colors duration-500">
-      <div className="mb-10">
-        <p className="text-apple-muted mb-3 opacity-60">Diffusion Géolocalisée</p>
-        <h2 className="text-apple-title">Communication Directe</h2>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Alertes directes"
+        description="Diffusion géolocalisée · Communication directe"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
@@ -297,6 +299,6 @@ export default function TargetedCommunication() {
         </div>
 
       </div>
-    </div>
+    </PageShell>
   );
 }

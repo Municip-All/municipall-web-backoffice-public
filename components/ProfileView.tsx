@@ -26,6 +26,7 @@ import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import clsx from "clsx";
+import PageShell from "@/components/PageShell";
 
 type SubView = "main" | "identity" | "security" | "notifications" | "help";
 
@@ -112,7 +113,7 @@ export default function ProfileView() {
         <button 
           onClick={activeSubView === "identity" ? handleUpdateIdentity : handleUpdatePassword}
           disabled={isSaving}
-          className="bg-[var(--accent)] text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-[var(--accent)]/30 flex items-center gap-2 hover:scale-105 active:scale-95 transition-all"
+          className="btn-primary"
         >
           {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
           Enregistrer
@@ -122,14 +123,13 @@ export default function ProfileView() {
   );
 
   return (
-    <div className="h-full overflow-y-auto p-10 custom-scrollbar bg-[var(--background)] transition-colors duration-500">
-      <div className="max-w-4xl mx-auto">
-        
+    <PageShell>
+      <div className="w-full">
         {activeSubView === "main" && (
-          <div className="animate-in fade-in duration-500">
+          <div className="fade-in">
             {renderHeader("Mon Profil Agent", "Paramètres Personnels", false)}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              <div className="md:col-span-1 space-y-8">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(280px,340px)_1fr] lg:gap-10">
+              <div className="space-y-6">
                 <div className="card-premium p-10 flex flex-col items-center">
                   <div className="relative group mb-8">
                     <div className="w-36 h-36 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-[var(--card)] shadow-2xl overflow-hidden relative flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -156,7 +156,7 @@ export default function ProfileView() {
                 </button>
               </div>
 
-              <div className="md:col-span-2 space-y-8">
+              <div className="min-w-0 space-y-8">
                 <div className="card-premium p-4">
                   {[
                     { id: "identity" as SubView, label: "Informations Personnelles", icon: UserIcon, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -227,7 +227,7 @@ export default function ProfileView() {
         {activeSubView === "security" && (
           <div className="animate-in fade-in slide-in-from-right-8 duration-500">
             {renderHeader("Sécurité", "Authentification")}
-            <div className="card-premium p-12 space-y-10 max-w-2xl mx-auto">
+            <div className="card-premium mx-auto max-w-2xl space-y-10 p-12">
               <div className="space-y-8">
                 <div className="relative group">
                   <label className="block text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 opacity-60">MOT DE PASSE ACTUEL</label>
@@ -302,10 +302,10 @@ export default function ProfileView() {
           </div>
         )}
 
-        <p className="text-center text-[10px] font-black text-apple-muted opacity-40 uppercase tracking-[0.4em] mt-20 pb-12">
-          Municip&apos;All Core v1.5.0 • Session Sécurisée AES-256
+        <p className="mt-16 pb-8 text-center text-[11px] text-[var(--muted)]">
+          Municip&apos;All Panel · Session sécurisée
         </p>
       </div>
-    </div>
+    </PageShell>
   );
 }

@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { Hammer, Plus, X, Calendar, MapPin, Save, Loader2, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
+import PageHeader from "@/components/PageHeader";
+import PageShell from "@/components/PageShell";
 
 interface ConstructionWork {
   id?: number;
@@ -111,14 +113,14 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
   );
 
   return (
-    <div className="p-10 max-w-6xl mx-auto bg-[var(--background)] transition-colors duration-500 overflow-hidden">
-      <div className="flex items-center justify-between mb-12">
-        <div>
-          <p className="text-apple-muted mb-3 opacity-60">Voirie & Urbanisme</p>
-          <h2 className="text-apple-title">Gestion des Chantiers</h2>
-        </div>
-        <button
-          onClick={() => setEditingWork({
+    <PageShell>
+      <PageHeader
+        title="Chantiers & travaux"
+        description="Voirie & urbanisme"
+        actions={
+          <button
+            type="button"
+            onClick={() => setEditingWork({
             title: "",
             description: "",
             locationName: "",
@@ -127,12 +129,13 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
             status: "Programmé",
             impactType: "Circulation alternée"
           })}
-          className="flex items-center gap-3 bg-[var(--accent)] hover:scale-105 active:scale-95 text-white px-8 py-4 rounded-[24px] font-black transition-all shadow-xl shadow-[var(--accent)]/20 text-xs uppercase tracking-widest"
-        >
-          <Plus className="w-5 h-5" />
+            className="btn-primary"
+          >
+          <Plus className="h-4 w-4" />
           Déclarer un chantier
-        </button>
-      </div>
+          </button>
+        }
+      />
 
       {editingWork && (
         <div className="card-premium p-10 mb-12 relative border-2 border-[var(--accent)]/20 shadow-2xl animate-in zoom-in-95 duration-300">
@@ -306,6 +309,6 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
           ))
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }
