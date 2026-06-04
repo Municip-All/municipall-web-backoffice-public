@@ -185,7 +185,7 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                     onChange={(e) =>
                       updateService(sIndex, { type: e.target.value })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
+                    className="form-input-lg"
                   />
                 </div>
 
@@ -194,7 +194,7 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                     <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
                       Identifiant Couleur
                     </label>
-                    <div className="flex items-center gap-4 bg-zinc-100 dark:bg-zinc-800/50 p-3 rounded-[22px] border border-transparent">
+                    <div className="surface-subtle flex items-center gap-4 p-3">
                       <input
                         type="color"
                         value={service.color}
@@ -213,14 +213,14 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                       Heure de passage
                     </label>
                     <div className="relative">
-                      <Clock className="w-5 h-5 absolute left-6 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
+                      <Clock className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-[var(--accent)]" />
                       <input
                         type="time"
                         value={service.time}
                         onChange={(e) =>
                           updateService(sIndex, { time: e.target.value })
                         }
-                        className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] pl-16 pr-7 py-5 outline-none transition-all font-bold shadow-sm"
+                        className="form-input-lg-icon"
                       />
                     </div>
                   </div>
@@ -237,10 +237,10 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                     <button
                       key={day.id}
                       onClick={() => toggleDay(sIndex, day.id)}
-                      className={`h-14 rounded-[18px] font-black text-[10px] uppercase tracking-tighter transition-all border-2 ${
+                      className={`h-14 rounded-[18px] font-black text-[10px] uppercase tracking-tighter transition-all ${
                         service.days.includes(day.id)
-                          ? "bg-[var(--accent)] border-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20"
-                          : "bg-zinc-100 dark:bg-zinc-800/50 border-transparent text-zinc-400 hover:border-[var(--accent)]/30"
+                          ? "day-chip-active"
+                          : "day-chip-inactive"
                       }`}
                     >
                       {day.label}
@@ -257,10 +257,10 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                       <button
                         key={item.id}
                         onClick={() => updateService(sIndex, { icon: item.id })}
-                        className={`w-14 h-14 rounded-[20px] border-2 transition-all flex items-center justify-center ${
+                        className={`w-14 h-14 rounded-[20px] transition-all flex items-center justify-center ${
                           service.icon === item.id
-                            ? "bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--accent)] shadow-inner"
-                            : "bg-zinc-100 dark:bg-zinc-800/50 border-transparent text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700"
+                            ? "icon-chip-active"
+                            : "icon-chip-inactive"
                         }`}
                       >
                         <item.icon className="w-6 h-6" />

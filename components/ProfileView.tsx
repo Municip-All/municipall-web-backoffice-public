@@ -276,7 +276,7 @@ export default function ProfileView() {
                     onChange={(e) =>
                       setIdentityForm({ ...identityForm, name: e.target.value })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm"
+                    className="form-input-lg"
                   />
                 </div>
                 <div>
@@ -292,7 +292,7 @@ export default function ProfileView() {
                         surname: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm"
+                    className="form-input-lg"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -308,7 +308,7 @@ export default function ProfileView() {
                         email: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm"
+                    className="form-input-lg"
                   />
                 </div>
               </div>
@@ -346,7 +346,7 @@ export default function ProfileView() {
                         current: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm"
+                    className="form-input-lg"
                   />
                   <button
                     onClick={() => setShowPass(!showPass)}
@@ -370,7 +370,7 @@ export default function ProfileView() {
                     onChange={(e) =>
                       setPasswordForm({ ...passwordForm, new: e.target.value })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm"
+                    className="form-input-lg"
                   />
                 </div>
                 <div>
@@ -386,7 +386,7 @@ export default function ProfileView() {
                         confirm: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[22px] px-7 py-5 outline-none transition-all font-bold text-lg shadow-sm"
+                    className="form-input-lg"
                   />
                 </div>
               </div>

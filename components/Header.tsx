@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { api } from "@/lib/api";
 import { ViewType } from "./Sidebar";
+import NotificationCenter from "@/components/NotificationCenter";
 
 interface HeaderProps {
   onViewChange: (view: ViewType) => void;
@@ -43,6 +44,8 @@ export default function Header({ onViewChange }: HeaderProps) {
       </button>
 
       <div className="flex items-center gap-3">
+        <NotificationCenter onViewChange={onViewChange} />
+
         <button
           type="button"
           onClick={toggleTheme}
@@ -71,7 +74,7 @@ export default function Header({ onViewChange }: HeaderProps) {
               {user?.role || "Service municipal"}
             </p>
           </div>
-          <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-zinc-100 ring-1 ring-[var(--card-border)] dark:bg-zinc-800">
+          <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-[var(--accent)]/15 ring-1 ring-[var(--card-border)] dark:bg-zinc-800">
             {user?.avatar_url ? (
               <Image
                 src={user.avatar_url}

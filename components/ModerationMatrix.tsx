@@ -9,11 +9,15 @@ import {
   Check,
   Loader2,
   RefreshCcw,
+  MessageSquare,
 } from "lucide-react";
-import { api, Report } from "@/lib/api";
+import { api, ContactTicketListItem, Report } from "@/lib/api";
+import { useInbox } from "@/context/InboxContext";
+import clsx from "clsx";
 import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
+import ContactTicketChat from "@/components/ContactTicketChat";
 
 interface DisplayReport extends Report {
   priority: "Haute" | "Moyenne" | "Basse";
@@ -43,30 +47,63 @@ function formatDate(dateStr: string): string {
   });
 }
 
+type ModerationTab = "reports" | "messages";
+
 export default function ModerationMatrix() {
   const toast = useToast();
+  const { refresh: refreshInbox } = useInbox();
+  const [activeTab, setActiveTab] = useState<ModerationTab>("reports");
   const [reports, setReports] = useState<DisplayReport[]>([]);
+  const [tickets, setTickets] = useState<ContactTicketListItem[]>([]);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const fetchReports = () => setRefreshKey((k) => k + 1);
+  const fetchData = () => setRefreshKey((k) => k + 1);
+
+  useEffect(() => {
+    const savedTab = sessionStorage.getItem("moderation_tab");
+    if (savedTab === "reports" || savedTab === "messages") {
+      setActiveTab(savedTab);
+      sessionStorage.removeItem("moderation_tab");
+    }
+    const savedTicket = sessionStorage.getItem("moderation_ticket_id");
+    if (savedTicket) {
+      const id = Number(savedTicket);
+      if (!Number.isNaN(id)) {
+        setSelectedTicketId(id);
+        setActiveTab("messages");
+      }
+      sessionStorage.removeItem("moderation_ticket_id");
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(true);
-      api
-        .getReports()
-        .then((data) => {
-          setReports(
-            data.map((r) => ({ ...r, priority: getPriority(r.category) })),
-          );
-          setIsLoading(false);
-        })
-        .catch(() => setIsLoading(false));
+      if (activeTab === "reports") {
+        api
+          .getReports()
+          .then((data) => {
+            setReports(
+              data.map((r) => ({ ...r, priority: getPriority(r.category) })),
+            );
+            setIsLoading(false);
+          })
+          .catch(() => setIsLoading(false));
+      } else {
+        api
+          .getContactTickets()
+          .then((data) => {
+            setTickets(data);
+            setIsLoading(false);
+          })
+          .catch(() => setIsLoading(false));
+      }
     }, 0);
     return () => clearTimeout(timer);
-  }, [refreshKey]);
+  }, [refreshKey, activeTab]);
 
   const assignReport = async (id: number) => {
     const ok = await api.updateReportStatus(id, "En cours");
@@ -78,12 +115,13 @@ export default function ModerationMatrix() {
         "success",
         `Signalement #${String(id).padStart(4, "0")} assigné aux services.`,
       );
+      refreshInbox();
     } else {
       toast("error", "Impossible de mettre à jour le signalement.");
     }
   };
 
-  const filtered = reports.filter((r) => {
+  const filteredReports = reports.filter((r) => {
     const q = search.toLowerCase();
     return (
       String(r.id).includes(q) ||
@@ -92,10 +130,20 @@ export default function ModerationMatrix() {
     );
   });
 
+  const filteredTickets = tickets.filter((t) => {
+    const q = search.toLowerCase();
+    const preview = t.lastMessage?.body ?? "";
+    return (
+      String(t.id).includes(q) ||
+      t.subject.toLowerCase().includes(q) ||
+      preview.toLowerCase().includes(q)
+    );
+  });
+
   return (
     <PageShell>
       <PageHeader
-        title="Signalements"
+        title={activeTab === "reports" ? "Signalements" : "Conversations contact"}
         description="Gestion citoyenne · Console de modération"
         actions={
           <>
@@ -108,7 +156,7 @@ export default function ModerationMatrix() {
             />
             <button
               type="button"
-              onClick={() => fetchReports()}
+              onClick={() => fetchData()}
               className="btn-secondary !px-3"
               aria-label="Rafraîchir"
             >
@@ -118,12 +166,103 @@ export default function ModerationMatrix() {
         }
       />
 
+      <div className="mb-6 flex gap-2">
+        <button
+          type="button"
+          onClick={() => setActiveTab("reports")}
+          className={clsx(
+            "rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all",
+            activeTab === "reports" ? "tab-segment-active" : "tab-segment-inactive",
+          )}
+        >
+          Signalements
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("messages")}
+          className={clsx(
+            "rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2",
+            activeTab === "messages" ? "tab-segment-active" : "tab-segment-inactive",
+          )}
+        >
+          <MessageSquare className="w-4 h-4" />
+          Conversations
+        </button>
+      </div>
+
       <div className="card-panel overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-10 h-10 text-[var(--accent)] animate-spin opacity-40" />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : activeTab === "messages" ? (
+          filteredTickets.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-zinc-400">
+              <MessageSquare className="w-12 h-12 mb-4 opacity-20" />
+              <p className="text-sm font-black opacity-40 uppercase tracking-widest">
+                Aucune conversation{search ? " trouvée" : ""}
+              </p>
+            </div>
+          ) : (
+            <div
+              className={clsx(
+                "grid min-h-[520px]",
+                selectedTicketId ? "lg:grid-cols-[minmax(0,1fr)_minmax(320px,42%)]" : "grid-cols-1",
+              )}
+            >
+              <div className="divide-y divide-[var(--card-border)] overflow-y-auto max-h-[70vh]">
+                {filteredTickets.map((ticket) => {
+                  const preview = ticket.lastMessage?.body ?? "—";
+                  const fromCitizen = ticket.lastMessage?.senderRole === "citizen";
+                  return (
+                    <button
+                      key={ticket.id}
+                      type="button"
+                      onClick={() => setSelectedTicketId(ticket.id)}
+                      className={clsx(
+                        "w-full px-6 py-4 text-left transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20",
+                        selectedTicketId === ticket.id && "bg-[var(--accent)]/5 border-l-4 border-[var(--accent)]",
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm font-black text-[var(--foreground)] line-clamp-1">
+                          {ticket.subject}
+                        </p>
+                        <span
+                          className={clsx(
+                            "shrink-0 text-[10px] font-black uppercase tracking-widest",
+                            ticket.status === "En attente" && "text-amber-500",
+                            ticket.status === "En cours" && "text-[var(--accent)]",
+                            ticket.status === "Clôturé" && "text-zinc-400",
+                          )}
+                        >
+                          {ticket.status}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-[var(--muted)] line-clamp-2">
+                        {fromCitizen ? "" : "Mairie · "}
+                        {preview}
+                      </p>
+                      <p className="mt-2 text-[10px] font-bold text-apple-muted">
+                        {formatDate(ticket.lastMessage?.createdAt ?? ticket.updatedAt)}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedTicketId && (
+                <ContactTicketChat
+                  ticketId={selectedTicketId}
+                  onUpdated={fetchData}
+                  onClose={() => {
+                    setSelectedTicketId(null);
+                    fetchData();
+                  }}
+                />
+              )}
+            </div>
+          )
+        ) : filteredReports.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-zinc-400">
             <ShieldAlert className="w-12 h-12 mb-4 opacity-20" />
             <p className="text-sm font-black opacity-40 uppercase tracking-widest">
@@ -143,7 +282,7 @@ export default function ModerationMatrix() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--card-border)]">
-                {filtered.map((report) => (
+                {filteredReports.map((report) => (
                   <tr
                     key={report.id}
                     className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors group"

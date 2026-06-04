@@ -15,6 +15,7 @@ import {
   Loader2,
   Building2,
   LayoutDashboard,
+  Mail,
 } from "lucide-react";
 import clsx from "clsx";
 import { useAuth } from "@/context/AuthContext";
@@ -30,6 +31,9 @@ export default function WhiteLabelSettings() {
   const [primaryColor, setPrimaryColor] = useState("#0B0080");
   const [secondaryColor, setSecondaryColor] = useState("#4F46E5");
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactHelpText, setContactHelpText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,6 +52,9 @@ export default function WhiteLabelSettings() {
             setPrimaryColor(config.theme.primaryColor || "#0B0080");
             setSecondaryColor(config.theme.secondaryColor || "#4F46E5");
             setLogoPreview(config.theme.logoUrl || null);
+            setContactEmail(config.contact?.email || "");
+            setContactPhone(config.contact?.phone || "");
+            setContactHelpText(config.contact?.helpText || "");
           }
           setIsLoading(false);
         })
@@ -77,6 +84,9 @@ export default function WhiteLabelSettings() {
         secondaryColor,
         logoUrl: logoPreview || "",
         useGradient: false,
+        contactEmail: contactEmail.trim() || undefined,
+        contactPhone: contactPhone.trim() || undefined,
+        contactHelpText: contactHelpText.trim() || undefined,
       });
       if (ok) {
         toast("success", "Paramètres publiés avec succès !");
@@ -151,7 +161,7 @@ export default function WhiteLabelSettings() {
                       value={appName}
                       onChange={(e) => setAppName(e.target.value)}
                       placeholder="Ex: Ma Ville en poche"
-                      className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-sm rounded-[20px] px-5 py-4 outline-none transition-all font-bold"
+                      className="form-input-sm"
                     />
                     <p className="text-[11px] text-[var(--muted)] mt-4 leading-relaxed">
                       S&apos;affichera sur les stores et l&apos;écran
@@ -199,6 +209,55 @@ export default function WhiteLabelSettings() {
 
               <div className="card-premium p-10">
                 <h3 className="text-xl font-black text-[var(--foreground)] mb-8 flex items-center gap-3">
+                  <Mail className="w-6 h-6 text-[var(--accent)]" />
+                  Page Contact (application mobile)
+                </h3>
+                <p className="text-sm text-[var(--muted)] mb-8 leading-relaxed">
+                  Ces informations s&apos;affichent dans la section &laquo;&nbsp;Besoin
+                  d&apos;aide&nbsp;&raquo; de l&apos;app citoyenne.
+                </p>
+                <div className="space-y-8">
+                  <div>
+                    <label className="block text-[10px] font-black text-apple-muted mb-4 opacity-60">
+                      E-MAIL DE LA MAIRIE
+                    </label>
+                    <input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      placeholder="mairie@ville.fr"
+                      className="form-input-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-apple-muted mb-4 opacity-60">
+                      TÉLÉPHONE
+                    </label>
+                    <input
+                      type="tel"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      placeholder="01 23 45 67 89"
+                      className="form-input-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-apple-muted mb-4 opacity-60">
+                      TEXTE D&apos;INTRODUCTION
+                    </label>
+                    <textarea
+                      value={contactHelpText}
+                      onChange={(e) => setContactHelpText(e.target.value)}
+                      placeholder="Notre équipe est à votre disposition..."
+                      rows={3}
+                      className="form-input-sm resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="card-premium p-10">
+                <h3 className="text-xl font-black text-[var(--foreground)] mb-8 flex items-center gap-3">
                   <PaintBucket className="w-6 h-6 text-[var(--accent)]" />
                   Charte Graphique
                 </h3>
@@ -217,7 +276,7 @@ export default function WhiteLabelSettings() {
                           className="w-16 h-16 rounded-[22px] cursor-pointer border-4 border-white dark:border-zinc-800 shadow-xl p-0 overflow-hidden"
                         />
                       </div>
-                      <div className="flex items-center gap-3 bg-zinc-100 dark:bg-zinc-800/50 p-2 rounded-[24px] border border-[var(--card-border)]">
+                      <div className="surface-subtle flex items-center gap-3 p-2 rounded-[24px]">
                         {predefinedColors.map((color) => (
                           <button
                             key={color.name}

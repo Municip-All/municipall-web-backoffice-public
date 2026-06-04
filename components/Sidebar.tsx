@@ -16,6 +16,7 @@ import {
 import clsx from "clsx";
 import BrandLogo from "@/components/BrandLogo";
 import Badge from "@/components/Badge";
+import { useInbox } from "@/context/InboxContext";
 
 export type ViewType =
   | "pouls-ai"
@@ -35,14 +36,25 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
+  const { pendingTotal, pendingReports, pendingMessages, urgentCount } = useInbox();
+
   const menuItems = [
     {
       id: "pouls-ai" as const,
-      label: "Pouls de la ville",
+      label: "Tableau de bord",
       icon: LayoutDashboard,
-      badge: "IA",
     },
-    { id: "moderation" as const, label: "Signalements", icon: ShieldAlert },
+    {
+      id: "moderation" as const,
+      label: "Signalements",
+      icon: ShieldAlert,
+      count: pendingTotal,
+      urgent: urgentCount > 0,
+      title:
+        pendingTotal > 0
+          ? `${pendingReports} signalement(s), ${pendingMessages} message(s)`
+          : undefined,
+    },
     { id: "targeted-push" as const, label: "Alertes directes", icon: Send },
     { id: "widgets" as const, label: "Services GPS", icon: Smartphone },
     { id: "neighborhoods" as const, label: "Secteurs géo", icon: Map },
@@ -100,10 +112,16 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                   />
                   <span className="truncate">{item.label}</span>
                 </span>
-                {"badge" in item && item.badge ? (
-                  <Badge variant="accent" className="!py-0 !text-[9px]">
-                    {item.badge}
-                  </Badge>
+                {"count" in item && item.count && item.count > 0 ? (
+                  <span
+                    title={"title" in item ? item.title : undefined}
+                    className={clsx(
+                      "flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-black text-white",
+                      "urgent" in item && item.urgent ? "bg-red-500" : "bg-red-500",
+                    )}
+                  >
+                    {item.count > 99 ? "99+" : item.count}
+                  </span>
                 ) : isActive ? (
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
                 ) : null}

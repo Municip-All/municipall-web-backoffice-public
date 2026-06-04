@@ -188,7 +188,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
                   onChange={(e) =>
                     setEditingWork({ ...editingWork, title: e.target.value })
                   }
-                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
+                  className="form-input-lg"
                   placeholder="ex: Réfection Avenue République"
                 />
               </div>
@@ -204,7 +204,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
                       description: e.target.value,
                     })
                   }
-                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 h-32 resize-none outline-none transition-all font-bold shadow-sm leading-relaxed"
+                  className="form-input-lg h-32 resize-none leading-relaxed"
                   placeholder="Détails des travaux..."
                 />
               </div>
@@ -213,7 +213,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
                   Localisation
                 </label>
                 <div className="relative">
-                  <MapPin className="w-5 h-5 absolute left-6 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
+                  <MapPin className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-[var(--accent)]" />
                   <input
                     type="text"
                     value={editingWork.locationName}
@@ -223,7 +223,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
                         locationName: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] pl-16 pr-7 py-5 outline-none transition-all font-bold shadow-sm"
+                    className="form-input-lg-icon"
                     placeholder="Adresse ou quartier"
                   />
                 </div>
@@ -245,7 +245,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
                         startDate: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
+                    className="form-input-lg"
                   />
                 </div>
                 <div>
@@ -261,7 +261,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
                         endDate: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
+                    className="form-input-lg"
                   />
                 </div>
               </div>
@@ -274,7 +274,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
                   onChange={(e) =>
                     setEditingWork({ ...editingWork, status: e.target.value })
                   }
-                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm appearance-none"
+                  className="form-input-lg appearance-none"
                 >
                   <option>Programmé</option>
                   <option>En cours</option>
@@ -294,7 +294,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
                       impactType: e.target.value,
                     })
                   }
-                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm appearance-none"
+                  className="form-input-lg appearance-none"
                 >
                   <option>Circulation alternée</option>
                   <option>Rue barrée</option>
@@ -309,7 +309,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
           <div className="mt-12 flex justify-end gap-6">
             <button
               onClick={() => setEditingWork(null)}
-              className="px-8 py-4 rounded-[22px] font-black text-apple-muted hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all uppercase tracking-widest text-xs"
+              className="btn-secondary !rounded-[22px] uppercase tracking-widest text-xs"
             >
               Annuler
             </button>

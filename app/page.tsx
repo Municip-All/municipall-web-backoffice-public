@@ -15,6 +15,7 @@ import ConstructionManager from "@/components/ConstructionManager";
 import WasteManager from "@/components/WasteManager";
 import EventManager from "@/components/EventManager";
 import { useAuth } from "@/context/AuthContext";
+import { InboxProvider } from "@/context/InboxContext";
 
 export default function Home() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -33,15 +34,18 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-      <Header onViewChange={setActiveView} />
+    <InboxProvider>
+      <div className="flex h-screen w-full flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+        <Header onViewChange={setActiveView} />
 
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <Sidebar activeView={activeView} onViewChange={setActiveView} />
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <Sidebar activeView={activeView} onViewChange={setActiveView} />
 
-        <main className="relative min-w-0 flex-1 overflow-hidden">
-          <div className="fade-in h-full w-full">
-            {activeView === "pouls-ai" && <PoulsAiDashboard />}
+          <main className="relative min-w-0 flex-1 overflow-hidden">
+            <div className="fade-in h-full w-full">
+              {activeView === "pouls-ai" && (
+                <PoulsAiDashboard onViewChange={setActiveView} />
+              )}
             {activeView === "moderation" && <ModerationMatrix />}
             {activeView === "widgets" && <WidgetGenerator />}
             {activeView === "targeted-push" && <TargetedCommunication />}
@@ -56,8 +60,9 @@ export default function Home() {
             )}
             {activeView === "events" && <EventManager />}
           </div>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
+    </InboxProvider>
   );
 }

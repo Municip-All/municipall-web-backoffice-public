@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Calendar,
   Plus,
@@ -18,45 +17,30 @@ import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
 import { useAuth } from "@/context/AuthContext";
-
-interface Event {
-  id?: number;
-  title: string;
-  description: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  category: string;
-  imageUrl?: string;
-}
+import { api, CityEvent } from "@/lib/api";
 
 export default function EventManager() {
   const { user } = useAuth();
   const toast = useToast();
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<CityEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState<CityEvent | null>(null);
 
-  const fetchEvents = React.useCallback(async () => {
+  const fetchEvents = useCallback(async () => {
+    if (!user?.cityId) {
+      setIsLoading(false);
+      return;
+    }
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/events`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-            "x-tenant-id": user?.cityId || "",
-          },
-        },
-      );
-      const data = await response.json();
+      const data = await api.getEvents();
       setEvents(data);
     } catch (error) {
       console.error("Error fetching events:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user?.cityId]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -65,29 +49,11 @@ export default function EventManager() {
     return () => clearTimeout(timer);
   }, [fetchEvents]);
 
-  const handleSave = async (event: Event) => {
+  const handleSave = async (event: CityEvent) => {
     setIsSaving(true);
     try {
-      const method = event.id ? "PATCH" : "POST";
-      const url = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/events${event.id ? `/${event.id}` : ""}`;
-
-      const body = {
-        ...event,
-        startDate: new Date(event.startDate).toISOString(),
-        endDate: new Date(event.endDate).toISOString(),
-      };
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          "x-tenant-id": user?.cityId || "",
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (response.ok) {
+      const saved = await api.saveEvent(event);
+      if (saved) {
         toast("success", `Événement ${event.id ? "mis à jour" : "ajouté"} !`);
         setEditingEvent(null);
         fetchEvents();
@@ -105,20 +71,12 @@ export default function EventManager() {
     if (!confirm("Voulez-vous vraiment supprimer cet événement ?")) return;
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/events/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-            "x-tenant-id": user?.cityId || "",
-          },
-        },
-      );
-
-      if (response.ok) {
+      const ok = await api.deleteEvent(id);
+      if (ok) {
         toast("success", "Événement supprimé.");
         fetchEvents();
+      } else {
+        toast("error", "Erreur lors de la suppression.");
       }
     } catch {
       toast("error", "Erreur lors de la suppression.");
@@ -128,8 +86,8 @@ export default function EventManager() {
   if (isLoading)
     return (
       <div className="p-20 text-center flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-10 h-10 animate-spin text-[var(--accent)]" />
-        <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest">
+        <Loader2 className="w-10 h-10 text-[var(--accent)] animate-spin opacity-40" />
+        <p className="text-sm font-black text-apple-muted uppercase tracking-widest opacity-40">
           Chargement de l&apos;agenda...
         </p>
       </div>
@@ -139,7 +97,7 @@ export default function EventManager() {
     <PageShell>
       <PageHeader
         title="Agenda & événements"
-        description="Culture & vie locale"
+        description="Gestion citoyenne · Calendrier municipal"
         actions={
           <button
             type="button"
@@ -148,40 +106,41 @@ export default function EventManager() {
                 title: "",
                 description: "",
                 location: "",
-                startDate: new Date().toISOString().split("T")[0] + "T14:00",
-                endDate: new Date().toISOString().split("T")[0] + "T18:00",
+                startDate: new Date().toISOString(),
+                endDate: new Date(Date.now() + 3600000).toISOString(),
                 category: "Culture",
               })
             }
             className="btn-primary"
           >
-            <Plus className="h-4 w-4" />
-            Ajouter un événement
+            <Plus className="w-4 h-4" />
+            Nouvel événement
           </button>
         }
       />
 
       {editingEvent && (
-        <div className="card-premium p-10 mb-12 relative border-2 border-[var(--accent)]/20 shadow-2xl animate-in zoom-in-95 duration-300">
-          <div className="flex justify-between items-center mb-10">
+        <div className="card-premium p-10 mb-10 animate-in fade-in slide-in-from-top-4">
+          <div className="flex items-center justify-between mb-10">
             <h3 className="text-2xl font-black text-[var(--foreground)] tracking-tight">
               {editingEvent.id
-                ? "Modifier l&apos;événement"
-                : "Nouvel Événement"}
+                ? "Modifier l'événement"
+                : "Créer un événement"}
             </h3>
             <button
+              type="button"
               onClick={() => setEditingEvent(null)}
-              className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+              className="btn-ghost !p-2"
             >
-              <X className="w-6 h-6 text-zinc-400" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-8">
               <div>
                 <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
-                  Titre de l&apos;événement
+                  Titre
                 </label>
                 <input
                   type="text"
@@ -189,8 +148,8 @@ export default function EventManager() {
                   onChange={(e) =>
                     setEditingEvent({ ...editingEvent, title: e.target.value })
                   }
-                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
-                  placeholder="ex: Fête de la Musique"
+                  className="input-field w-full"
+                  placeholder="Ex: Marché de printemps"
                 />
               </div>
               <div>
@@ -205,16 +164,18 @@ export default function EventManager() {
                       description: e.target.value,
                     })
                   }
-                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 h-32 resize-none outline-none transition-all font-bold shadow-sm leading-relaxed"
-                  placeholder="Détails de l'événement..."
+                  rows={4}
+                  className="input-field w-full min-h-[120px]"
                 />
               </div>
+            </div>
+            <div className="space-y-8">
               <div>
                 <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
-                  Lieu / Salle
+                  Lieu
                 </label>
                 <div className="relative">
-                  <MapPin className="w-5 h-5 absolute left-6 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
+                  <MapPin className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-[var(--accent)]" />
                   <input
                     type="text"
                     value={editingEvent.location}
@@ -224,30 +185,29 @@ export default function EventManager() {
                         location: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] pl-16 pr-7 py-5 outline-none transition-all font-bold shadow-sm"
-                    placeholder="ex: Place de la Mairie"
+                    className="input-field-icon w-full"
                   />
                 </div>
               </div>
-            </div>
-
-            <div className="space-y-8">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
                     Début
                   </label>
-                  <input
-                    type="datetime-local"
-                    value={editingEvent.startDate.slice(0, 16)}
-                    onChange={(e) =>
-                      setEditingEvent({
-                        ...editingEvent,
-                        startDate: e.target.value,
-                      })
-                    }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
-                  />
+                  <div className="relative">
+                    <Clock className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-[var(--accent)]" />
+                    <input
+                      type="datetime-local"
+                      value={editingEvent.startDate.slice(0, 16)}
+                      onChange={(e) =>
+                        setEditingEvent({
+                          ...editingEvent,
+                          startDate: new Date(e.target.value).toISOString(),
+                        })
+                      }
+                      className="input-field-icon w-full"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
@@ -259,10 +219,10 @@ export default function EventManager() {
                     onChange={(e) =>
                       setEditingEvent({
                         ...editingEvent,
-                        endDate: e.target.value,
+                        endDate: new Date(e.target.value).toISOString(),
                       })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
+                    className="input-field w-full"
                   />
                 </div>
               </div>
@@ -271,7 +231,7 @@ export default function EventManager() {
                   Catégorie
                 </label>
                 <div className="relative">
-                  <Tag className="w-5 h-5 absolute left-6 top-1/2 -translate-y-1/2 text-[var(--accent)]" />
+                  <Tag className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-[var(--accent)]" />
                   <select
                     value={editingEvent.category}
                     onChange={(e) =>
@@ -280,7 +240,7 @@ export default function EventManager() {
                         category: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] pl-16 pr-7 py-5 outline-none transition-all font-bold shadow-sm appearance-none"
+                    className="input-field-icon w-full appearance-none"
                   >
                     <option>Culture</option>
                     <option>Sport</option>
@@ -303,110 +263,100 @@ export default function EventManager() {
                       imageUrl: e.target.value,
                     })
                   }
-                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
+                  className="input-field w-full"
                   placeholder="https://..."
                 />
               </div>
             </div>
           </div>
 
-          <div className="mt-12 flex justify-end gap-6">
+          <div className="mt-10 flex justify-end gap-4">
             <button
+              type="button"
               onClick={() => setEditingEvent(null)}
-              className="px-8 py-4 rounded-[22px] font-black text-apple-muted hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all uppercase tracking-widest text-xs"
+              className="btn-secondary"
             >
               Annuler
             </button>
             <button
+              type="button"
               onClick={() => handleSave(editingEvent)}
               disabled={isSaving}
-              className="bg-[var(--accent)] text-white px-10 py-4 rounded-[24px] font-black shadow-xl shadow-[var(--accent)]/20 flex items-center gap-3 hover:scale-105 active:scale-95 transition-all text-xs uppercase tracking-widest"
+              className="btn-primary"
             >
               {isSaving ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <Save className="w-5 h-5" />
+                <>
+                  <Save className="w-4 h-4" />
+                  Enregistrer
+                </>
               )}
-              Enregistrer l&apos;événement
             </button>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="space-y-6">
         {events.length === 0 ? (
-          <div className="col-span-full text-center py-32 card-premium !bg-transparent border-4 border-dashed border-zinc-100 dark:border-zinc-800">
-            <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800 rounded-[28px] flex items-center justify-center mb-8 mx-auto opacity-50">
-              <Calendar className="w-10 h-10 text-[var(--muted)]" />
-            </div>
-            <p className="text-[10px] font-black text-apple-muted uppercase tracking-[0.4em] opacity-40">
+          <div className="card-premium p-16 text-center">
+            <Calendar className="w-12 h-12 mx-auto mb-4 text-zinc-300" />
+            <p className="text-sm font-black text-apple-muted uppercase tracking-widest opacity-40">
               Agenda vide pour le moment
             </p>
           </div>
         ) : (
           events.map((event) => (
-            <div
-              key={event.id}
-              className="card-premium overflow-hidden group hover:border-[var(--accent)]/30 transition-all"
-            >
+            <div key={event.id} className="card-premium overflow-hidden">
               {event.imageUrl && (
-                <div className="h-48 w-full relative overflow-hidden">
-                  <Image
+                <div className="relative h-48 w-full overflow-hidden">
+                  {/* URL saisie par l'agent : domaine variable, pas de whitelist next/image */}
+                  <img
                     src={event.imageUrl}
                     alt={event.title}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    unoptimized
+                    className="h-full w-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute bottom-4 left-6">
-                    <span className="bg-[var(--accent)] text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-                      {event.category}
-                    </span>
-                  </div>
                 </div>
               )}
               <div className="p-8">
-                <div className="flex justify-between items-start mb-6">
+                <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h4 className="text-xl font-black text-[var(--foreground)] tracking-tight mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)]">
+                      {event.category}
+                    </span>
+                    <h4 className="text-xl font-black text-[var(--foreground)] mt-1">
                       {event.title}
                     </h4>
-                    <div className="flex items-center gap-3 text-apple-muted opacity-60 text-[11px] font-bold uppercase tracking-widest">
-                      <Clock className="w-3.5 h-3.5 text-[var(--accent)]" />
-                      {new Date(event.startDate).toLocaleDateString()} •{" "}
+                    <p className="text-sm text-[var(--muted)] mt-2">
+                      {new Date(event.startDate).toLocaleDateString("fr-FR")} •{" "}
                       {new Date(event.startDate).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
-                    </div>
+                      {" — "}
+                      {event.location}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex gap-2 shrink-0">
                     <button
+                      type="button"
                       onClick={() => setEditingEvent(event)}
-                      className="p-3 text-zinc-400 hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 rounded-xl transition-all"
+                      className="btn-ghost !p-2"
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => event.id && handleDelete(event.id)}
-                      className="p-3 text-zinc-400 hover:text-red-500 hover:bg-red-500/5 rounded-xl transition-all"
+                      className="btn-ghost !p-2 text-red-500"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-
-                <p className="text-sm text-[var(--muted)] leading-relaxed mb-8 line-clamp-3 font-medium">
+                <p className="mt-4 text-sm text-[var(--foreground)] opacity-80 leading-relaxed">
                   {event.description}
                 </p>
-
-                <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-black text-[var(--foreground)]">
-                    <MapPin className="w-4 h-4 text-[var(--accent)]" />
-                    {event.location}
-                  </div>
-                </div>
               </div>
             </div>
           ))

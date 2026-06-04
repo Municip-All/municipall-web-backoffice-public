@@ -8,6 +8,9 @@ interface StatCardProps {
   trend?: number;
   trendReverse?: boolean;
   icon: LucideIcon;
+  alertCount?: number;
+  onClick?: () => void;
+  highlight?: boolean;
 }
 
 export default function StatCard({
@@ -16,15 +19,45 @@ export default function StatCard({
   trend,
   trendReverse = false,
   icon: Icon,
+  alertCount,
+  onClick,
+  highlight = false,
 }: StatCardProps) {
   const trendUp = trend !== undefined && trend >= 0;
   const trendPositive = trendReverse ? !trendUp : trendUp;
+  const Wrapper = onClick ? "button" : "div";
 
   return (
-    <div className="card-panel group p-5">
+    <Wrapper
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      className={clsx(
+        "card-panel group w-full p-5 text-left transition-all",
+        onClick && "hover:ring-2 hover:ring-[var(--accent)]/20 cursor-pointer",
+        highlight && "ring-2 ring-red-500/25",
+      )}
+    >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent)]/[0.08] ring-1 ring-[var(--accent)]/15">
-          <Icon className="h-5 w-5 text-[var(--accent)]" strokeWidth={2} />
+        <div
+          className={clsx(
+            "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1",
+            highlight
+              ? "bg-red-500/10 ring-red-500/20"
+              : "bg-[var(--accent)]/[0.08] ring-[var(--accent)]/15",
+          )}
+        >
+          <Icon
+            className={clsx(
+              "h-5 w-5",
+              highlight ? "text-red-500" : "text-[var(--accent)]",
+            )}
+            strokeWidth={2}
+          />
+          {alertCount !== undefined && alertCount > 0 && (
+            <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
+              {alertCount > 99 ? "99+" : alertCount}
+            </span>
+          )}
         </div>
         {trend !== undefined && (
           <span
@@ -43,6 +76,6 @@ export default function StatCard({
           {value}
         </p>
       </div>
-    </div>
+    </Wrapper>
   );
 }

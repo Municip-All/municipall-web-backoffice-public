@@ -19,7 +19,8 @@
     --foreground: #0f172a;
     --card: #ffffff;
     --card-border: rgba(15, 23, 42, 0.08);
-    --muted: #64748b;
+    --muted: #475569;
+    --surface-subtle: #f1f5f9;
     --accent: #0b0080;
     --glass: rgba(255, 255, 255, 0.85);
   }
@@ -104,6 +105,66 @@ body {
 
   .tab-pill-inactive {
     @apply text-[var(--muted)] hover:bg-[var(--card)]/60 hover:text-[var(--foreground)];
+  }
+
+  .field-label {
+    @apply mb-4 block text-[10px] font-black uppercase tracking-[0.2em] text-[var(--muted)];
+  }
+
+  .form-input-lg {
+    @apply w-full rounded-[22px] border border-[var(--card-border)] bg-[var(--card)] px-7 py-5 text-lg font-semibold text-[var(--foreground)] shadow-sm outline-none transition-all placeholder:text-[var(--muted)] focus:border-[var(--accent)]/40 focus:ring-2 focus:ring-[var(--accent)]/15;
+  }
+
+  .form-input-lg-icon {
+    @apply w-full rounded-[22px] border border-[var(--card-border)] bg-[var(--card)] py-5 pl-14 pr-7 text-lg font-semibold text-[var(--foreground)] shadow-sm outline-none transition-all placeholder:text-[var(--muted)] focus:border-[var(--accent)]/40 focus:ring-2 focus:ring-[var(--accent)]/15;
+  }
+
+  .form-input-sm {
+    @apply w-full rounded-[20px] border border-[var(--card-border)] bg-[var(--card)] px-5 py-4 text-sm font-semibold text-[var(--foreground)] shadow-sm outline-none transition-all placeholder:text-[var(--muted)] focus:border-[var(--accent)]/40 focus:ring-2 focus:ring-[var(--accent)]/15;
+  }
+
+  .surface-subtle {
+    @apply rounded-[22px] border border-[var(--card-border)] bg-[var(--surface-subtle)] text-[var(--foreground)] dark:bg-zinc-800/50 dark:text-zinc-100;
+  }
+
+  .tab-segment-inactive {
+    @apply rounded-2xl bg-[var(--card)] px-5 py-2.5 text-xs font-black uppercase tracking-widest text-[var(--muted)] ring-1 ring-[var(--card-border)] transition-all hover:text-[var(--foreground)];
+  }
+
+  .tab-segment-active {
+    @apply rounded-2xl bg-[var(--accent)] px-5 py-2.5 text-xs font-black uppercase tracking-widest text-white shadow-lg transition-all;
+  }
+
+  .day-chip-inactive {
+    @apply border-2 border-[var(--card-border)] bg-[var(--card)] text-[var(--muted)] hover:border-[var(--accent)]/30 hover:text-[var(--foreground)];
+  }
+
+  .day-chip-active {
+    @apply border-2 border-[var(--accent)] bg-[var(--accent)] text-white shadow-lg shadow-[var(--accent)]/20;
+  }
+
+  .icon-chip-inactive {
+    @apply border-2 border-[var(--card-border)] bg-[var(--card)] text-[var(--muted)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)];
+  }
+
+  .icon-chip-active {
+    @apply border-2 border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)] shadow-inner;
+  }
+
+  .choice-toggle {
+    @apply flex items-center justify-center gap-3 rounded-[22px] border-2 border-[var(--card-border)] bg-[var(--card)] py-5 text-xs font-black uppercase tracking-widest text-[var(--muted)] transition-all hover:border-[var(--accent)]/30 hover:text-[var(--foreground)];
+  }
+
+  .choice-toggle-active-info {
+    @apply border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)] shadow-lg shadow-[var(--accent)]/10;
+  }
+
+  .choice-toggle-active-urgent {
+    @apply border-red-500 bg-red-50 text-red-600 shadow-lg shadow-red-500/10 dark:bg-red-950/30 dark:text-red-400;
+  }
+
+  .chat-bubble-citizen {
+    @apply rounded-2xl bg-zinc-100 px-4 py-2.5 text-sm leading-relaxed text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100;
   }
 }
 

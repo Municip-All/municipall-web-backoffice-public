@@ -15,9 +15,20 @@ async function request<T>(
   const token =
     typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
 
+  let tenantId = "";
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("auth_user");
+      if (raw) tenantId = (JSON.parse(raw) as { cityId?: string }).cityId || "";
+    } catch {
+      tenantId = "";
+    }
+  }
+
   const defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(tenantId ? { "x-tenant-id": tenantId } : {}),
     ...headers,
   };
 
@@ -58,9 +69,16 @@ export interface CityNeighborhood {
   points: [number, number][];
 }
 
+export interface CityContactConfig {
+  email?: string;
+  phone?: string;
+  helpText?: string;
+}
+
 export interface CityConfig {
   name: string;
   features: string[];
+  contact?: CityContactConfig;
   neighborhoods?: CityNeighborhood[];
   theme: {
     primaryColor: string;
@@ -79,15 +97,34 @@ export interface CityConfig {
   };
 }
 
+export type DashboardAlertSeverity = "urgent" | "high" | "normal";
+export type DashboardAlertType = "report" | "contact";
+
+export interface DashboardAlert {
+  id: string;
+  type: DashboardAlertType;
+  severity: DashboardAlertSeverity;
+  title: string;
+  subtitle: string;
+  createdAt: string;
+  entityId: number;
+}
+
 export interface CityDashboardStats {
   satisfaction: number;
   satisfactionTrend: number;
   citizensCount: number;
   activeReportsCount: number;
+  pendingContactMessagesCount: number;
+  urgentReportsCount: number;
+  reportsInProgressCount: number;
+  pendingTotalCount: number;
+  urgentAlertsCount: number;
   reportsTrend: number;
   suggestionsCount: number;
   suggestionsTrend: number;
   trendData: { name: string; satisfaction: number }[];
+  alerts: DashboardAlert[];
 }
 
 export interface Report {
@@ -101,6 +138,62 @@ export interface Report {
   createdAt: string;
   updatedAt: string;
   isResident?: boolean;
+}
+
+export interface TicketMessage {
+  id: number;
+  senderId: number;
+  senderRole: "citizen" | "agent";
+  senderName: string;
+  body: string;
+  createdAt: string;
+}
+
+export interface ContactTicketListItem {
+  id: number;
+  subject: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  lastMessage?: {
+    body: string;
+    senderRole: "citizen" | "agent";
+    createdAt: string;
+  };
+}
+
+export interface ContactTicketDetail {
+  id: number;
+  subject: string;
+  status: string;
+  userId: number;
+  citizenName: string;
+  createdAt: string;
+  updatedAt: string;
+  closedAt?: string;
+  messages: TicketMessage[];
+}
+
+export interface CityEvent {
+  id?: number;
+  title: string;
+  description: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  category: string;
+  imageUrl?: string;
+}
+
+/** @deprecated */
+export interface ContactMessage {
+  id: number;
+  subject: string;
+  body: string;
+  status: string;
+  userId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // --- Generic Methods ---
@@ -136,7 +229,12 @@ export const api = {
 
   async saveCityConfig(
     cityId: string,
-    data: Partial<CityConfig> & Partial<CityConfig["theme"]>,
+    data: Partial<CityConfig> &
+      Partial<CityConfig["theme"]> & {
+        contactEmail?: string;
+        contactPhone?: string;
+        contactHelpText?: string;
+      },
   ): Promise<boolean> {
     const response = await request(
       `/api/v1/admin/cities/${cityId}`,
@@ -166,6 +264,84 @@ export const api = {
     const response = await request(`/api/v1/reports/${id}/status`, "PATCH", {
       status,
     });
+    return response.status < 400;
+  },
+
+  async getContactTickets(): Promise<ContactTicketListItem[]> {
+    const response = await request<ContactTicketListItem[]>("/api/v1/contact-tickets");
+    return response.data || [];
+  },
+
+  async getContactTicket(id: number): Promise<ContactTicketDetail | null> {
+    const response = await request<ContactTicketDetail>(`/api/v1/contact-tickets/${id}`);
+    return response.data || null;
+  },
+
+  async replyContactTicket(id: number, body: string): Promise<ContactTicketDetail | null> {
+    const response = await request<ContactTicketDetail>(
+      `/api/v1/contact-tickets/${id}/messages`,
+      "POST",
+      { body },
+    );
+    return response.data || null;
+  },
+
+  async closeContactTicket(id: number): Promise<ContactTicketDetail | null> {
+    const response = await request<ContactTicketDetail>(
+      `/api/v1/contact-tickets/${id}/close`,
+      "PATCH",
+      {},
+    );
+    return response.data || null;
+  },
+
+  /** @deprecated */
+  async getContactMessages(): Promise<ContactTicketListItem[]> {
+    return this.getContactTickets();
+  },
+
+  /** @deprecated */
+  async updateContactMessageStatus(id: number, status: string): Promise<boolean> {
+    if (status === "En cours") {
+      const t = await this.getContactTicket(id);
+      if (t && t.status === "En attente") {
+        await this.replyContactTicket(id, "Prise en charge par la mairie.");
+      }
+      return true;
+    }
+    if (status === "Clôturé" || status === "Résolu") {
+      return (await this.closeContactTicket(id)) !== null;
+    }
+    return false;
+  },
+
+  // --- Events ---
+
+  async getEvents(): Promise<CityEvent[]> {
+    const response = await request<CityEvent[]>("/api/v1/events");
+    return response.data || [];
+  },
+
+  async saveEvent(event: CityEvent): Promise<CityEvent | null> {
+    const body = {
+      ...event,
+      startDate: new Date(event.startDate).toISOString(),
+      endDate: new Date(event.endDate).toISOString(),
+    };
+    if (event.id) {
+      const response = await request<CityEvent>(
+        `/api/v1/events/${event.id}`,
+        "PATCH",
+        body,
+      );
+      return response.data || null;
+    }
+    const response = await request<CityEvent>("/api/v1/events", "POST", body);
+    return response.data || null;
+  },
+
+  async deleteEvent(id: number): Promise<boolean> {
+    const response = await request(`/api/v1/events/${id}`, "DELETE");
     return response.status < 400;
   },
 

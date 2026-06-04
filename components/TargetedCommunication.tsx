@@ -133,7 +133,7 @@ export default function TargetedCommunication() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ex: Travaux sur le réseau d'eau"
-                className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 outline-none transition-all font-bold shadow-sm"
+                className="form-input-lg"
               />
             </div>
 
@@ -146,7 +146,7 @@ export default function TargetedCommunication() {
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Détaillez votre message ici..."
                 maxLength={250}
-                className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] text-lg rounded-[22px] px-7 py-5 h-40 resize-none outline-none transition-all font-bold shadow-sm leading-relaxed"
+                className="form-input-lg h-40 resize-none leading-relaxed"
               />
             </div>
 
@@ -165,8 +165,8 @@ export default function TargetedCommunication() {
                   className={clsx(
                     "flex items-center justify-center gap-3 py-5 rounded-[22px] border-2 text-xs font-black uppercase tracking-widest transition-all",
                     alertType === "info"
-                      ? "border-[var(--accent)] bg-[var(--accent)]/5 text-[var(--accent)] shadow-lg shadow-[var(--accent)]/10 scale-[1.02]"
-                      : "border-transparent bg-zinc-100 dark:bg-zinc-800/50 text-zinc-400 opacity-60 hover:opacity-100",
+                      ? "choice-toggle-active-info scale-[1.02]"
+                      : "choice-toggle",
                   )}
                 >
                   <Info className="w-5 h-5" />
@@ -177,8 +177,8 @@ export default function TargetedCommunication() {
                   className={clsx(
                     "flex items-center justify-center gap-3 py-5 rounded-[22px] border-2 text-xs font-black uppercase tracking-widest transition-all",
                     alertType === "urgent"
-                      ? "border-red-500 bg-red-500/5 text-red-500 shadow-lg shadow-red-500/10 scale-[1.02]"
-                      : "border-transparent bg-zinc-100 dark:bg-zinc-800/50 text-zinc-400 opacity-60 hover:opacity-100",
+                      ? "choice-toggle-active-urgent scale-[1.02]"
+                      : "choice-toggle",
                   )}
                 >
                   <AlertCircle className="w-5 h-5" />
@@ -214,7 +214,7 @@ export default function TargetedCommunication() {
                     customNeighborhoods={neighborhoods}
                   />
                 ) : (
-                  <div className="w-full h-full bg-zinc-100 dark:bg-zinc-800/50 flex flex-col items-center justify-center gap-4">
+                  <div className="surface-subtle flex h-full w-full flex-col items-center justify-center gap-4">
                     <Loader2 className="w-8 h-8 text-[var(--accent)] animate-spin opacity-40" />
                     <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest opacity-40">
                       Initialisation...

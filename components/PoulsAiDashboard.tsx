@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   AreaChart,
   Area,
@@ -11,61 +11,73 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import {
-  TrendingUp,
+  AlertTriangle,
   Users,
-  AlertCircle,
+  ShieldAlert,
   MessageSquare,
   Loader2,
+  Clock,
+  CheckCircle2,
+  ArrowRight,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { api, CityDashboardStats } from "@/lib/api";
+import clsx from "clsx";
+import { useInbox } from "@/context/InboxContext";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
 import StatCard from "@/components/StatCard";
 import Badge from "@/components/Badge";
+import { ViewType } from "./Sidebar";
 
-export default function PoulsAiDashboard() {
-  const { user } = useAuth();
-  const [stats, setStats] = useState<CityDashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+interface PoulsAiDashboardProps {
+  onViewChange: (view: ViewType) => void;
+}
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!user?.cityId) {
-        setIsLoading(false);
-        return;
-      }
-      setIsLoading(true);
-      api
-        .getDashboardStats(user.cityId)
-        .then((data) => {
-          setStats(data);
-          setIsLoading(false);
-        })
-        .catch(() => setIsLoading(false));
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [user?.cityId]);
+function formatRelativeTime(iso: string): string {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} h`;
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+  });
+}
 
-  const trendData = stats?.trendData ?? [
-    { name: "Lun", satisfaction: 0 },
-    { name: "Mar", satisfaction: 0 },
-    { name: "Mer", satisfaction: 0 },
-    { name: "Jeu", satisfaction: 0 },
-    { name: "Ven", satisfaction: 0 },
-    { name: "Sam", satisfaction: 0 },
-    { name: "Dim", satisfaction: 0 },
-  ];
+export default function PoulsAiDashboard({ onViewChange }: PoulsAiDashboardProps) {
+  const { stats, alerts, pendingReports, pendingMessages, urgentCount, isLoading, refresh } =
+    useInbox();
+
+  const goModeration = (tab: "reports" | "messages") => {
+    sessionStorage.setItem("moderation_tab", tab);
+    onViewChange("moderation");
+  };
+
+  const trendData = stats?.trendData ?? [];
+  const urgentAlerts = alerts.filter((a) => a.severity === "urgent").slice(0, 5);
 
   return (
     <PageShell>
       <PageHeader
-        title="Pouls de la ville"
-        description="Intelligence urbaine · Municip'All Pulse"
+        title="Tableau de bord"
+        description="Vue d'ensemble · Pouls de la ville"
         badge={
-          <Badge variant="accent" dot>
-            IA
-          </Badge>
+          urgentCount > 0 ? (
+            <Badge variant="danger" dot>
+              {urgentCount} urgent{urgentCount > 1 ? "s" : ""}
+            </Badge>
+          ) : pendingReports + pendingMessages > 0 ? (
+            <Badge variant="warning" dot>
+              À traiter
+            </Badge>
+          ) : (
+            <Badge variant="success" dot>
+              Calme
+            </Badge>
+          )
+        }
+        actions={
+          <button type="button" onClick={refresh} className="btn-secondary text-xs">
+            Actualiser
+          </button>
         }
       />
 
@@ -75,67 +87,188 @@ export default function PoulsAiDashboard() {
         </div>
       ) : (
         <>
-          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             <StatCard
-              title="Satisfaction"
-              value={`${stats?.satisfaction ?? 0}%`}
-              trend={stats?.satisfactionTrend}
-              icon={TrendingUp}
+              title="Signalements en attente"
+              value={pendingReports}
+              icon={ShieldAlert}
+              alertCount={pendingReports}
+              highlight={pendingReports > 0}
+              onClick={() => goModeration("reports")}
             />
             <StatCard
-              title="Engagement"
+              title="Messages en attente"
+              value={pendingMessages}
+              icon={MessageSquare}
+              alertCount={pendingMessages}
+              highlight={pendingMessages > 0}
+              onClick={() => goModeration("messages")}
+            />
+            <StatCard
+              title="Urgences"
+              value={urgentCount}
+              icon={AlertTriangle}
+              alertCount={urgentCount}
+              highlight={urgentCount > 0}
+              onClick={() => onViewChange("moderation")}
+            />
+            <StatCard
+              title="En cours de traitement"
+              value={stats?.reportsInProgressCount ?? 0}
+              icon={Clock}
+              onClick={() => goModeration("reports")}
+            />
+            <StatCard
+              title="Citoyens inscrits"
               value={(stats?.citizensCount ?? 0).toLocaleString("fr-FR")}
               icon={Users}
             />
             <StatCard
-              title="Alertes"
-              value={stats?.activeReportsCount ?? 0}
-              trend={stats?.reportsTrend}
-              trendReverse
-              icon={AlertCircle}
-            />
-            <StatCard
-              title="Idées"
-              value={stats?.suggestionsCount ?? 0}
-              trend={stats?.suggestionsTrend}
-              icon={MessageSquare}
+              title="Satisfaction"
+              value={`${stats?.satisfaction ?? 0}%`}
+              trend={stats?.satisfactionTrend}
+              icon={CheckCircle2}
             />
           </div>
 
+          <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <button
+              type="button"
+              onClick={() => goModeration("reports")}
+              className="card-panel flex items-center justify-between p-5 text-left transition-all hover:ring-2 hover:ring-[var(--accent)]/20"
+            >
+              <div>
+                <p className="section-title">Signalements</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+                  Modérer la file citoyenne
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {pendingReports > 0 && (
+                  <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-black text-white">
+                    {pendingReports}
+                  </span>
+                )}
+                <ArrowRight className="h-4 w-4 text-[var(--accent)]" />
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => goModeration("messages")}
+              className="card-panel flex items-center justify-between p-5 text-left transition-all hover:ring-2 hover:ring-[var(--accent)]/20"
+            >
+              <div>
+                <p className="section-title">Messages contact</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+                  Répondre aux demandes
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {pendingMessages > 0 && (
+                  <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-black text-white">
+                    {pendingMessages}
+                  </span>
+                )}
+                <ArrowRight className="h-4 w-4 text-[var(--accent)]" />
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => onViewChange("targeted-push")}
+              className="card-panel flex items-center justify-between p-5 text-left transition-all hover:ring-2 hover:ring-[var(--accent)]/20"
+            >
+              <div>
+                <p className="section-title">Alertes directes</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+                  Communiquer à la population
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-[var(--accent)]" />
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="card-panel p-6 lg:col-span-1">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-[var(--foreground)]">
+                  Alertes prioritaires
+                </h3>
+                {urgentCount > 0 && (
+                  <Badge variant="danger">{urgentCount}</Badge>
+                )}
+              </div>
+              {urgentAlerts.length === 0 ? (
+                <p className="text-sm text-[var(--muted)]">
+                  Aucune alerte urgente pour le moment.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {urgentAlerts.map((alert) => (
+                    <li key={alert.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sessionStorage.setItem(
+                            "moderation_tab",
+                            alert.type === "contact" ? "messages" : "reports",
+                          );
+                          if (alert.type === "contact") {
+                            sessionStorage.setItem(
+                              "moderation_ticket_id",
+                              String(alert.entityId),
+                            );
+                          }
+                          onViewChange("moderation");
+                        }}
+                        className={clsx(
+                          "w-full rounded-xl border px-3 py-2.5 text-left transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50",
+                          alert.severity === "urgent"
+                            ? "border-red-500/30 bg-red-500/5"
+                            : "border-[var(--card-border)]",
+                        )}
+                      >
+                        <p className="text-xs font-bold text-[var(--foreground)] line-clamp-1">
+                          {alert.title}
+                        </p>
+                        <p className="mt-0.5 text-[10px] text-[var(--muted)]">
+                          {formatRelativeTime(alert.createdAt)}
+                          <span className="ml-2 font-bold text-red-500">URGENT</span>
+                        </p>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {(stats?.pendingTotalCount ?? 0) > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onViewChange("moderation")}
+                  className="mt-4 w-full text-xs font-bold text-[var(--accent)]"
+                >
+                  Voir les {stats?.pendingTotalCount} éléments à traiter →
+                </button>
+              )}
+            </div>
+
             <div className="card-panel p-6 lg:col-span-2">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-[var(--foreground)]">
                   Évolution de la satisfaction
                 </h3>
                 <Badge variant="live" dot>
-                  Actuel
+                  7 jours
                 </Badge>
               </div>
-              <div className="h-[300px] w-full">
+              <div className="h-[260px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
                     data={trendData}
                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                   >
                     <defs>
-                      <linearGradient
-                        id="colorSatisfaction"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="var(--accent)"
-                          stopOpacity={0.25}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="var(--accent)"
-                          stopOpacity={0}
-                        />
+                      <linearGradient id="colorSatisfaction" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid
@@ -174,53 +307,6 @@ export default function PoulsAiDashboard() {
                     />
                   </AreaChart>
                 </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-6">
-              <div className="card-panel flex-1 p-6">
-                <h3 className="section-title mb-4">Sujets chauds (IA)</h3>
-                <div className="flex flex-wrap gap-x-4 gap-y-3">
-                  {[
-                    {
-                      label: "Nids-de-poule",
-                      size: "text-lg font-semibold text-red-500",
-                    },
-                    {
-                      label: "Stationnement",
-                      size: "text-sm font-medium text-[var(--accent)]",
-                    },
-                    { label: "Sécurité", size: "text-base font-semibold" },
-                    { label: "Parcs", size: "text-xs text-[var(--muted)]" },
-                    {
-                      label: "Propreté",
-                      size: "text-sm font-medium text-emerald-600",
-                    },
-                    {
-                      label: "Éclairage",
-                      size: "text-sm font-medium text-amber-600",
-                    },
-                  ].map((tag) => (
-                    <span
-                      key={tag.label}
-                      className={`${tag.size} text-[var(--foreground)]`}
-                    >
-                      {tag.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative overflow-hidden rounded-2xl bg-[var(--accent)] p-6 text-white shadow-premium">
-                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
-                  Synthèse de la semaine
-                </h3>
-                <p className="text-sm leading-relaxed text-white/90">
-                  {stats && stats.activeReportsCount > 0
-                    ? `L'IA note ${stats.activeReportsCount} signalement${stats.activeReportsCount > 1 ? "s" : ""} actif${stats.activeReportsCount > 1 ? "s" : ""} en attente. Satisfaction citoyenne : ${stats.satisfaction}%.`
-                    : "Aucun signalement actif. La ville fonctionne normalement."}
-                </p>
               </div>
             </div>
           </div>

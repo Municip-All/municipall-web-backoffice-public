@@ -437,7 +437,7 @@ export default function NeighborhoodManager() {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Ex: Quartier de la Mairie"
-                className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent focus:border-[var(--accent)] text-[var(--foreground)] rounded-[26px] px-8 py-5 outline-none transition-all font-black text-xl mb-10 shadow-sm text-center"
+                className="form-input-lg mb-10 text-center text-xl font-black"
                 onKeyDown={(e) => e.key === "Enter" && saveNewNeighborhood()}
               />
 
