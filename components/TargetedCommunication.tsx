@@ -92,10 +92,23 @@ export default function TargetedCommunication() {
       if (response.error) {
         toast("error", `Échec de l'envoi : ${response.error}`);
       } else {
-        toast(
-          "success",
-          `Alerte envoyée à ~${totalCitizens.toLocaleString("fr-FR")} citoyens !`,
-        );
+        const result = response.data as {
+          recipientCount?: number;
+          sent?: number;
+          failed?: number;
+        };
+        const count = result?.sent ?? result?.recipientCount ?? 0;
+        if (count === 0) {
+          toast(
+            "error",
+            "Aucun appareil enregistré pour cette ville. Les citoyens doivent ouvrir l'app connectés et autoriser les notifications.",
+          );
+        } else {
+          toast(
+            "success",
+            `Notification envoyée à ${count} appareil${count > 1 ? "s" : ""}${result?.failed ? ` (${result.failed} échec${result.failed > 1 ? "s" : ""})` : ""}.`,
+          );
+        }
         setTitle("");
         setMessage("");
         setSelectedZones(new Set());
