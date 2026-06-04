@@ -1,157 +1,317 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp, Users, AlertCircle, MessageSquare, Loader2 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { api, CityDashboardStats } from "@/lib/api";
+import React from "react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  AlertTriangle,
+  Users,
+  ShieldAlert,
+  MessageSquare,
+  Loader2,
+  Clock,
+  CheckCircle2,
+  ArrowRight,
+} from "lucide-react";
+import clsx from "clsx";
+import { useInbox } from "@/context/InboxContext";
+import PageHeader from "@/components/PageHeader";
+import PageShell from "@/components/PageShell";
+import StatCard from "@/components/StatCard";
+import Badge from "@/components/Badge";
+import { ViewType } from "./Sidebar";
 
-export default function PoulsAiDashboard() {
-  const { user } = useAuth();
-  const [stats, setStats] = useState<CityDashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
+interface PoulsAiDashboardProps {
+  onViewChange: (view: ViewType) => void;
+}
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!user?.cityId) {
-        setIsLoading(false);
-        return;
-      }
-      setIsLoading(true);
-      api.getDashboardStats(user.cityId)
-        .then(data => {
-          setStats(data);
-          setIsLoading(false);
-        })
-        .catch(() => setIsLoading(false));
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [user?.cityId, refreshKey]);
+function formatRelativeTime(iso: string): string {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} h`;
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+  });
+}
 
-  void setRefreshKey; // kept for manual refresh if needed
+export default function PoulsAiDashboard({ onViewChange }: PoulsAiDashboardProps) {
+  const { stats, alerts, pendingReports, pendingMessages, urgentCount, isLoading, refresh } =
+    useInbox();
 
-  const trendData = stats?.trendData ?? [
-    { name: "Lun", satisfaction: 0 },
-    { name: "Mar", satisfaction: 0 },
-    { name: "Mer", satisfaction: 0 },
-    { name: "Jeu", satisfaction: 0 },
-    { name: "Ven", satisfaction: 0 },
-    { name: "Sam", satisfaction: 0 },
-    { name: "Dim", satisfaction: 0 },
-  ];
+  const goModeration = (tab: "reports" | "messages") => {
+    sessionStorage.setItem("moderation_tab", tab);
+    onViewChange("moderation");
+  };
+
+  const trendData = stats?.trendData ?? [];
+  const urgentAlerts = alerts.filter((a) => a.severity === "urgent").slice(0, 5);
 
   return (
-    <div className="p-10 h-full overflow-y-auto custom-scrollbar">
-      <div className="mb-12">
-        <p className="text-apple-muted mb-3 opacity-60">
-          Intelligence Urbaine • Municip&apos;All Pulse
-        </p>
-        <h2 className="text-apple-title">
-          Pouls de la Ville
-        </h2>
-      </div>
+    <PageShell>
+      <PageHeader
+        title="Tableau de bord"
+        description="Vue d'ensemble · Pouls de la ville"
+        badge={
+          urgentCount > 0 ? (
+            <Badge variant="danger" dot>
+              {urgentCount} urgent{urgentCount > 1 ? "s" : ""}
+            </Badge>
+          ) : pendingReports + pendingMessages > 0 ? (
+            <Badge variant="warning" dot>
+              À traiter
+            </Badge>
+          ) : (
+            <Badge variant="success" dot>
+              Calme
+            </Badge>
+          )
+        }
+        actions={
+          <button type="button" onClick={refresh} className="btn-secondary text-xs">
+            Actualiser
+          </button>
+        }
+      />
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-10 h-10 text-[var(--accent)] animate-spin opacity-40" />
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)] opacity-40" />
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            {[
-              { label: 'Satisfaction', value: `${stats?.satisfaction ?? 0}%`, trend: stats?.satisfactionTrend ?? 0, icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50/50 dark:bg-indigo-900/10' },
-              { label: 'Engagement', value: (stats?.citizensCount ?? 0).toLocaleString('fr-FR'), icon: Users, color: 'text-blue-500', bg: 'bg-blue-50/50 dark:bg-blue-900/10' },
-              { label: 'Alertes', value: stats?.activeReportsCount ?? 0, trend: stats?.reportsTrend ?? 0, icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50/50 dark:bg-amber-900/10', reverse: true },
-              { label: 'Idées', value: stats?.suggestionsCount ?? 0, trend: stats?.suggestionsTrend ?? 0, icon: MessageSquare, color: 'text-emerald-500', bg: 'bg-emerald-50/50 dark:bg-emerald-900/10' },
-            ].map((card, i) => (
-              <div key={i} className="card-premium p-8 flex items-center gap-6 hover:scale-[1.02] transition-transform">
-                <div className={`w-16 h-16 rounded-[22px] ${card.bg} flex items-center justify-center shrink-0 border border-white/20`}>
-                  <card.icon className={`${card.color} w-8 h-8`} />
-                </div>
-                <div>
-                  <p className="text-apple-muted mb-1 opacity-60">{card.label}</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-[var(--foreground)]">{card.value}</span>
-                    {card.trend !== undefined && (
-                      <span className={`text-[10px] font-black ${(card.trend >= 0 ? !card.reverse : card.reverse) ? 'text-green-500' : 'text-red-500'}`}>
-                        {card.trend >= 0 ? '↑' : '↓'} {Math.abs(card.trend)}%
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+            <StatCard
+              title="Signalements en attente"
+              value={pendingReports}
+              icon={ShieldAlert}
+              alertCount={pendingReports}
+              highlight={pendingReports > 0}
+              onClick={() => goModeration("reports")}
+            />
+            <StatCard
+              title="Messages en attente"
+              value={pendingMessages}
+              icon={MessageSquare}
+              alertCount={pendingMessages}
+              highlight={pendingMessages > 0}
+              onClick={() => goModeration("messages")}
+            />
+            <StatCard
+              title="Urgences"
+              value={urgentCount}
+              icon={AlertTriangle}
+              alertCount={urgentCount}
+              highlight={urgentCount > 0}
+              onClick={() => onViewChange("moderation")}
+            />
+            <StatCard
+              title="En cours de traitement"
+              value={stats?.reportsInProgressCount ?? 0}
+              icon={Clock}
+              onClick={() => goModeration("reports")}
+            />
+            <StatCard
+              title="Citoyens inscrits"
+              value={(stats?.citizensCount ?? 0).toLocaleString("fr-FR")}
+              icon={Users}
+            />
+            <StatCard
+              title="Satisfaction"
+              value={`${stats?.satisfaction ?? 0}%`}
+              trend={stats?.satisfactionTrend}
+              icon={CheckCircle2}
+            />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 card-premium p-10">
-              <div className="flex items-center justify-between mb-10">
-                <h3 className="text-xl font-black text-[var(--foreground)]">Évolution de la Satisfaction</h3>
-                <div className="flex gap-2">
-                  <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-zinc-800 px-3 py-1.5 rounded-full border border-[var(--card-border)]">
-                    <div className="w-2 h-2 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]"></div>
-                    <span className="text-[10px] font-black text-[var(--muted)]">ACTUEL</span>
-                  </div>
-                </div>
+          <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <button
+              type="button"
+              onClick={() => goModeration("reports")}
+              className="card-panel flex items-center justify-between p-5 text-left transition-all hover:ring-2 hover:ring-[var(--accent)]/20"
+            >
+              <div>
+                <p className="section-title">Signalements</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+                  Modérer la file citoyenne
+                </p>
               </div>
-              <div className="h-[340px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorSatisfaction" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#5e5ce6" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#5e5ce6" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-zinc-100 dark:text-zinc-800" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#86868b', fontSize: 11, fontWeight: 700}} dy={15} />
-                    <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#86868b', fontSize: 11, fontWeight: 700}} ticks={[0, 25, 50, 75, 100]} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: 'var(--card)', borderRadius: '16px', border: '1px solid var(--card-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', color: 'var(--foreground)' }}
-                      itemStyle={{ color: 'var(--foreground)', fontWeight: 800 }}
-                    />
-                    <Area type="monotone" dataKey="satisfaction" stroke="#5e5ce6" strokeWidth={4} fillOpacity={1} fill="url(#colorSatisfaction)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="flex items-center gap-2">
+                {pendingReports > 0 && (
+                  <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-black text-white">
+                    {pendingReports}
+                  </span>
+                )}
+                <ArrowRight className="h-4 w-4 text-[var(--accent)]" />
               </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => goModeration("messages")}
+              className="card-panel flex items-center justify-between p-5 text-left transition-all hover:ring-2 hover:ring-[var(--accent)]/20"
+            >
+              <div>
+                <p className="section-title">Messages contact</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+                  Répondre aux demandes
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {pendingMessages > 0 && (
+                  <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-black text-white">
+                    {pendingMessages}
+                  </span>
+                )}
+                <ArrowRight className="h-4 w-4 text-[var(--accent)]" />
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => onViewChange("targeted-push")}
+              className="card-panel flex items-center justify-between p-5 text-left transition-all hover:ring-2 hover:ring-[var(--accent)]/20"
+            >
+              <div>
+                <p className="section-title">Alertes directes</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+                  Communiquer à la population
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-[var(--accent)]" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="card-panel p-6 lg:col-span-1">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-[var(--foreground)]">
+                  Alertes prioritaires
+                </h3>
+                {urgentCount > 0 && (
+                  <Badge variant="danger">{urgentCount}</Badge>
+                )}
+              </div>
+              {urgentAlerts.length === 0 ? (
+                <p className="text-sm text-[var(--muted)]">
+                  Aucune alerte urgente pour le moment.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {urgentAlerts.map((alert) => (
+                    <li key={alert.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sessionStorage.setItem(
+                            "moderation_tab",
+                            alert.type === "contact" ? "messages" : "reports",
+                          );
+                          if (alert.type === "contact") {
+                            sessionStorage.setItem(
+                              "moderation_ticket_id",
+                              String(alert.entityId),
+                            );
+                          }
+                          onViewChange("moderation");
+                        }}
+                        className={clsx(
+                          "w-full rounded-xl border px-3 py-2.5 text-left transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50",
+                          alert.severity === "urgent"
+                            ? "border-red-500/30 bg-red-500/5"
+                            : "border-[var(--card-border)]",
+                        )}
+                      >
+                        <p className="text-xs font-bold text-[var(--foreground)] line-clamp-1">
+                          {alert.title}
+                        </p>
+                        <p className="mt-0.5 text-[10px] text-[var(--muted)]">
+                          {formatRelativeTime(alert.createdAt)}
+                          <span className="ml-2 font-bold text-red-500">URGENT</span>
+                        </p>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {(stats?.pendingTotalCount ?? 0) > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onViewChange("moderation")}
+                  className="mt-4 w-full text-xs font-bold text-[var(--accent)]"
+                >
+                  Voir les {stats?.pendingTotalCount} éléments à traiter →
+                </button>
+              )}
             </div>
 
-            <div className="flex flex-col gap-8">
-              <div className="card-premium p-10 flex-1">
-                <h3 className="text-base font-black text-[var(--foreground)] mb-8 opacity-80 uppercase tracking-widest">Sujets Chauds (IA)</h3>
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-6">
-                  <span className="text-3xl font-black text-red-500 drop-shadow-sm">Nids-de-poule</span>
-                  <span className="text-xl font-bold text-[var(--accent)]">Stationnement</span>
-                  <span className="text-2xl font-black text-[var(--foreground)]">Sécurité</span>
-                  <span className="text-sm text-[var(--muted)] font-bold">Parcs</span>
-                  <span className="text-lg font-bold text-green-500">Propreté</span>
-                  <span className="text-sm text-[var(--muted)] font-bold">Pistes cyclables</span>
-                  <span className="text-2xl font-bold text-orange-500">Éclairage</span>
-                  <span className="text-xs text-[var(--muted)]">Bruit</span>
-                  <span className="text-xl font-black text-blue-500">Transports</span>
-                </div>
-              </div>
-
-              <div className="bg-[var(--accent)] rounded-[32px] p-8 relative overflow-hidden shadow-2xl shadow-[var(--accent)]/20">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
-                <h3 className="text-base font-black text-white mb-4 flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
-                  Synthèse de la Semaine
+            <div className="card-panel p-6 lg:col-span-2">
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-[var(--foreground)]">
+                  Évolution de la satisfaction
                 </h3>
-                <p className="text-sm text-white/90 leading-relaxed font-medium">
-                  {stats && stats.activeReportsCount > 0
-                    ? `L'IA note ${stats.activeReportsCount} signalement${stats.activeReportsCount > 1 ? 's' : ''} actif${stats.activeReportsCount > 1 ? 's' : ''} en attente de traitement. La satisfaction citoyenne est stable à ${stats.satisfaction}%.`
-                    : "Aucun signalement actif pour le moment. La ville fonctionne normalement. Bel engagement citoyen constaté."}
-                </p>
-                <div className="mt-6 flex justify-end">
-                  <div className="text-[10px] font-black text-white/40 uppercase tracking-tighter">AI AGENT ANALYTICS v2.0</div>
-                </div>
+                <Badge variant="live" dot>
+                  7 jours
+                </Badge>
+              </div>
+              <div className="h-[260px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={trendData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="colorSatisfaction" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      className="stroke-zinc-200 dark:stroke-zinc-800"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "var(--muted)", fontSize: 11 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "var(--muted)", fontSize: 11 }}
+                      ticks={[0, 25, 50, 75, 100]}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--card)",
+                        borderRadius: "12px",
+                        border: "1px solid var(--card-border)",
+                        color: "var(--foreground)",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="satisfaction"
+                      stroke="var(--accent)"
+                      strokeWidth={2}
+                      fill="url(#colorSatisfaction)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

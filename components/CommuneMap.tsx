@@ -34,13 +34,15 @@ interface MapZone {
   bounds?: [[number, number], [number, number]];
 }
 
-// Generates sub-zone polygons within a commune bounding box  
+// Generates sub-zone polygons within a commune bounding box
 function generateSubZones(contour: number[][][], zoneName: string): MapZone[] {
   const coords = contour[0];
-  const lngs = coords.map(c => c[0]);
-  const lats = coords.map(c => c[1]);
-  const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+  const lngs = coords.map((c) => c[0]);
+  const lats = coords.map((c) => c[1]);
+  const minLng = Math.min(...lngs),
+    maxLng = Math.max(...lngs);
+  const minLat = Math.min(...lats),
+    maxLat = Math.max(...lats);
 
   const midLng = (minLng + maxLng) / 2;
   const midLat = (minLat + maxLat) / 2;
@@ -48,26 +50,44 @@ function generateSubZones(contour: number[][][], zoneName: string): MapZone[] {
   const zones: MapZone[] = [
     {
       name: "Centre-Ville",
-      bounds: [[midLat - 0.002, midLng - 0.003], [midLat + 0.002, midLng + 0.003]] as [[number, number], [number, number]]
+      bounds: [
+        [midLat - 0.002, midLng - 0.003],
+        [midLat + 0.002, midLng + 0.003],
+      ] as [[number, number], [number, number]],
     },
     {
       name: "Quartier Nord",
-      bounds: [[midLat + 0.002, midLng - 0.004], [midLat + 0.006, midLng + 0.002]] as [[number, number], [number, number]]
+      bounds: [
+        [midLat + 0.002, midLng - 0.004],
+        [midLat + 0.006, midLng + 0.002],
+      ] as [[number, number], [number, number]],
     },
     {
       name: "Quartier Sud",
-      bounds: [[midLat - 0.006, midLng - 0.003], [midLat - 0.002, midLng + 0.003]] as [[number, number], [number, number]]
+      bounds: [
+        [midLat - 0.006, midLng - 0.003],
+        [midLat - 0.002, midLng + 0.003],
+      ] as [[number, number], [number, number]],
     },
     {
       name: "Zone Est",
-      bounds: [[midLat - 0.002, midLng + 0.002], [midLat + 0.003, midLng + 0.006]] as [[number, number], [number, number]]
+      bounds: [
+        [midLat - 0.002, midLng + 0.002],
+        [midLat + 0.003, midLng + 0.006],
+      ] as [[number, number], [number, number]],
     },
   ];
   void zoneName;
   return zones;
 }
 
-export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEditing, customNeighborhoods }: CommuneMapProps) {
+export default function CommuneMap({
+  cityName,
+  selectedZones,
+  onZoneToggle,
+  isEditing,
+  customNeighborhoods,
+}: CommuneMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<unknown>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,7 +104,7 @@ export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEd
 
         // Fetch commune boundary from geo.api.gouv.fr
         const resp = await fetch(
-          `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(cityName)}&fields=nom,code,centre,contour&format=json&geometry=contour&boost=population&limit=1`
+          `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(cityName)}&fields=nom,code,centre,contour&format=json&geometry=contour&boost=population&limit=1`,
         );
         const data: CommuneData[] = await resp.json();
 
@@ -116,39 +136,47 @@ export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEd
 
         // IGN tile layer (free, official French base map)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (L as any).tileLayer(
-          "https://data.geopf.fr/wmts?service=WMTS&request=GetTile&version=1.0.0&tilematrixset=PM&tilematrix={z}&tilecol={x}&tilerow={y}&layer=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&format=image/png&style=normal",
-          {
-            maxZoom: 18,
-          }
-        ).addTo(leafletMap);
+        (L as any)
+          .tileLayer(
+            "https://data.geopf.fr/wmts?service=WMTS&request=GetTile&version=1.0.0&tilematrixset=PM&tilematrix={z}&tilecol={x}&tilerow={y}&layer=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&format=image/png&style=normal",
+            {
+              maxZoom: 18,
+            },
+          )
+          .addTo(leafletMap);
 
         // Draw commune boundary
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const communeLayer = (L as any).geoJSON(
-          {
-            type: "Feature",
-            geometry: commune.contour,
-            properties: {},
-          },
-          {
-            style: {
-              color: "var(--accent)",
-              weight: 3,
-              fillColor: "var(--accent)",
-              fillOpacity: 0.05,
-              dashArray: "10 10",
+        const communeLayer = (L as any)
+          .geoJSON(
+            {
+              type: "Feature",
+              geometry: commune.contour,
+              properties: {},
             },
-          }
-        ).addTo(leafletMap);
+            {
+              style: {
+                color: "var(--accent)",
+                weight: 3,
+                fillColor: "var(--accent)",
+                fillOpacity: 0.05,
+                dashArray: "10 10",
+              },
+            },
+          )
+          .addTo(leafletMap);
 
         // Fit map to commune bounds
         leafletMap.fitBounds(communeLayer.getBounds(), { padding: [40, 40] });
 
         // Draw zones
-        const zonesToDraw: MapZone[] = customNeighborhoods && customNeighborhoods.length > 0
-          ? customNeighborhoods
-          : generateSubZones(commune.contour.coordinates as number[][][], commune.nom);
+        const zonesToDraw: MapZone[] =
+          customNeighborhoods && customNeighborhoods.length > 0
+            ? customNeighborhoods
+            : generateSubZones(
+                commune.contour.coordinates as number[][][],
+                commune.nom,
+              );
 
         zonesToDraw.forEach((zone: MapZone) => {
           const isSelected = selectedZones.has(zone.name);
@@ -160,7 +188,9 @@ export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEd
             layer = (L as any).polygon(zone.points, {
               color: isSelected ? "var(--accent)" : "rgba(107, 114, 128, 0.4)",
               weight: 2,
-              fillColor: isSelected ? "var(--accent)" : "rgba(156, 163, 175, 0.2)",
+              fillColor: isSelected
+                ? "var(--accent)"
+                : "rgba(156, 163, 175, 0.2)",
               fillOpacity: isSelected ? 0.35 : 0.05,
               interactive: !isEditing,
             });
@@ -170,7 +200,9 @@ export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEd
             layer = (L as any).rectangle(zone.bounds, {
               color: isSelected ? "var(--accent)" : "rgba(107, 114, 128, 0.4)",
               weight: 2,
-              fillColor: isSelected ? "var(--accent)" : "rgba(156, 163, 175, 0.2)",
+              fillColor: isSelected
+                ? "var(--accent)"
+                : "rgba(156, 163, 175, 0.2)",
               fillOpacity: isSelected ? 0.35 : 0.05,
               interactive: !isEditing,
             });
@@ -178,11 +210,13 @@ export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEd
 
           if (layer) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const label = (L as any).tooltip({
-              permanent: true,
-              direction: "center",
-              className: isSelected ? "zone-label selected" : "zone-label",
-            }).setContent(zone.name);
+            const label = (L as any)
+              .tooltip({
+                permanent: true,
+                direction: "center",
+                className: isSelected ? "zone-label selected" : "zone-label",
+              })
+              .setContent(zone.name);
 
             layer.bindTooltip(label).addTo(leafletMap);
 
@@ -222,7 +256,9 @@ export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEd
               <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
             </div>
           </div>
-          <p className="text-[10px] font-black text-apple-muted uppercase tracking-[0.4em] opacity-60">Synchronisation Cartographique</p>
+          <p className="text-[10px] font-black text-apple-muted uppercase tracking-[0.4em] opacity-60">
+            Synchronisation Cartographique
+          </p>
         </div>
       )}
 
@@ -231,7 +267,9 @@ export default function CommuneMap({ cityName, selectedZones, onZoneToggle, isEd
           <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-[24px] flex items-center justify-center mb-6">
             <X className="w-8 h-8" />
           </div>
-          <p className="text-sm font-black text-[var(--foreground)] text-center tracking-tight leading-relaxed">{error}</p>
+          <p className="text-sm font-black text-[var(--foreground)] text-center tracking-tight leading-relaxed">
+            {error}
+          </p>
         </div>
       )}
 

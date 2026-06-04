@@ -1,8 +1,44 @@
+"use client";
+
 import React, { useState } from "react";
-import { Shield, Lock, Mail, ArrowRight, AlertTriangle } from "lucide-react";
+import {
+  Lock,
+  Mail,
+  ArrowRight,
+  AlertTriangle,
+  Shield,
+  LayoutDashboard,
+  Send,
+  MapPin,
+  ShieldCheck,
+} from "lucide-react";
 import clsx from "clsx";
 import { api } from "@/lib/api";
 import { useAuth, User } from "@/context/AuthContext";
+import BrandLogo from "@/components/BrandLogo";
+
+const highlights = [
+  {
+    icon: LayoutDashboard,
+    title: "Pouls de la ville",
+    description: "Tableau de bord et indicateurs en temps réel.",
+  },
+  {
+    icon: Shield,
+    title: "Signalements",
+    description: "Modération et suivi des remontées citoyennes.",
+  },
+  {
+    icon: Send,
+    title: "Alertes directes",
+    description: "Communication géolocalisée vers les habitants.",
+  },
+  {
+    icon: MapPin,
+    title: "Services municipaux",
+    description: "Agenda, chantiers, déchets et secteurs géo.",
+  },
+];
 
 export default function Login() {
   const { login } = useAuth();
@@ -22,15 +58,21 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      const response = await api.post('/api/v1/auth/login', { email, password });
-      
+      const response = await api.post("/api/v1/auth/login", {
+        email,
+        password,
+      });
+
       if (response.error) {
         setError(response.error);
         return;
       }
 
       if (response.data) {
-        const { access_token, user } = response.data as { access_token: string; user: User };
+        const { access_token, user } = response.data as {
+          access_token: string;
+          user: User;
+        };
         login(access_token, user);
       }
     } catch {
@@ -41,91 +83,224 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[var(--background)] relative overflow-hidden transition-colors duration-500">
-      {/* Background decorations */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[var(--accent)]/5 rounded-full blur-[120px] -translate-y-1/4 translate-x-1/4"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[100px] translate-y-1/4 -translate-x-1/4"></div>
-      
-      <div className="relative z-10 w-full max-w-lg p-10">
-        <div className="flex flex-col items-center mb-10">
-          <div className="w-20 h-20 bg-[var(--accent)] rounded-[28px] flex items-center justify-center shadow-2xl shadow-[var(--accent)]/30 mb-8 border border-white/20">
-            <Shield className="w-10 h-10 text-white" />
+    <div className="flex min-h-screen w-full bg-[var(--background)]">
+      {/* Panneau gauche — contexte & valeur */}
+      <aside className="relative hidden w-[min(44%,520px)] shrink-0 overflow-hidden lg:flex lg:flex-col">
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(165deg, #0b0080 0%, #1a1a6e 45%, #2d2a9a 100%)",
+          }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.12]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-indigo-400/20 blur-3xl" />
+
+        <div className="relative z-10 flex flex-1 flex-col justify-between p-10 xl:p-12">
+          <div>
+            <div className="mb-10 flex items-center gap-4">
+              <div className="rounded-2xl bg-white/95 p-2.5 shadow-lg ring-1 ring-white/20">
+                <BrandLogo
+                  size="lg"
+                  className="!h-12 !w-12 !rounded-xl !bg-transparent !ring-0 !shadow-none"
+                />
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-white">
+                  Municip&apos;All Panel
+                </p>
+                <p className="text-sm text-white/70">Espace mairie</p>
+              </div>
+            </div>
+
+            <h2 className="max-w-sm text-2xl font-semibold leading-snug tracking-tight text-white xl:text-[1.65rem]">
+              Pilotez votre commune au quotidien
+            </h2>
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/75">
+              Un seul portail pour superviser l&apos;activité citoyenne, modérer
+              les signalements et diffuser vos services municipaux.
+            </p>
           </div>
-          <h1 className="text-4xl font-black text-[var(--foreground)] tracking-tighter">Municip&apos;All</h1>
-          <p className="text-apple-muted opacity-50 mt-2 font-black">Espace de Gestion Municipale</p>
+
+          <ul className="mt-10 space-y-3">
+            {highlights.map((item) => {
+              const Icon = item.icon;
+              return (
+                <li
+                  key={item.title}
+                  className="flex gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/15">
+                    <Icon className="h-4 w-4 text-white" strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white">
+                      {item.title}
+                    </p>
+                    <p className="text-xs leading-relaxed text-white/65">
+                      {item.description}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="mt-10 text-xs text-white/45">
+            © 2026 Municip&apos;All · Technologies civiques
+          </p>
         </div>
+      </aside>
 
-        <div className="card-premium p-12 bg-glass">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            
-            {error && (
-              <div className="bg-red-500/10 text-red-500 p-4 rounded-2xl text-xs flex items-start gap-3 border border-red-500/20 font-bold animate-shake">
-                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                <p>{error}</p>
-              </div>
-            )}
+      {/* Panneau droit — formulaire */}
+      <main className="relative flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-10 sm:px-10">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-80 dark:opacity-50"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 50% at 80% 0%, rgba(11, 0, 128, 0.06), transparent), radial-gradient(ellipse 50% 40% at 0% 100%, rgba(79, 70, 229, 0.05), transparent)",
+          }}
+        />
 
-            <div>
-              <label className="block text-[10px] font-black text-apple-muted mb-3 opacity-60">EMAIL INSTITUTIONNEL</label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 group-focus-within:text-[var(--accent)] transition-colors" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="agent@ville.gouv.fr"
-                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent dark:border-zinc-700/50 text-[var(--foreground)] text-sm rounded-[20px] pl-12 pr-4 py-4 focus:bg-white dark:focus:bg-zinc-800 border-zinc-200 focus:border-[var(--accent)] outline-none transition-all font-medium"
-                />
-              </div>
-            </div>
+        <div className="relative z-10 w-full max-w-[420px]">
+          {/* En-tête mobile */}
+          <div className="mb-8 flex flex-col items-center text-center lg:hidden">
+            <BrandLogo size="lg" className="mb-4" />
+            <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">
+              Municip&apos;All Panel
+            </h1>
+            <p className="mt-1.5 text-sm text-[var(--muted)]">
+              Espace de gestion municipale
+            </p>
+          </div>
 
-            <div>
-              <label className="block text-[10px] font-black text-apple-muted mb-3 opacity-60">MOT DE PASSE</label>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 group-focus-within:text-[var(--accent)] transition-colors" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent dark:border-zinc-700/50 text-[var(--foreground)] text-sm rounded-[20px] pl-12 pr-4 py-4 focus:bg-white dark:focus:bg-zinc-800 border-zinc-200 focus:border-[var(--accent)] outline-none transition-all font-medium"
-                />
-              </div>
-            </div>
+          <div className="mb-6 hidden lg:block">
+            <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">
+              Connexion
+            </h1>
+            <p className="mt-1.5 text-sm text-[var(--muted)]">
+              Accédez à votre espace agent avec vos identifiants
+              institutionnels.
+            </p>
+          </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={clsx(
-                "w-full bg-[var(--accent)] text-white py-4 rounded-[22px] text-base font-black shadow-xl shadow-[var(--accent)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 mt-4",
-                isLoading && "opacity-75 cursor-wait"
-              )}
-            >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span>Accès Sécurisé</span>
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-10 pt-8 border-t border-[var(--card-border)]">
-            <div className="flex items-start gap-4 bg-zinc-100 dark:bg-zinc-800/50 p-5 rounded-[28px] border border-[var(--card-border)]">
-              <Shield className="w-6 h-6 text-[var(--accent)] shrink-0 mt-0.5 opacity-60" />
-              <p className="text-[11px] text-[var(--muted)] font-medium leading-relaxed">
-                Ce portail est <strong>réservé au personnel habilité</strong> des collectivités territoriales. Toute tentative d&apos;accès non autorisée est enregistrée.
+          <div className="card-panel p-7 sm:p-8">
+            <div className="mb-6 flex items-center gap-2 rounded-xl bg-[var(--accent)]/[0.06] px-3.5 py-2.5 ring-1 ring-[var(--accent)]/10">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--accent)]" />
+              <p className="text-xs font-medium text-[var(--muted)]">
+                Accès réservé au personnel habilité des collectivités
               </p>
             </div>
-          </div>
-        </div>
 
-        <p className="text-center text-[10px] font-black text-apple-muted opacity-40 mt-10 tracking-widest">
-          © 2026 MUNICIP&apos;ALL • TECHNOLOGIES CIVIQUES
-        </p>
-      </div>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              {error && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+                >
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <p>{error}</p>
+                </div>
+              )}
+
+              <div>
+                <label
+                  htmlFor="login-email"
+                  className="section-title mb-2 block"
+                >
+                  Email institutionnel
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
+                  <input
+                    id="login-email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="agent@ville.gouv.fr"
+                    className="input-field-icon"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="login-password"
+                  className="section-title mb-2 block"
+                >
+                  Mot de passe
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
+                  <input
+                    id="login-password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="input-field-icon"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={clsx(
+                  "btn-primary w-full py-3",
+                  isLoading && "opacity-75",
+                )}
+              >
+                {isLoading ? (
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <>
+                    Se connecter
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <p className="mt-6 text-center text-[11px] leading-relaxed text-[var(--muted)]">
+              Toute tentative d&apos;accès non autorisée est enregistrée et peut
+              faire l&apos;objet de poursuites.
+            </p>
+          </div>
+
+          {/* Raccourcis visuels sur mobile */}
+          <div className="mt-8 grid grid-cols-2 gap-3 lg:hidden">
+            {highlights.slice(0, 4).map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  className="rounded-xl border border-[var(--card-border)] bg-[var(--card)]/60 px-3 py-3"
+                >
+                  <Icon className="mb-2 h-4 w-4 text-[var(--accent)]" />
+                  <p className="text-xs font-medium text-[var(--foreground)]">
+                    {item.title}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mt-8 text-center text-[11px] text-[var(--muted)] lg:hidden">
+            © 2026 Municip&apos;All
+          </p>
+        </div>
+      </main>
     </div>
   );
 }

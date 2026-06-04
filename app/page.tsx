@@ -15,6 +15,7 @@ import ConstructionManager from "@/components/ConstructionManager";
 import WasteManager from "@/components/WasteManager";
 import EventManager from "@/components/EventManager";
 import { useAuth } from "@/context/AuthContext";
+import { InboxProvider } from "@/context/InboxContext";
 
 export default function Home() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -22,8 +23,8 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-gray-50">
-        <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+      <div className="flex h-screen w-full items-center justify-center bg-[var(--background)]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)]/20 border-t-[var(--accent)]" />
       </div>
     );
   }
@@ -33,27 +34,35 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[var(--background)] overflow-hidden text-[var(--foreground)] font-sans transition-colors duration-500">
-      <Header onViewChange={setActiveView} />
-      
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar activeView={activeView} onViewChange={setActiveView} />
-        
-        <main className="flex-1 h-full overflow-hidden relative">
-          <div className="relative z-10 w-full h-full fade-in">
-            {activeView === "pouls-ai" && <PoulsAiDashboard />}
+    <InboxProvider>
+      <div className="flex h-screen w-full flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+        <Header onViewChange={setActiveView} />
+
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <Sidebar activeView={activeView} onViewChange={setActiveView} />
+
+          <main className="relative min-w-0 flex-1 overflow-hidden">
+            <div className="fade-in h-full w-full">
+              {activeView === "pouls-ai" && (
+                <PoulsAiDashboard onViewChange={setActiveView} />
+              )}
             {activeView === "moderation" && <ModerationMatrix />}
             {activeView === "widgets" && <WidgetGenerator />}
             {activeView === "targeted-push" && <TargetedCommunication />}
             {activeView === "settings" && <WhiteLabelSettings />}
             {activeView === "profile" && <ProfileView />}
             {activeView === "neighborhoods" && <NeighborhoodManager />}
-            {activeView === "construction" && user?.cityId && <ConstructionManager cityId={user.cityId} />}
-            {activeView === "waste" && user?.cityId && <WasteManager cityId={user.cityId} />}
+            {activeView === "construction" && user?.cityId && (
+              <ConstructionManager cityId={user.cityId} />
+            )}
+            {activeView === "waste" && user?.cityId && (
+              <WasteManager cityId={user.cityId} />
+            )}
             {activeView === "events" && <EventManager />}
           </div>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
+    </InboxProvider>
   );
 }
