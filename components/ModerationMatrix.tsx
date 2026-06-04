@@ -49,61 +49,82 @@ function formatDate(dateStr: string): string {
 
 type ModerationTab = "reports" | "messages";
 
+function consumeModerationSession(): { tab: ModerationTab; ticketId: number | null } {
+  if (typeof window === "undefined") {
+    return { tab: "reports", ticketId: null };
+  }
+  let tab: ModerationTab = "reports";
+  let ticketId: number | null = null;
+
+  const savedTab = sessionStorage.getItem("moderation_tab");
+  if (savedTab === "reports" || savedTab === "messages") {
+    tab = savedTab;
+    sessionStorage.removeItem("moderation_tab");
+  }
+
+  const savedTicket = sessionStorage.getItem("moderation_ticket_id");
+  if (savedTicket) {
+    const id = Number(savedTicket);
+    if (!Number.isNaN(id)) {
+      ticketId = id;
+      tab = "messages";
+    }
+    sessionStorage.removeItem("moderation_ticket_id");
+  }
+
+  return { tab, ticketId };
+}
+
 export default function ModerationMatrix() {
   const toast = useToast();
   const { refresh: refreshInbox } = useInbox();
-  const [activeTab, setActiveTab] = useState<ModerationTab>("reports");
+  const [sessionNav] = useState(consumeModerationSession);
+  const [activeTab, setActiveTab] = useState<ModerationTab>(sessionNav.tab);
   const [reports, setReports] = useState<DisplayReport[]>([]);
   const [tickets, setTickets] = useState<ContactTicketListItem[]>([]);
-  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(
+    sessionNav.ticketId,
+  );
   const [search, setSearch] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [readyKey, setReadyKey] = useState<string | null>(null);
+
+  const fetchKey = `${activeTab}:${refreshKey}`;
+  const isLoading = readyKey !== fetchKey;
 
   const fetchData = () => setRefreshKey((k) => k + 1);
 
   useEffect(() => {
-    const savedTab = sessionStorage.getItem("moderation_tab");
-    if (savedTab === "reports" || savedTab === "messages") {
-      setActiveTab(savedTab);
-      sessionStorage.removeItem("moderation_tab");
-    }
-    const savedTicket = sessionStorage.getItem("moderation_ticket_id");
-    if (savedTicket) {
-      const id = Number(savedTicket);
-      if (!Number.isNaN(id)) {
-        setSelectedTicketId(id);
-        setActiveTab("messages");
-      }
-      sessionStorage.removeItem("moderation_ticket_id");
-    }
-  }, []);
+    let cancelled = false;
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(true);
-      if (activeTab === "reports") {
-        api
-          .getReports()
-          .then((data) => {
-            setReports(
-              data.map((r) => ({ ...r, priority: getPriority(r.category) })),
-            );
-            setIsLoading(false);
-          })
-          .catch(() => setIsLoading(false));
-      } else {
-        api
-          .getContactTickets()
-          .then((data) => {
-            setTickets(data);
-            setIsLoading(false);
-          })
-          .catch(() => setIsLoading(false));
-      }
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [refreshKey, activeTab]);
+    if (activeTab === "reports") {
+      void api
+        .getReports()
+        .then((data) => {
+          if (cancelled) return;
+          setReports(data.map((r) => ({ ...r, priority: getPriority(r.category) })));
+          setReadyKey(fetchKey);
+        })
+        .catch(() => {
+          if (!cancelled) setReadyKey(fetchKey);
+        });
+    } else {
+      void api
+        .getContactTickets()
+        .then((data) => {
+          if (cancelled) return;
+          setTickets(data);
+          setReadyKey(fetchKey);
+        })
+        .catch(() => {
+          if (!cancelled) setReadyKey(fetchKey);
+        });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, fetchKey]);
 
   const assignReport = async (id: number) => {
     const ok = await api.updateReportStatus(id, "En cours");

@@ -79,24 +79,31 @@ export default function WidgetGenerator() {
     widgetCatalog.map((w) => ({ ...w, enabled: w.id === "traffic" })),
   );
   const [preservedFeatures, setPreservedFeatures] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [readyCityId, setReadyCityId] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
 
+  const cityId = user?.cityId;
+  const isLoading = Boolean(cityId) && readyCityId !== cityId;
+
   useEffect(() => {
-    if (!user?.cityId) {
-      setIsLoading(false);
-      return;
-    }
-    api
-      .getCityConfig(user.cityId)
+    if (!cityId) return;
+    let cancelled = false;
+    void api
+      .getCityConfig(cityId)
       .then((config) => {
+        if (cancelled) return;
         const features = config?.features ?? [];
         setPreservedFeatures(features.filter((f) => !MANAGED_FEATURES.has(f)));
         setWidgets(widgetsFromFeatures(features));
-        setIsLoading(false);
+        setReadyCityId(cityId);
       })
-      .catch(() => setIsLoading(false));
-  }, [user?.cityId]);
+      .catch(() => {
+        if (!cancelled) setReadyCityId(cityId);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cityId]);
 
   const persistFeatures = useCallback(
     async (nextWidgets: WidgetItem[], previousWidgets: WidgetItem[]) => {
@@ -113,7 +120,7 @@ export default function WidgetGenerator() {
       toast("error", "Impossible d'enregistrer ce module. Réessayez.");
       return false;
     },
-    [user?.cityId, preservedFeatures, toast],
+    [user, preservedFeatures, toast],
   );
 
   const toggleWidget = async (id: string, isBeta?: boolean) => {

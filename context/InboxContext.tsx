@@ -26,35 +26,36 @@ const InboxContext = createContext<InboxContextValue | undefined>(undefined);
 
 export function InboxProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const cityId = user?.cityId;
   const [stats, setStats] = useState<CityDashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [readyKey, setReadyKey] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
+  const fetchKey = cityId ? `${cityId}:${refreshKey}` : null;
+  const isLoading = Boolean(fetchKey) && readyKey !== fetchKey;
+
   useEffect(() => {
-    if (!user?.cityId) {
-      setStats(null);
-      setIsLoading(false);
-      return;
-    }
+    if (!cityId || !fetchKey) return;
 
     let cancelled = false;
-    setIsLoading(true);
-
-    api
-      .getDashboardStats(user.cityId)
+    void api
+      .getDashboardStats(cityId)
       .then((data) => {
-        if (!cancelled) setStats(data);
+        if (!cancelled) {
+          setStats(data);
+          setReadyKey(fetchKey);
+        }
       })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
+      .catch(() => {
+        if (!cancelled) setReadyKey(fetchKey);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [user?.cityId, refreshKey]);
+  }, [cityId, fetchKey]);
 
   useEffect(() => {
     if (!user?.cityId) return;
@@ -62,18 +63,20 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [user?.cityId, refresh]);
 
+  const effectiveStats = cityId ? stats : null;
+
   const value = useMemo<InboxContextValue>(
     () => ({
-      stats,
-      alerts: stats?.alerts ?? [],
-      pendingReports: stats?.activeReportsCount ?? 0,
-      pendingMessages: stats?.pendingContactMessagesCount ?? 0,
-      pendingTotal: stats?.pendingTotalCount ?? 0,
-      urgentCount: stats?.urgentAlertsCount ?? 0,
+      stats: effectiveStats,
+      alerts: effectiveStats?.alerts ?? [],
+      pendingReports: effectiveStats?.activeReportsCount ?? 0,
+      pendingMessages: effectiveStats?.pendingContactMessagesCount ?? 0,
+      pendingTotal: effectiveStats?.pendingTotalCount ?? 0,
+      urgentCount: effectiveStats?.urgentAlertsCount ?? 0,
       isLoading,
       refresh,
     }),
-    [stats, isLoading, refresh],
+    [effectiveStats, isLoading, refresh],
   );
 
   return <InboxContext.Provider value={value}>{children}</InboxContext.Provider>;

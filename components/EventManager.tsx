@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import {
   Calendar,
   Plus,
@@ -310,11 +311,13 @@ export default function EventManager() {
             <div key={event.id} className="card-premium overflow-hidden">
               {event.imageUrl && (
                 <div className="relative h-48 w-full overflow-hidden">
-                  {/* URL saisie par l'agent : domaine variable, pas de whitelist next/image */}
-                  <img
+                  <Image
                     src={event.imageUrl}
                     alt={event.title}
-                    className="h-full w-full object-cover"
+                    fill
+                    unoptimized
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 800px"
                   />
                 </div>
               )}

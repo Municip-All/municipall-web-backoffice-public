@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Loader2, Send, X, CheckCircle2 } from "lucide-react";
 import clsx from "clsx";
 import { api, ContactTicketDetail } from "@/lib/api";
@@ -21,22 +21,25 @@ export default function ContactTicketChat({
   const toast = useToast();
   const { refresh: refreshInbox } = useInbox();
   const [ticket, setTicket] = useState<ContactTicketDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadedTicketId, setLoadedTicketId] = useState<number | null>(null);
+  const loading = loadedTicketId !== ticketId;
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const [closing, setClosing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const data = await api.getContactTicket(ticketId);
-    setTicket(data);
-    setLoading(false);
-  }, [ticketId]);
-
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    void api.getContactTicket(ticketId).then((data) => {
+      if (!cancelled) {
+        setTicket(data);
+        setLoadedTicketId(ticketId);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ticketId]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });

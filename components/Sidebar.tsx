@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import BrandLogo from "@/components/BrandLogo";
-import Badge from "@/components/Badge";
 import { useInbox } from "@/context/InboxContext";
 
 export type ViewType =
