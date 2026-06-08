@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { PermissionsProvider } from "@/context/PermissionsContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
@@ -35,7 +36,9 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col">
         <ThemeProvider>
           <AuthProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <PermissionsProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </PermissionsProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

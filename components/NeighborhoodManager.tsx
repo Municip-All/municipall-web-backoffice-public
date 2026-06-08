@@ -13,6 +13,7 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { api, CityNeighborhood } from "@/lib/api";
+import { getGeoCommuneName } from "@/lib/geoCommune";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import clsx from "clsx";
@@ -39,7 +40,7 @@ export default function NeighborhoodManager() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [cityName, setCityName] = useState("");
+  const [communeName, setCommuneName] = useState("");
   const [neighborhoods, setNeighborhoods] = useState<CityNeighborhood[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [tempPoints, setTempPoints] = useState<[number, number][]>([]);
@@ -98,23 +99,23 @@ export default function NeighborhoodManager() {
     api
       .getCityConfig(user.cityId)
       .then((config) => {
-        if (config && config.name && config.name !== "Municip'All") {
-          setCityName(config.name);
+        if (config && user.cityId) {
+          setCommuneName(getGeoCommuneName(user.cityId, config));
           setNeighborhoods(config.neighborhoods ?? []);
         } else {
-          setCityName("Paris");
+          setCommuneName("Paris");
           toast("info", "Ville non reconnue. Affichage de Paris par défaut.");
         }
       })
       .catch(() => {
-        setCityName("Paris");
+        setCommuneName("Paris");
         toast("error", "Erreur API. Mode démo activé.");
       })
       .finally(() => setIsLoading(false));
   }, [user?.cityId, toast]);
 
   useEffect(() => {
-    if (!mapRef.current || !cityName) return;
+    if (!mapRef.current || !communeName) return;
 
     let isMounted = true;
     const initMap = async () => {
@@ -123,7 +124,7 @@ export default function NeighborhoodManager() {
         if (!isMounted || !mapRef.current) return;
 
         const resp = await fetch(
-          `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(cityName)}&fields=nom,code,centre,contour&format=json&geometry=contour&boost=population&limit=1`,
+          `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(communeName)}&fields=nom,code,centre,contour&format=json&geometry=contour&boost=population&limit=1`,
         );
         const data = await resp.json();
         if (!data || data.length === 0) return;
@@ -192,7 +193,7 @@ export default function NeighborhoodManager() {
     return () => {
       isMounted = false;
     };
-  }, [cityName, isPointInPolygon, toast]);
+  }, [communeName, isPointInPolygon, toast]);
 
   // Handle Temp Points rendering
   useEffect(() => {
@@ -288,8 +289,8 @@ export default function NeighborhoodManager() {
   const saveAll = async () => {
     if (!user?.cityId) return;
     setIsSaving(true);
-     
-    const success = await api.saveCityConfig(user.cityId, {
+
+    const { ok: success } = await api.saveCityConfig(user.cityId, {
       neighborhoods,
     });
     if (success) {

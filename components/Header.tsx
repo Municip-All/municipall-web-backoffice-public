@@ -8,6 +8,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { api } from "@/lib/api";
 import { ViewType } from "./Sidebar";
 import NotificationCenter from "@/components/NotificationCenter";
+import { roleLabel } from "@/lib/roleLabels";
 
 interface HeaderProps {
   onViewChange: (view: ViewType) => void;
@@ -71,10 +72,10 @@ export default function Header({ onViewChange }: HeaderProps) {
                 : "Agent"}
             </p>
             <p className="text-[11px] text-[var(--muted)]">
-              {user?.role || "Service municipal"}
+              {user?.role ? roleLabel(user.role) : "Service municipal"}
             </p>
           </div>
-          <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-[var(--accent)]/15 ring-1 ring-[var(--card-border)] dark:bg-zinc-800">
+          <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-[var(--accent)] ring-1 ring-[var(--accent)]/30">
             {user?.avatar_url ? (
               <Image
                 src={user.avatar_url}
@@ -83,7 +84,7 @@ export default function Header({ onViewChange }: HeaderProps) {
                 className="object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-[var(--accent)]">
+              <div className="flex h-full w-full items-center justify-center text-sm font-bold text-white">
                 {(user?.name?.[0] || "A").toUpperCase()}
               </div>
             )}

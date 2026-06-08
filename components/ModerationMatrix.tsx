@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import {
   ShieldAlert,
   Clock,
@@ -10,6 +9,7 @@ import {
   Loader2,
   RefreshCcw,
   MessageSquare,
+  ChevronRight,
 } from "lucide-react";
 import { api, ContactTicketListItem, Report } from "@/lib/api";
 import { useInbox } from "@/context/InboxContext";
@@ -18,9 +18,25 @@ import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
 import ContactTicketChat from "@/components/ContactTicketChat";
+import ReportDetailModal from "@/components/ReportDetailModal";
+import ReportThumbnail from "@/components/ReportThumbnail";
 
 interface DisplayReport extends Report {
   priority: "Haute" | "Moyenne" | "Basse";
+}
+
+function categoryBadgeClass(category: string): string {
+  const map: Record<string, string> = {
+    Voirie: "bg-blue-100 text-blue-900 border-blue-200",
+    Éclairage: "bg-amber-100 text-amber-900 border-amber-200",
+    Sécurité: "bg-red-100 text-red-900 border-red-200",
+    Vandalisme: "bg-orange-100 text-orange-900 border-orange-200",
+    Propreté: "bg-emerald-100 text-emerald-900 border-emerald-200",
+    Eau: "bg-cyan-100 text-cyan-900 border-cyan-200",
+    "Espaces Verts": "bg-lime-100 text-lime-900 border-lime-200",
+    Autre: "bg-slate-100 text-slate-800 border-slate-200",
+  };
+  return map[category] ?? "bg-indigo-100 text-indigo-900 border-indigo-200";
 }
 
 function getPriority(category: string): "Haute" | "Moyenne" | "Basse" {
@@ -49,7 +65,10 @@ function formatDate(dateStr: string): string {
 
 type ModerationTab = "reports" | "messages";
 
-function consumeModerationSession(): { tab: ModerationTab; ticketId: number | null } {
+function consumeModerationSession(): {
+  tab: ModerationTab;
+  ticketId: number | null;
+} {
   if (typeof window === "undefined") {
     return { tab: "reports", ticketId: null };
   }
@@ -88,6 +107,7 @@ export default function ModerationMatrix() {
   const [search, setSearch] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [readyKey, setReadyKey] = useState<string | null>(null);
+  const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
 
   const fetchKey = `${activeTab}:${refreshKey}`;
   const isLoading = readyKey !== fetchKey;
@@ -102,7 +122,9 @@ export default function ModerationMatrix() {
         .getReports()
         .then((data) => {
           if (cancelled) return;
-          setReports(data.map((r) => ({ ...r, priority: getPriority(r.category) })));
+          setReports(
+            data.map((r) => ({ ...r, priority: getPriority(r.category) })),
+          );
           setReadyKey(fetchKey);
         })
         .catch(() => {
@@ -127,7 +149,7 @@ export default function ModerationMatrix() {
   }, [activeTab, fetchKey]);
 
   const assignReport = async (id: number) => {
-    const ok = await api.updateReportStatus(id, "En cours");
+    const { ok } = await api.updateReportStatus(id, "En cours");
     if (ok) {
       setReports((current) =>
         current.map((r) => (r.id === id ? { ...r, status: "En cours" } : r)),
@@ -163,8 +185,18 @@ export default function ModerationMatrix() {
 
   return (
     <PageShell>
+      <ReportDetailModal
+        reportId={selectedReportId}
+        onClose={() => setSelectedReportId(null)}
+        onUpdated={() => {
+          fetchData();
+          refreshInbox();
+        }}
+      />
       <PageHeader
-        title={activeTab === "reports" ? "Signalements" : "Conversations contact"}
+        title={
+          activeTab === "reports" ? "Signalements" : "Conversations contact"
+        }
         description="Gestion citoyenne · Console de modération"
         actions={
           <>
@@ -193,7 +225,9 @@ export default function ModerationMatrix() {
           onClick={() => setActiveTab("reports")}
           className={clsx(
             "rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all",
-            activeTab === "reports" ? "tab-segment-active" : "tab-segment-inactive",
+            activeTab === "reports"
+              ? "tab-segment-active"
+              : "tab-segment-inactive",
           )}
         >
           Signalements
@@ -203,7 +237,9 @@ export default function ModerationMatrix() {
           onClick={() => setActiveTab("messages")}
           className={clsx(
             "rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2",
-            activeTab === "messages" ? "tab-segment-active" : "tab-segment-inactive",
+            activeTab === "messages"
+              ? "tab-segment-active"
+              : "tab-segment-inactive",
           )}
         >
           <MessageSquare className="w-4 h-4" />
@@ -228,13 +264,16 @@ export default function ModerationMatrix() {
             <div
               className={clsx(
                 "grid min-h-[520px]",
-                selectedTicketId ? "lg:grid-cols-[minmax(0,1fr)_minmax(320px,42%)]" : "grid-cols-1",
+                selectedTicketId
+                  ? "lg:grid-cols-[minmax(0,1fr)_minmax(320px,42%)]"
+                  : "grid-cols-1",
               )}
             >
               <div className="divide-y divide-[var(--card-border)] overflow-y-auto max-h-[70vh]">
                 {filteredTickets.map((ticket) => {
                   const preview = ticket.lastMessage?.body ?? "—";
-                  const fromCitizen = ticket.lastMessage?.senderRole === "citizen";
+                  const fromCitizen =
+                    ticket.lastMessage?.senderRole === "citizen";
                   return (
                     <button
                       key={ticket.id}
@@ -242,7 +281,8 @@ export default function ModerationMatrix() {
                       onClick={() => setSelectedTicketId(ticket.id)}
                       className={clsx(
                         "w-full px-6 py-4 text-left transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20",
-                        selectedTicketId === ticket.id && "bg-[var(--accent)]/5 border-l-4 border-[var(--accent)]",
+                        selectedTicketId === ticket.id &&
+                          "bg-[var(--accent)]/5 border-l-4 border-[var(--accent)]",
                       )}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -253,7 +293,8 @@ export default function ModerationMatrix() {
                           className={clsx(
                             "shrink-0 text-[10px] font-black uppercase tracking-widest",
                             ticket.status === "En attente" && "text-amber-500",
-                            ticket.status === "En cours" && "text-[var(--accent)]",
+                            ticket.status === "En cours" &&
+                              "text-[var(--accent)]",
                             ticket.status === "Clôturé" && "text-zinc-400",
                           )}
                         >
@@ -265,7 +306,9 @@ export default function ModerationMatrix() {
                         {preview}
                       </p>
                       <p className="mt-2 text-[10px] font-bold text-apple-muted">
-                        {formatDate(ticket.lastMessage?.createdAt ?? ticket.updatedAt)}
+                        {formatDate(
+                          ticket.lastMessage?.createdAt ?? ticket.updatedAt,
+                        )}
                       </p>
                     </button>
                   );
@@ -306,25 +349,14 @@ export default function ModerationMatrix() {
                 {filteredReports.map((report) => (
                   <tr
                     key={report.id}
-                    className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors group"
+                    onClick={() => setSelectedReportId(report.id)}
+                    className="cursor-pointer hover:bg-zinc-50/80 dark:hover:bg-zinc-800/20 transition-colors group"
                   >
                     <td className="py-6 px-8">
-                      <div className="relative">
-                        {report.imageUrl ? (
-                          <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-[var(--card-border)] shadow-sm group-hover:scale-105 transition-transform bg-zinc-100 dark:bg-zinc-800">
-                            <Image
-                              src={report.imageUrl}
-                              alt="Photo"
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-20 h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-[var(--card-border)] flex items-center justify-center">
-                            <ShieldAlert className="w-8 h-8 text-zinc-300 dark:text-zinc-600" />
-                          </div>
-                        )}
-                      </div>
+                      <ReportThumbnail
+                        imageUrl={report.imageUrl}
+                        className="group-hover:scale-105 transition-transform"
+                      />
                     </td>
 
                     <td className="py-6 px-8">
@@ -352,7 +384,12 @@ export default function ModerationMatrix() {
                     </td>
 
                     <td className="py-6 px-8">
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-[var(--foreground)] text-[11px] font-black uppercase tracking-wider border border-[var(--card-border)] shadow-sm">
+                      <span
+                        className={clsx(
+                          "inline-flex items-center rounded-xl border px-3 py-1.5 text-[11px] font-black uppercase tracking-wider shadow-sm",
+                          categoryBadgeClass(report.category),
+                        )}
+                      >
                         {report.category}
                       </span>
                     </td>
@@ -385,21 +422,26 @@ export default function ModerationMatrix() {
                     </td>
 
                     <td className="py-6 px-8 text-right">
-                      <div className="flex justify-end">
+                      <div className="flex items-center justify-end gap-2">
                         {report.status === "En attente" ? (
                           <button
-                            onClick={() => assignReport(report.id)}
-                            className="bg-[var(--accent)] text-white text-[11px] font-black uppercase tracking-widest px-6 py-3 rounded-2xl shadow-lg shadow-[var(--accent)]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void assignReport(report.id);
+                            }}
+                            className="bg-[var(--accent)] text-white text-[11px] font-black uppercase tracking-widest px-5 py-2.5 rounded-2xl shadow-lg shadow-[var(--accent)]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                           >
                             <Wrench className="w-4 h-4" />
                             Assigner
                           </button>
                         ) : (
-                          <div className="px-5 py-3 border border-emerald-500/20 bg-emerald-500/5 text-emerald-500 font-black rounded-2xl text-[11px] uppercase tracking-widest flex items-center gap-2">
+                          <div className="px-4 py-2.5 border border-emerald-500/30 bg-emerald-50 text-emerald-700 font-black rounded-2xl text-[11px] uppercase tracking-widest flex items-center gap-2">
                             <Check className="w-4 h-4" />
                             {report.status}
                           </div>
                         )}
+                        <ChevronRight className="h-5 w-5 text-zinc-300 group-hover:text-[var(--accent)] transition-colors" />
                       </div>
                     </td>
                   </tr>

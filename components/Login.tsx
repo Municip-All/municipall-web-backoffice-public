@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { api } from "@/lib/api";
-import { useAuth, User } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import BrandLogo from "@/components/BrandLogo";
 
 const highlights = [
@@ -58,21 +58,15 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      const response = await api.post("/api/v1/auth/login", {
-        email,
-        password,
-      });
+      const result = await api.backofficeLogin(email, password);
 
-      if (response.error) {
-        setError(response.error);
+      if (result.error) {
+        setError(result.error);
         return;
       }
 
-      if (response.data) {
-        const { access_token, user } = response.data as {
-          access_token: string;
-          user: User;
-        };
+      if (result.data) {
+        const { access_token, user } = result.data;
         login(access_token, user);
       }
     } catch {

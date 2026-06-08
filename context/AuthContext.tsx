@@ -17,6 +17,7 @@ export interface User {
   role: string;
   cityId: string;
   avatar_url?: string;
+  permissions?: string[];
 }
 
 interface AuthContextType {

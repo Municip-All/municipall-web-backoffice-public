@@ -23,13 +23,17 @@ import { api } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
+import ColorHexField from "@/components/ColorHexField";
+import { getOnPrimaryColor, isPrimaryReadableOnWhite } from "@/lib/brandUtils";
 
 export default function WhiteLabelSettings() {
   const { user } = useAuth();
   const toast = useToast();
   const [appName, setAppName] = useState("");
+  const [officialName, setOfficialName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#0B0080");
   const [secondaryColor, setSecondaryColor] = useState("#4F46E5");
+  const [useGradient, setUseGradient] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -49,8 +53,10 @@ export default function WhiteLabelSettings() {
         .then((config) => {
           if (config) {
             setAppName(config.name || "");
+            setOfficialName(config.officialName || config.name || "");
             setPrimaryColor(config.theme.primaryColor || "#0B0080");
             setSecondaryColor(config.theme.secondaryColor || "#4F46E5");
+            setUseGradient(config.theme.useGradient ?? false);
             setLogoPreview(config.theme.logoUrl || null);
             setContactEmail(config.contact?.email || "");
             setContactPhone(config.contact?.phone || "");
@@ -78,12 +84,12 @@ export default function WhiteLabelSettings() {
     if (!user?.cityId) return;
     setIsSaving(true);
     try {
-      const ok = await api.saveCityConfig(user.cityId, {
+      const { ok } = await api.saveCityConfig(user.cityId, {
         name: appName,
         primaryColor,
         secondaryColor,
         logoUrl: logoPreview || "",
-        useGradient: false,
+        useGradient,
         contactEmail: contactEmail.trim() || undefined,
         contactPhone: contactPhone.trim() || undefined,
         contactHelpText: contactHelpText.trim() || undefined,
@@ -154,19 +160,28 @@ export default function WhiteLabelSettings() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   <div>
                     <label className="block text-[10px] font-black text-apple-muted mb-4 opacity-60">
-                      NOM DE L&apos;APPLICATION
+                      NOM AFFICHÉ DANS L&apos;APP
                     </label>
                     <input
                       type="text"
                       value={appName}
                       onChange={(e) => setAppName(e.target.value)}
-                      placeholder="Ex: Ma Ville en poche"
+                      placeholder="Ex: KB'App, Ma Ville en poche…"
                       className="form-input-sm"
                     />
                     <p className="text-[11px] text-[var(--muted)] mt-4 leading-relaxed">
-                      S&apos;affichera sur les stores et l&apos;écran
-                      d&apos;accueil.
+                      Titre sur l&apos;écran d&apos;accueil mobile (marque
+                      blanche). Ce n&apos;est pas le nom géographique de la
+                      commune.
                     </p>
+                    {officialName && officialName !== appName && (
+                      <p className="mt-3 rounded-xl bg-zinc-100 px-3 py-2 text-[11px] font-medium text-[var(--muted)] dark:bg-zinc-800/60">
+                        Commune officielle (cartes &amp; géoloc.) :{" "}
+                        <strong className="text-[var(--foreground)]">
+                          {officialName}
+                        </strong>
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -213,8 +228,9 @@ export default function WhiteLabelSettings() {
                   Page Contact (application mobile)
                 </h3>
                 <p className="text-sm text-[var(--muted)] mb-8 leading-relaxed">
-                  Ces informations s&apos;affichent dans la section &laquo;&nbsp;Besoin
-                  d&apos;aide&nbsp;&raquo; de l&apos;app citoyenne.
+                  Ces informations s&apos;affichent dans la section
+                  &laquo;&nbsp;Besoin d&apos;aide&nbsp;&raquo; de l&apos;app
+                  citoyenne.
                 </p>
                 <div className="space-y-8">
                   <div>
@@ -292,23 +308,42 @@ export default function WhiteLabelSettings() {
                         ))}
                       </div>
                     </div>
+                    {!isPrimaryReadableOnWhite(primaryColor) && (
+                      <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-800">
+                        Cette couleur est très claire : les boutons et liens
+                        resteront lisibles grâce à un texte automatique sombre,
+                        mais préférez une teinte plus soutenue pour un rendu
+                        harmonieux.
+                      </p>
+                    )}
                   </div>
 
                   <div className="pt-8 border-t border-[var(--card-border)]">
-                    <label className="block text-[10px] font-black text-apple-muted mb-5 opacity-60">
-                      COULEUR SECONDAIRE (ACCENTS)
-                    </label>
-                    <div className="flex items-center gap-5">
+                    <ColorHexField
+                      label="COULEUR SECONDAIRE (ACCENTS)"
+                      value={secondaryColor}
+                      onChange={setSecondaryColor}
+                    />
+                  </div>
+
+                  <div className="pt-8 border-t border-[var(--card-border)]">
+                    <label className="flex cursor-pointer items-center justify-between gap-4">
+                      <div>
+                        <span className="block text-[10px] font-black text-apple-muted opacity-60">
+                          DÉGRADÉ D&apos;ACCUEIL
+                        </span>
+                        <span className="mt-1 block text-xs text-[var(--muted)]">
+                          Halo coloré discret sur les écrans de connexion (sans
+                          modifier la structure de l&apos;app).
+                        </span>
+                      </div>
                       <input
-                        type="color"
-                        value={secondaryColor}
-                        onChange={(e) => setSecondaryColor(e.target.value)}
-                        className="w-12 h-12 rounded-full cursor-pointer border-2 border-white dark:border-zinc-800 shadow-md p-0 overflow-hidden"
+                        type="checkbox"
+                        checked={useGradient}
+                        onChange={(e) => setUseGradient(e.target.checked)}
+                        className="h-5 w-5 rounded border-gray-300 text-[var(--accent)]"
                       />
-                      <span className="text-sm font-black text-[var(--foreground)] bg-zinc-100 dark:bg-zinc-800 px-4 py-2 rounded-full border border-[var(--card-border)]">
-                        {secondaryColor.toUpperCase()}
-                      </span>
-                    </div>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -325,8 +360,11 @@ export default function WhiteLabelSettings() {
                     <div className="absolute top-0 inset-x-0 h-7 bg-zinc-900 rounded-b-[24px] mx-20 z-20"></div>
 
                     <div
-                      className="pt-14 px-6 pb-8 text-white rounded-b-[3rem] transition-all duration-700"
-                      style={{ backgroundColor: primaryColor }}
+                      className="pt-14 px-6 pb-8 rounded-b-[3rem] transition-all duration-700"
+                      style={{
+                        backgroundColor: primaryColor,
+                        color: getOnPrimaryColor(primaryColor),
+                      }}
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center p-2 shrink-0 border border-white/30 relative">

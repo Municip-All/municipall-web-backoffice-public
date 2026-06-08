@@ -31,7 +31,9 @@ function severityStyles(severity: DashboardAlert["severity"]) {
   }
 }
 
-export default function NotificationCenter({ onViewChange }: NotificationCenterProps) {
+export default function NotificationCenter({
+  onViewChange,
+}: NotificationCenterProps) {
   const { alerts, pendingTotal, urgentCount, isLoading } = useInbox();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);

@@ -1,3 +1,5 @@
+import { translateApiError } from "./apiErrors";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export interface ApiResponse<T = unknown> {
@@ -43,7 +45,7 @@ async function request<T>(
 
     if (!response.ok) {
       return {
-        error: data.message || "Une erreur est survenue",
+        error: translateApiError(data, response.status),
         status: response.status,
       };
     }
@@ -75,8 +77,18 @@ export interface CityContactConfig {
   helpText?: string;
 }
 
+export interface GeoJsonFeature {
+  type: "Feature";
+  geometry: {
+    type: string;
+    coordinates: unknown;
+  };
+  properties?: { name?: string };
+}
+
 export interface CityConfig {
   name: string;
+  officialName?: string;
   features: string[];
   contact?: CityContactConfig;
   neighborhoods?: CityNeighborhood[];
@@ -140,6 +152,31 @@ export interface Report {
   isResident?: boolean;
 }
 
+export interface ReportMessage {
+  id: number;
+  senderId: number;
+  senderRole: "citizen" | "agent";
+  senderName: string;
+  body: string;
+  createdAt: string;
+}
+
+export interface ReportCitizen {
+  id: number;
+  name: string;
+  surname: string;
+  email: string;
+  cityId?: string;
+  cityName?: string;
+}
+
+export interface ReportDetail extends Report {
+  lat: number;
+  lon: number;
+  citizen?: ReportCitizen;
+  messages: ReportMessage[];
+}
+
 export interface TicketMessage {
   id: number;
   senderId: number;
@@ -196,6 +233,15 @@ export interface ContactMessage {
   updatedAt: string;
 }
 
+export interface NotificationPreferences {
+  moderationAlerts: boolean;
+  weeklyReports: boolean;
+  citizenEngagement: boolean;
+  systemMaintenance: boolean;
+  contactInbox: boolean;
+  teamActivity: boolean;
+}
+
 // --- Generic Methods ---
 
 export const api = {
@@ -227,6 +273,13 @@ export const api = {
     return response.data || null;
   },
 
+  async getCityBoundary(cityId: string): Promise<GeoJsonFeature | null> {
+    const response = await request<GeoJsonFeature>(
+      `/api/v1/city-config/${cityId}/boundary`,
+    );
+    return response.data ?? null;
+  },
+
   async saveCityConfig(
     cityId: string,
     data: Partial<CityConfig> &
@@ -235,13 +288,14 @@ export const api = {
         contactPhone?: string;
         contactHelpText?: string;
       },
-  ): Promise<boolean> {
+  ): Promise<{ ok: boolean; error?: string }> {
     const response = await request(
-      `/api/v1/admin/cities/${cityId}`,
+      `/api/v1/city-config/${cityId}`,
       "PATCH",
       data,
     );
-    return response.status < 400;
+    if (response.error) return { ok: false, error: response.error };
+    return { ok: response.status < 400 };
   },
 
   // --- Dashboard Stats ---
@@ -260,24 +314,64 @@ export const api = {
     return response.data || [];
   },
 
-  async updateReportStatus(id: number, status: string): Promise<boolean> {
+  async getReport(
+    id: number,
+  ): Promise<{ data: ReportDetail | null; error?: string }> {
+    const response = await request<ReportDetail>(`/api/v1/reports/${id}`);
+    if (response.error) {
+      return { data: null, error: response.error };
+    }
+    return { data: response.data ?? null };
+  },
+
+  async replyToReport(
+    id: number,
+    body: string,
+  ): Promise<{ data: ReportDetail | null; error?: string }> {
+    const response = await request<ReportDetail>(
+      `/api/v1/reports/${id}/messages`,
+      "POST",
+      {
+        body,
+      },
+    );
+    if (response.error) {
+      return { data: null, error: response.error };
+    }
+    return { data: response.data ?? null };
+  },
+
+  async updateReportStatus(
+    id: number,
+    status: string,
+  ): Promise<{ ok: boolean; error?: string }> {
     const response = await request(`/api/v1/reports/${id}/status`, "PATCH", {
       status,
     });
-    return response.status < 400;
+    if (response.error) {
+      return { ok: false, error: response.error };
+    }
+    return { ok: response.status < 400 };
   },
 
   async getContactTickets(): Promise<ContactTicketListItem[]> {
-    const response = await request<ContactTicketListItem[]>("/api/v1/contact-tickets");
+    const response = await request<ContactTicketListItem[]>(
+      "/api/v1/contact-tickets",
+    );
     return response.data || [];
   },
 
   async getContactTicket(id: number): Promise<ContactTicketDetail | null> {
-    const response = await request<ContactTicketDetail>(`/api/v1/contact-tickets/${id}`);
+    const response = await request<ContactTicketDetail>(
+      `/api/v1/contact-tickets/${id}`,
+    );
     return response.data || null;
   },
 
-  async replyContactTicket(id: number, body: string): Promise<ContactTicketDetail | null> {
+  async replyContactTicket(
+    id: number,
+    body: string,
+  ): Promise<ContactTicketDetail | null> {
     const response = await request<ContactTicketDetail>(
       `/api/v1/contact-tickets/${id}/messages`,
       "POST",
@@ -301,7 +395,10 @@ export const api = {
   },
 
   /** @deprecated */
-  async updateContactMessageStatus(id: number, status: string): Promise<boolean> {
+  async updateContactMessageStatus(
+    id: number,
+    status: string,
+  ): Promise<boolean> {
     if (status === "En cours") {
       const t = await this.getContactTicket(id);
       if (t && t.status === "En attente") {
@@ -364,4 +461,187 @@ export const api = {
     const response = await request("/api/v1/users/password", "POST", data);
     return response.status < 400;
   },
+
+  async updateAvatar(avatarUrl: string): Promise<boolean> {
+    const response = await request("/api/v1/users/avatar", "POST", {
+      avatarUrl,
+    });
+    return response.status < 400;
+  },
+
+  async getMe(): Promise<User | null> {
+    const response = await request<User>("/api/v1/auth/me");
+    return response.data ?? null;
+  },
+
+  async getUserStats(): Promise<{
+    reports: number;
+    participations: number;
+    points: number;
+  } | null> {
+    const response = await request<{
+      reports: number;
+      participations: number;
+      points: number;
+    }>("/api/v1/users/stats");
+    return response.data ?? null;
+  },
+
+  async getNotificationPreferences(): Promise<NotificationPreferences | null> {
+    const response = await request<NotificationPreferences>(
+      "/api/v1/users/preferences",
+    );
+    return response.data ?? null;
+  },
+
+  async updateNotificationPreferences(
+    data: Partial<NotificationPreferences>,
+  ): Promise<NotificationPreferences | null> {
+    const response = await request<NotificationPreferences>(
+      "/api/v1/users/preferences",
+      "POST",
+      data,
+    );
+    return response.data ?? null;
+  },
+
+  // --- Staff / équipe mairie ---
+
+  async getTeamKpis(days = 30): Promise<AgentKpi[]> {
+    const response = await request<AgentKpi[]>(
+      `/api/v1/staff/team/kpis?days=${days}`,
+    );
+    return response.data ?? [];
+  },
+
+  async getTeamActivity(limit = 50): Promise<TeamActivityItem[]> {
+    const response = await request<TeamActivityItem[]>(
+      `/api/v1/staff/team/activity?limit=${limit}`,
+    );
+    return response.data ?? [];
+  },
+
+  async getTeam(): Promise<TeamMember[]> {
+    const response = await request<TeamMember[]>("/api/v1/staff/team");
+    return response.data ?? [];
+  },
+
+  async inviteTeamMember(data: {
+    name: string;
+    email: string;
+    role: "assistant" | "agent";
+  }): Promise<{ data?: StaffInvitationResult; error?: string }> {
+    const response = await request<StaffInvitationResult>(
+      "/api/v1/staff/invitations",
+      "POST",
+      data,
+    );
+    if (response.error) return { error: response.error };
+    return { data: response.data };
+  },
+
+  async getInvitationPreview(
+    token: string,
+  ): Promise<{ data?: InvitationPreview; error?: string }> {
+    const response = await request<InvitationPreview>(
+      `/api/v1/staff/invitations/preview?token=${encodeURIComponent(token)}`,
+    );
+    if (response.error) return { error: response.error };
+    return { data: response.data };
+  },
+
+  async acceptInvitation(data: {
+    token: string;
+    name: string;
+    surname: string;
+    password: string;
+  }): Promise<{ data?: { access_token: string; user: User }; error?: string }> {
+    const response = await request<{ access_token: string; user: User }>(
+      "/api/v1/staff/invitations/accept",
+      "POST",
+      data,
+    );
+    if (response.error) return { error: response.error };
+    return { data: response.data };
+  },
+
+  async backofficeLogin(
+    email: string,
+    password: string,
+  ): Promise<{ data?: { access_token: string; user: User }; error?: string }> {
+    const response = await request<{ access_token: string; user: User }>(
+      "/api/v1/auth/backoffice/login",
+      "POST",
+      { email, password },
+    );
+    if (response.error) return { error: response.error };
+    return { data: response.data };
+  },
 };
+
+export interface AgentKpi {
+  userId: number;
+  name: string;
+  surname: string;
+  email: string;
+  role: string;
+  reportsHandled: number;
+  messagesSent: number;
+  contactReplies: number;
+  ticketsClosed: number;
+  reportsResolved: number;
+  resolutionRate: number;
+  avgFirstResponseHours: number | null;
+  satisfactionScore: number | null;
+}
+
+export interface TeamActivityItem {
+  id: number;
+  userId: number;
+  userName: string;
+  action: string;
+  resourceType: string;
+  resourceId?: number;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface InvitationPreview {
+  email: string;
+  suggestedName?: string;
+  role: string;
+  cityId: string;
+  cityName: string;
+  status: string;
+  expiresAt?: string;
+}
+
+export interface StaffInvitationResult {
+  id: number;
+  email: string;
+  name?: string;
+  role: string;
+  status: string;
+  expiresAt?: string;
+  acceptPath: string;
+}
+
+export interface TeamMember {
+  id: number;
+  name: string;
+  surname: string;
+  email: string;
+  role: string;
+  createdAt: string;
+}
+
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  surname: string;
+  role: string;
+  cityId: string;
+  avatar_url?: string;
+  permissions?: string[];
+}

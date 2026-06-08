@@ -79,7 +79,9 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
     [effectiveStats, isLoading, refresh],
   );
 
-  return <InboxContext.Provider value={value}>{children}</InboxContext.Provider>;
+  return (
+    <InboxContext.Provider value={value}>{children}</InboxContext.Provider>
+  );
 }
 
 export function useInbox() {
