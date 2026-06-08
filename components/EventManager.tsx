@@ -124,9 +124,7 @@ export default function EventManager() {
         <div className="card-premium p-10 mb-10 animate-in fade-in slide-in-from-top-4">
           <div className="flex items-center justify-between mb-10">
             <h3 className="text-2xl font-black text-[var(--foreground)] tracking-tight">
-              {editingEvent.id
-                ? "Modifier l'événement"
-                : "Créer un événement"}
+              {editingEvent.id ? "Modifier l'événement" : "Créer un événement"}
             </h3>
             <button
               type="button"

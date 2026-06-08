@@ -17,6 +17,7 @@ import { api } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
+import ColorHexField from "@/components/ColorHexField";
 
 interface WasteService {
   type: string;
@@ -111,7 +112,7 @@ export default function WasteManager({ cityId }: { cityId: string }) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const ok = await api.saveCityConfig(cityId, {
+      const { ok } = await api.saveCityConfig(cityId, {
         wasteConfig: { services },
       });
 
@@ -190,24 +191,11 @@ export default function WasteManager({ cityId }: { cityId: string }) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-8">
-                  <div>
-                    <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
-                      Identifiant Couleur
-                    </label>
-                    <div className="surface-subtle flex items-center gap-4 p-3">
-                      <input
-                        type="color"
-                        value={service.color}
-                        onChange={(e) =>
-                          updateService(sIndex, { color: e.target.value })
-                        }
-                        className="h-12 w-12 p-0 border-none rounded-[14px] cursor-pointer bg-transparent overflow-hidden"
-                      />
-                      <span className="text-sm font-black text-[var(--foreground)] uppercase tracking-widest">
-                        {service.color}
-                      </span>
-                    </div>
-                  </div>
+                  <ColorHexField
+                    label="Identifiant Couleur"
+                    value={service.color}
+                    onChange={(color) => updateService(sIndex, { color })}
+                  />
                   <div>
                     <label className="text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] mb-4 block opacity-60">
                       Heure de passage

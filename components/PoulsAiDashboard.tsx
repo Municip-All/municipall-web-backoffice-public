@@ -42,9 +42,18 @@ function formatRelativeTime(iso: string): string {
   });
 }
 
-export default function PoulsAiDashboard({ onViewChange }: PoulsAiDashboardProps) {
-  const { stats, alerts, pendingReports, pendingMessages, urgentCount, isLoading, refresh } =
-    useInbox();
+export default function PoulsAiDashboard({
+  onViewChange,
+}: PoulsAiDashboardProps) {
+  const {
+    stats,
+    alerts,
+    pendingReports,
+    pendingMessages,
+    urgentCount,
+    isLoading,
+    refresh,
+  } = useInbox();
 
   const goModeration = (tab: "reports" | "messages") => {
     sessionStorage.setItem("moderation_tab", tab);
@@ -52,7 +61,9 @@ export default function PoulsAiDashboard({ onViewChange }: PoulsAiDashboardProps
   };
 
   const trendData = stats?.trendData ?? [];
-  const urgentAlerts = alerts.filter((a) => a.severity === "urgent").slice(0, 5);
+  const urgentAlerts = alerts
+    .filter((a) => a.severity === "urgent")
+    .slice(0, 5);
 
   return (
     <PageShell>
@@ -75,7 +86,11 @@ export default function PoulsAiDashboard({ onViewChange }: PoulsAiDashboardProps
           )
         }
         actions={
-          <button type="button" onClick={refresh} className="btn-secondary text-xs">
+          <button
+            type="button"
+            onClick={refresh}
+            className="btn-secondary text-xs"
+          >
             Actualiser
           </button>
         }
@@ -232,7 +247,9 @@ export default function PoulsAiDashboard({ onViewChange }: PoulsAiDashboardProps
                         </p>
                         <p className="mt-0.5 text-[10px] text-[var(--muted)]">
                           {formatRelativeTime(alert.createdAt)}
-                          <span className="ml-2 font-bold text-red-500">URGENT</span>
+                          <span className="ml-2 font-bold text-red-500">
+                            URGENT
+                          </span>
                         </p>
                       </button>
                     </li>
@@ -266,9 +283,23 @@ export default function PoulsAiDashboard({ onViewChange }: PoulsAiDashboardProps
                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                   >
                     <defs>
-                      <linearGradient id="colorSatisfaction" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
+                      <linearGradient
+                        id="colorSatisfaction"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="var(--accent)"
+                          stopOpacity={0.25}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="var(--accent)"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
                     </defs>
                     <CartesianGrid

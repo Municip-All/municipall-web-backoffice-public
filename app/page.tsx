@@ -14,12 +14,18 @@ import Login from "@/components/Login";
 import ConstructionManager from "@/components/ConstructionManager";
 import WasteManager from "@/components/WasteManager";
 import EventManager from "@/components/EventManager";
+import TeamInsightsDashboard from "@/components/TeamInsightsDashboard";
+import TeamManager from "@/components/TeamManager";
 import { useAuth } from "@/context/AuthContext";
+import { usePermissions, Permission } from "@/context/PermissionsContext";
 import { InboxProvider } from "@/context/InboxContext";
 
 export default function Home() {
   const { isAuthenticated, isLoading, user } = useAuth();
-  const [activeView, setActiveView] = useState<ViewType>("pouls-ai");
+  const { can, isMayor } = usePermissions();
+  const [activeView, setActiveView] = useState<ViewType>(
+    isMayor ? "team-insights" : "pouls-ai",
+  );
 
   if (isLoading) {
     return (
@@ -42,24 +48,32 @@ export default function Home() {
           <Sidebar activeView={activeView} onViewChange={setActiveView} />
 
           <main className="relative min-w-0 flex-1 overflow-hidden">
-            <div className="fade-in h-full w-full">
+            <div className="fade-in h-full w-full overflow-y-auto">
+              {activeView === "team-insights" && can(Permission.TEAM_KPIS) && (
+                <TeamInsightsDashboard />
+              )}
+              {activeView === "team-manage" && can(Permission.TEAM_MANAGE) && (
+                <TeamManager />
+              )}
               {activeView === "pouls-ai" && (
                 <PoulsAiDashboard onViewChange={setActiveView} />
               )}
-            {activeView === "moderation" && <ModerationMatrix />}
-            {activeView === "widgets" && <WidgetGenerator />}
-            {activeView === "targeted-push" && <TargetedCommunication />}
-            {activeView === "settings" && <WhiteLabelSettings />}
-            {activeView === "profile" && <ProfileView />}
-            {activeView === "neighborhoods" && <NeighborhoodManager />}
-            {activeView === "construction" && user?.cityId && (
-              <ConstructionManager cityId={user.cityId} />
-            )}
-            {activeView === "waste" && user?.cityId && (
-              <WasteManager cityId={user.cityId} />
-            )}
-            {activeView === "events" && <EventManager />}
-          </div>
+              {activeView === "moderation" && <ModerationMatrix />}
+              {activeView === "widgets" && <WidgetGenerator />}
+              {activeView === "targeted-push" && <TargetedCommunication />}
+              {activeView === "settings" && <WhiteLabelSettings />}
+              {activeView === "profile" && (
+                <ProfileView onNavigate={setActiveView} />
+              )}
+              {activeView === "neighborhoods" && <NeighborhoodManager />}
+              {activeView === "construction" && user?.cityId && (
+                <ConstructionManager cityId={user.cityId} />
+              )}
+              {activeView === "waste" && user?.cityId && (
+                <WasteManager cityId={user.cityId} />
+              )}
+              {activeView === "events" && <EventManager />}
+            </div>
           </main>
         </div>
       </div>

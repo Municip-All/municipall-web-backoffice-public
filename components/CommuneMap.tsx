@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, X } from "lucide-react";
+import type { GeoJsonFeature } from "@/lib/api";
 
 interface CommuneMapProps {
-  cityName: string;
-  /**
-   * Called when a zone is clicked on the map (zone label)
-   */
+  /** Nom officiel INSEE pour recherche geo.api.gouv.fr (pas le nom d'app) */
+  communeName: string;
+  boundaryFeature?: GeoJsonFeature | null;
   selectedZones: Set<string>;
   onZoneToggle: (zoneName: string) => void;
   isEditing?: boolean;
@@ -21,7 +21,6 @@ interface CommuneData {
   contour: { type: string; coordinates: number[][][] };
 }
 
-// Dynamically load leaflet only client-side
 async function loadLeaflet() {
   const L = (await import("leaflet")).default;
   await import("leaflet/dist/leaflet.css");
@@ -34,7 +33,6 @@ interface MapZone {
   bounds?: [[number, number], [number, number]];
 }
 
-// Generates sub-zone polygons within a commune bounding box
 function generateSubZones(contour: number[][][], zoneName: string): MapZone[] {
   const coords = contour[0];
   const lngs = coords.map((c) => c[0]);
@@ -81,8 +79,37 @@ function generateSubZones(contour: number[][][], zoneName: string): MapZone[] {
   return zones;
 }
 
+function contourFromFeature(feature: GeoJsonFeature): {
+  contour: { type: string; coordinates: number[][][] };
+  center: [number, number];
+} | null {
+  const geom = feature.geometry;
+  if (!geom?.coordinates) return null;
+
+  let ring: number[][] | undefined;
+  if (geom.type === "Polygon") {
+    ring = (geom.coordinates as number[][][])[0];
+  } else if (geom.type === "MultiPolygon") {
+    ring = (geom.coordinates as number[][][][])[0]?.[0];
+  }
+  if (!ring?.length) return null;
+
+  const lngs = ring.map((c) => c[0]!);
+  const lats = ring.map((c) => c[1]!);
+  const center: [number, number] = [
+    (Math.min(...lngs) + Math.max(...lngs)) / 2,
+    (Math.min(...lats) + Math.max(...lats)) / 2,
+  ];
+
+  return {
+    contour: { type: "Polygon", coordinates: [ring] },
+    center,
+  };
+}
+
 export default function CommuneMap({
-  cityName,
+  communeName,
+  boundaryFeature,
   selectedZones,
   onZoneToggle,
   isEditing,
@@ -92,9 +119,13 @@ export default function CommuneMap({
   const mapInstance = useRef<unknown>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const customNeighborhoodsKey = useMemo(
+    () => JSON.stringify(customNeighborhoods),
+    [customNeighborhoods],
+  );
 
   useEffect(() => {
-    if (!mapRef.current || !cityName) return;
+    if (!mapRef.current || !communeName) return;
 
     let isMounted = true;
 
@@ -102,24 +133,41 @@ export default function CommuneMap({
       try {
         const L = await loadLeaflet();
 
-        // Fetch commune boundary from geo.api.gouv.fr
-        const resp = await fetch(
-          `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(cityName)}&fields=nom,code,centre,contour&format=json&geometry=contour&boost=population&limit=1`,
-        );
-        const data: CommuneData[] = await resp.json();
+        let commune: CommuneData | null = null;
+
+        if (boundaryFeature) {
+          const parsed = contourFromFeature(boundaryFeature);
+          if (parsed) {
+            const [lng, lat] = parsed.center;
+            commune = {
+              nom: boundaryFeature.properties?.name || communeName,
+              code: "",
+              centre: { type: "Point", coordinates: [lng, lat] },
+              contour: parsed.contour,
+            };
+          }
+        }
+
+        if (!commune) {
+          const resp = await fetch(
+            `https://geo.api.gouv.fr/communes?nom=${encodeURIComponent(communeName)}&fields=nom,code,centre,contour&format=json&geometry=contour&boost=population&limit=1`,
+          );
+          const data: CommuneData[] = await resp.json();
+          if (data?.length) commune = data[0]!;
+        }
 
         if (!isMounted || !mapRef.current) return;
 
-        if (!data || data.length === 0) {
-          setError(`Commune "${cityName}" non trouvée.`);
+        if (!commune) {
+          setError(
+            `Commune « ${communeName} » introuvable sur la carte. Vérifiez le nom officiel dans la configuration.`,
+          );
           setIsLoading(false);
           return;
         }
 
-        const commune = data[0];
         const [lng, lat] = commune.centre.coordinates;
 
-        // Destroy previous map instance if any
         if (mapInstance.current) {
           (mapInstance.current as { remove: () => void }).remove();
         }
@@ -134,18 +182,14 @@ export default function CommuneMap({
 
         mapInstance.current = leafletMap;
 
-        // IGN tile layer (free, official French base map)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (L as any)
           .tileLayer(
             "https://data.geopf.fr/wmts?service=WMTS&request=GetTile&version=1.0.0&tilematrixset=PM&tilematrix={z}&tilecol={x}&tilerow={y}&layer=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&format=image/png&style=normal",
-            {
-              maxZoom: 18,
-            },
+            { maxZoom: 18 },
           )
           .addTo(leafletMap);
 
-        // Draw commune boundary
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const communeLayer = (L as any)
           .geoJSON(
@@ -166,10 +210,8 @@ export default function CommuneMap({
           )
           .addTo(leafletMap);
 
-        // Fit map to commune bounds
         leafletMap.fitBounds(communeLayer.getBounds(), { padding: [40, 40] });
 
-        // Draw zones
         const zonesToDraw: MapZone[] =
           customNeighborhoods && customNeighborhoods.length > 0
             ? customNeighborhoods
@@ -183,7 +225,6 @@ export default function CommuneMap({
 
           let layer;
           if (zone.points) {
-            // Custom polygon from NeighborhoodManager
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             layer = (L as any).polygon(zone.points, {
               color: isSelected ? "var(--accent)" : "rgba(107, 114, 128, 0.4)",
@@ -195,7 +236,6 @@ export default function CommuneMap({
               interactive: !isEditing,
             });
           } else if (zone.bounds) {
-            // Fallback rectangle from generator
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             layer = (L as any).rectangle(zone.bounds, {
               color: isSelected ? "var(--accent)" : "rgba(107, 114, 128, 0.4)",
@@ -241,8 +281,14 @@ export default function CommuneMap({
     return () => {
       isMounted = false;
     };
+    // Dépendances volontairement limitées pour éviter de réinitialiser la carte à chaque render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cityName, JSON.stringify(customNeighborhoods), selectedZones.size]);
+  }, [
+    communeName,
+    boundaryFeature,
+    customNeighborhoodsKey,
+    selectedZones.size,
+  ]);
 
   return (
     <div className="relative w-full h-full rounded-[32px] overflow-hidden border border-[var(--card-border)] shadow-inner group">

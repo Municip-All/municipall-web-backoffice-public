@@ -12,7 +12,8 @@ import {
 import clsx from "clsx";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/context/AuthContext";
-import { api } from "@/lib/api";
+import { api, type GeoJsonFeature } from "@/lib/api";
+import { getGeoCommuneName } from "@/lib/geoCommune";
 import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
@@ -37,7 +38,11 @@ export default function TargetedCommunication() {
   const [message, setMessage] = useState("");
   const [alertType, setAlertType] = useState<"info" | "urgent">("info");
   const [selectedZones, setSelectedZones] = useState<Set<string>>(new Set());
-  const [cityName, setCityName] = useState<string>("");
+  const [appDisplayName, setAppDisplayName] = useState<string>("");
+  const [communeName, setCommuneName] = useState<string>("");
+  const [boundaryFeature, setBoundaryFeature] = useState<GeoJsonFeature | null>(
+    null,
+  );
   const [neighborhoods, setNeighborhoods] = useState<
     { id: string; name: string; points: [number, number][] }[]
   >([]);
@@ -46,19 +51,21 @@ export default function TargetedCommunication() {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!user?.cityId) return;
-      api
-        .getCityConfig(user.cityId)
-        .then((config) => {
-          if (config && config.name && config.name !== "Municip'All") {
-            setCityName(config.name);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const customZones = (config as any).neighborhoods || [];
-            setNeighborhoods(customZones);
+      Promise.all([
+        api.getCityConfig(user.cityId),
+        api.getCityBoundary(user.cityId).catch(() => null),
+      ])
+        .then(([config, boundary]) => {
+          if (config) {
+            setAppDisplayName(config.name);
+            setCommuneName(getGeoCommuneName(user.cityId, config));
+            setNeighborhoods(config.neighborhoods ?? []);
+            setBoundaryFeature(boundary);
           } else {
-            setCityName("Paris");
+            setCommuneName("Paris");
           }
         })
-        .catch(() => setCityName("Paris"));
+        .catch(() => setCommuneName("Paris"));
     }, 0);
     return () => clearTimeout(timer);
   }, [user?.cityId]);
@@ -208,20 +215,26 @@ export default function TargetedCommunication() {
               </div>
               Ciblage Géographique
             </h3>
-            {cityName && (
+            {communeName && (
               <p className="text-[10px] font-black text-apple-muted mb-8 uppercase tracking-[0.2em] opacity-40">
                 IGN Carto •{" "}
-                <span className="text-[var(--accent)]">{cityName}</span> •
-                Sélection par zones
+                <span className="text-[var(--accent)]">{communeName}</span>
+                {appDisplayName &&
+                  appDisplayName.toLowerCase() !==
+                    communeName.toLowerCase() && (
+                    <> • App : {appDisplayName}</>
+                  )}{" "}
+                • Sélection par zones
               </p>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-5 gap-10">
               {/* Real map - takes 3/5 of the grid */}
               <div className="md:col-span-3 h-[400px] rounded-[32px] overflow-hidden border border-[var(--card-border)] shadow-inner relative group">
-                {cityName ? (
+                {communeName ? (
                   <CommuneMap
-                    cityName={cityName}
+                    communeName={communeName}
+                    boundaryFeature={boundaryFeature}
                     selectedZones={selectedZones}
                     onZoneToggle={toggleZone}
                     customNeighborhoods={neighborhoods}

@@ -42,7 +42,10 @@ export default function ContactTicketChat({
   }, [ticketId]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [ticket?.messages.length]);
 
   const handleReply = async () => {
@@ -62,7 +65,12 @@ export default function ContactTicketChat({
   };
 
   const handleClose = async () => {
-    if (!confirm("Clôturer cette conversation ? Le citoyen ne pourra plus y répondre.")) return;
+    if (
+      !confirm(
+        "Clôturer cette conversation ? Le citoyen ne pourra plus y répondre.",
+      )
+    )
+      return;
     setClosing(true);
     const updated = await api.closeContactTicket(ticketId);
     setClosing(false);
@@ -108,7 +116,12 @@ export default function ContactTicketChat({
               )}
             </button>
           )}
-          <button type="button" onClick={onClose} className="btn-ghost !p-2" aria-label="Fermer">
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-ghost !p-2"
+            aria-label="Fermer"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -125,7 +138,10 @@ export default function ContactTicketChat({
             return (
               <div
                 key={msg.id}
-                className={clsx("flex flex-col max-w-[85%]", isAgent ? "ml-auto items-end" : "items-start")}
+                className={clsx(
+                  "flex flex-col max-w-[85%]",
+                  isAgent ? "ml-auto items-end" : "items-start",
+                )}
               >
                 <span className="mb-1 text-[10px] font-bold text-[var(--muted)]">
                   {msg.senderName}
@@ -133,7 +149,9 @@ export default function ContactTicketChat({
                 <div
                   className={clsx(
                     "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                    isAgent ? "bg-[var(--accent)] text-white" : "chat-bubble-citizen",
+                    isAgent
+                      ? "bg-[var(--accent)] text-white"
+                      : "chat-bubble-citizen",
                   )}
                 >
                   {msg.body}
@@ -166,7 +184,11 @@ export default function ContactTicketChat({
               disabled={sending || !reply.trim()}
               className="btn-primary !px-4 self-end"
             >
-              {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+              {sending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Send className="h-5 w-5" />
+              )}
             </button>
           </div>
         </div>
