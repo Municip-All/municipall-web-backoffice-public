@@ -33,6 +33,8 @@ export default function WhiteLabelSettings() {
   const [officialName, setOfficialName] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#0B0080");
   const [secondaryColor, setSecondaryColor] = useState("#4F46E5");
+  const [backgroundColorLight, setBackgroundColorLight] = useState("#F2F2F7");
+  const [backgroundColorDark, setBackgroundColorDark] = useState("#000000");
   const [useGradient, setUseGradient] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [contactEmail, setContactEmail] = useState("");
@@ -56,6 +58,12 @@ export default function WhiteLabelSettings() {
             setOfficialName(config.officialName || config.name || "");
             setPrimaryColor(config.theme.primaryColor || "#0B0080");
             setSecondaryColor(config.theme.secondaryColor || "#4F46E5");
+            setBackgroundColorLight(
+              config.theme.backgroundColorLight || "#F2F2F7",
+            );
+            setBackgroundColorDark(
+              config.theme.backgroundColorDark || "#000000",
+            );
             setUseGradient(config.theme.useGradient ?? false);
             setLogoPreview(config.theme.logoUrl || null);
             setContactEmail(config.contact?.email || "");
@@ -89,6 +97,8 @@ export default function WhiteLabelSettings() {
         primaryColor,
         secondaryColor,
         logoUrl: logoPreview || "",
+        backgroundColorLight,
+        backgroundColorDark,
         useGradient,
         contactEmail: contactEmail.trim() || undefined,
         contactPhone: contactPhone.trim() || undefined,
@@ -326,6 +336,24 @@ export default function WhiteLabelSettings() {
                     />
                   </div>
 
+                  <div className="grid grid-cols-1 gap-8 pt-8 border-t border-[var(--card-border)] md:grid-cols-2">
+                    <ColorHexField
+                      label="FOND DE L'APP (MODE CLAIR)"
+                      value={backgroundColorLight}
+                      onChange={setBackgroundColorLight}
+                    />
+                    <ColorHexField
+                      label="FOND DE L'APP (MODE SOMBRE)"
+                      value={backgroundColorDark}
+                      onChange={setBackgroundColorDark}
+                    />
+                  </div>
+                  <p className="text-xs text-[var(--muted)] leading-relaxed">
+                    Couleur d&apos;arrière-plan des écrans dans l&apos;application
+                    mobile. Les citoyens qui activent le mode sombre verront le
+                    fond sombre ; les autres verront le fond clair.
+                  </p>
+
                   <div className="pt-8 border-t border-[var(--card-border)]">
                     <label className="flex cursor-pointer items-center justify-between gap-4">
                       <div>
@@ -356,7 +384,10 @@ export default function WhiteLabelSettings() {
                 </h3>
 
                 <div className="w-[310px] h-[640px] bg-zinc-900 rounded-[55px] p-4 shadow-[0_40px_100px_rgba(0,0,0,0.4)] relative border-[8px] border-zinc-800 shrink-0 mx-auto">
-                  <div className="w-full h-full bg-[#fdfdfd] rounded-[42px] overflow-hidden relative flex flex-col">
+                  <div
+                    className="w-full h-full rounded-[42px] overflow-hidden relative flex flex-col"
+                    style={{ backgroundColor: backgroundColorLight }}
+                  >
                     <div className="absolute top-0 inset-x-0 h-7 bg-zinc-900 rounded-b-[24px] mx-20 z-20"></div>
 
                     <div

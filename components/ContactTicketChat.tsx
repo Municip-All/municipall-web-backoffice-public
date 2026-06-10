@@ -1,11 +1,17 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Send, X, CheckCircle2 } from "lucide-react";
 import clsx from "clsx";
 import { api, ContactTicketDetail } from "@/lib/api";
+import {
+  isTerminalContactStatus,
+  SUGGESTION_STATUSES,
+  suggestionStatusStyle,
+} from "@/lib/contactTicketStatus";
 import { useToast } from "@/context/ToastContext";
 import { useInbox } from "@/context/InboxContext";
+import { useLiveChatRefresh } from "@/hooks/useLiveChatRefresh";
 
 interface ContactTicketChatProps {
   ticketId: number;
@@ -26,20 +32,67 @@ export default function ContactTicketChat({
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const applyTicketData = useCallback(
+    (data: ContactTicketDetail | null, silent: boolean) => {
+      if (!data) {
+        if (!silent) {
+          setTicket(null);
+          setLoadedTicketId(ticketId);
+        }
+        return;
+      }
+      setTicket((prev) => {
+        if (!prev) return data;
+        const prevLastId = prev.messages[prev.messages.length - 1]?.id;
+        const nextLastId = data.messages[data.messages.length - 1]?.id;
+        if (
+          prev.messages.length === data.messages.length &&
+          prevLastId === nextLastId &&
+          prev.status === data.status
+        ) {
+          return prev;
+        }
+        return data;
+      });
+      if (!silent) {
+        setLoadedTicketId(ticketId);
+      }
+    },
+    [ticketId],
+  );
+
+  const loadTicket = useCallback(
+    async (silent = false) => {
+      const data = await api.getContactTicket(ticketId);
+      applyTicketData(data, silent);
+    },
+    [ticketId, applyTicketData],
+  );
 
   useEffect(() => {
     let cancelled = false;
     void api.getContactTicket(ticketId).then((data) => {
-      if (!cancelled) {
-        setTicket(data);
-        setLoadedTicketId(ticketId);
-      }
+      if (cancelled) return;
+      applyTicketData(data, false);
     });
     return () => {
       cancelled = true;
     };
-  }, [ticketId]);
+  }, [ticketId, applyTicketData]);
+
+  const ticketType = ticket?.ticketType ?? "question";
+  const isClosed = ticket
+    ? isTerminalContactStatus(ticketType, ticket.status)
+    : false;
+  const isSuggestion = ticketType === "suggestion";
+
+  useLiveChatRefresh(
+    () => loadTicket(true),
+    Boolean(ticket) && !isClosed,
+  );
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -50,7 +103,8 @@ export default function ContactTicketChat({
 
   const handleReply = async () => {
     const text = reply.trim();
-    if (!text || ticket?.status === "Clôturé") return;
+    if (!text || (ticket && isTerminalContactStatus(ticketType, ticket.status)))
+      return;
     setSending(true);
     const updated = await api.replyContactTicket(ticketId, text);
     setSending(false);
@@ -84,7 +138,29 @@ export default function ContactTicketChat({
     }
   };
 
-  const isClosed = ticket?.status === "Clôturé";
+  const handleStatusChange = async (status: string) => {
+    if (!ticket || status === ticket.status) return;
+    const terminal = isTerminalContactStatus("suggestion", status);
+    if (
+      terminal &&
+      !confirm(
+        `Passer la suggestion au statut « ${status} » ? Le citoyen ne pourra plus y répondre.`,
+      )
+    ) {
+      return;
+    }
+    setUpdatingStatus(true);
+    const updated = await api.updateContactTicketStatus(ticketId, status);
+    setUpdatingStatus(false);
+    if (updated) {
+      setTicket(updated);
+      toast("success", `Statut mis à jour : ${status}`);
+      refreshInbox();
+      onUpdated?.();
+    } else {
+      toast("error", "Impossible de modifier le statut.");
+    }
+  };
 
   return (
     <div className="flex h-full min-h-[480px] flex-col border-l border-[var(--card-border)] bg-[var(--card)]">
@@ -94,11 +170,13 @@ export default function ContactTicketChat({
             {ticket?.subject ?? "Conversation"}
           </p>
           <p className="text-[11px] text-[var(--muted)]">
-            {ticket?.citizenName} · {ticket?.status}
+            {ticket?.citizenName} ·{" "}
+            {ticket?.ticketType === "suggestion" ? "Suggestion · " : ""}
+            {ticket?.status}
           </p>
         </div>
         <div className="flex items-center gap-1">
-          {!isClosed && ticket && (
+          {!isClosed && ticket && !isSuggestion && (
             <button
               type="button"
               onClick={handleClose}
@@ -126,6 +204,32 @@ export default function ContactTicketChat({
           </button>
         </div>
       </div>
+
+      {isSuggestion && ticket && !isClosed && (
+        <div className="border-b border-[var(--card-border)] px-4 py-3">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
+            Statut de la suggestion
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {SUGGESTION_STATUSES.map((status) => (
+              <button
+                key={status}
+                type="button"
+                disabled={updatingStatus}
+                onClick={() => handleStatusChange(status)}
+                className={clsx(
+                  "rounded-full border px-2.5 py-1 text-[10px] font-bold transition-opacity",
+                  suggestionStatusStyle(status),
+                  ticket.status === status && "ring-2 ring-[var(--accent)] ring-offset-1",
+                  updatingStatus && "opacity-50",
+                )}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
         {loading ? (
@@ -196,7 +300,9 @@ export default function ContactTicketChat({
 
       {isClosed && (
         <p className="border-t border-[var(--card-border)] px-4 py-3 text-center text-xs text-[var(--muted)]">
-          Conversation clôturée
+          {isSuggestion
+            ? `Suggestion archivée · ${ticket?.status}`
+            : "Conversation clôturée"}
         </p>
       )}
     </div>

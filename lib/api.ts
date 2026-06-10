@@ -26,6 +26,10 @@ async function request<T>(
       tenantId = "";
     }
   }
+  if (!tenantId) {
+    const cityConfigMatch = endpoint.match(/^\/api\/v1\/city-config\/([^/]+)/);
+    if (cityConfigMatch) tenantId = cityConfigMatch[1];
+  }
 
   const defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
@@ -86,15 +90,42 @@ export interface GeoJsonFeature {
   properties?: { name?: string };
 }
 
+export type AssociationCategory = "association" | "groupe-parole" | "autre";
+
+export interface CityAssociation {
+  id: string;
+  name: string;
+  category: AssociationCategory;
+  description?: string;
+  address?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  website?: string;
+}
+
+export interface CityPublicProfile {
+  mayorName?: string;
+  mayorTitle?: string;
+  welcomeText?: string;
+  description?: string;
+  address?: string;
+  website?: string;
+  openingHours?: string;
+}
+
 export interface CityConfig {
   name: string;
   officialName?: string;
   features: string[];
   contact?: CityContactConfig;
+  associations?: CityAssociation[];
+  publicProfile?: CityPublicProfile;
   neighborhoods?: CityNeighborhood[];
   theme: {
     primaryColor: string;
     secondaryColor?: string;
+    backgroundColorLight?: string;
+    backgroundColorDark?: string;
     useGradient: boolean;
     logoUrl: string;
   };
@@ -107,6 +138,8 @@ export interface CityConfig {
       time: string;
     }[];
   };
+  isTransportFeatureAllowed?: boolean;
+  isTransportFeatureEnabled?: boolean;
 }
 
 export type DashboardAlertSeverity = "urgent" | "high" | "normal";
@@ -120,6 +153,7 @@ export interface DashboardAlert {
   subtitle: string;
   createdAt: string;
   entityId: number;
+  contactKind?: "question" | "suggestion";
 }
 
 export interface CityDashboardStats {
@@ -136,7 +170,19 @@ export interface CityDashboardStats {
   suggestionsCount: number;
   suggestionsTrend: number;
   trendData: { name: string; satisfaction: number }[];
+  ratingsCount?: number;
   alerts: DashboardAlert[];
+}
+
+export interface CitizenFeedbackItem {
+  id: number;
+  stars: number;
+  message?: string;
+  resourceType: "report" | "contact_ticket";
+  resourceId: number;
+  resourceLabel: string;
+  citizenName: string;
+  createdAt: string;
 }
 
 export interface Report {
@@ -189,6 +235,7 @@ export interface TicketMessage {
 export interface ContactTicketListItem {
   id: number;
   subject: string;
+  ticketType?: "question" | "suggestion";
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -202,6 +249,7 @@ export interface ContactTicketListItem {
 export interface ContactTicketDetail {
   id: number;
   subject: string;
+  ticketType?: "question" | "suggestion";
   status: string;
   userId: number;
   citizenName: string;
@@ -293,12 +341,18 @@ export const api = {
       `/api/v1/city-config/${cityId}`,
       "PATCH",
       data,
+      { "x-tenant-id": cityId },
     );
     if (response.error) return { ok: false, error: response.error };
     return { ok: response.status < 400 };
   },
 
   // --- Dashboard Stats ---
+
+  async getCitizenFeedback(): Promise<CitizenFeedbackItem[]> {
+    const response = await request<CitizenFeedbackItem[]>("/api/v1/feedback");
+    return response.data || [];
+  },
 
   async getDashboardStats(cityId: string): Promise<CityDashboardStats | null> {
     const response = await request<CityDashboardStats>(
@@ -385,6 +439,18 @@ export const api = {
       `/api/v1/contact-tickets/${id}/close`,
       "PATCH",
       {},
+    );
+    return response.data || null;
+  },
+
+  async updateContactTicketStatus(
+    id: number,
+    status: string,
+  ): Promise<ContactTicketDetail | null> {
+    const response = await request<ContactTicketDetail>(
+      `/api/v1/contact-tickets/${id}/status`,
+      "PATCH",
+      { status },
     );
     return response.data || null;
   },

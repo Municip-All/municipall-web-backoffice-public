@@ -10,6 +10,7 @@ import {
   RefreshCcw,
   MessageSquare,
   ChevronRight,
+  Lightbulb,
 } from "lucide-react";
 import { api, ContactTicketListItem, Report } from "@/lib/api";
 import { useInbox } from "@/context/InboxContext";
@@ -18,8 +19,14 @@ import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
 import ContactTicketChat from "@/components/ContactTicketChat";
+import { isTerminalContactStatus } from "@/lib/contactTicketStatus";
 import ReportDetailModal from "@/components/ReportDetailModal";
 import ReportThumbnail from "@/components/ReportThumbnail";
+import SuggestionsBoard from "@/components/SuggestionsBoard";
+import {
+  consumeModerationSession,
+  type ModerationTab,
+} from "@/lib/moderationNav";
 
 interface DisplayReport extends Report {
   priority: "Haute" | "Moyenne" | "Basse";
@@ -63,36 +70,11 @@ function formatDate(dateStr: string): string {
   });
 }
 
-type ModerationTab = "reports" | "messages";
-
-function consumeModerationSession(): {
-  tab: ModerationTab;
-  ticketId: number | null;
-} {
-  if (typeof window === "undefined") {
-    return { tab: "reports", ticketId: null };
-  }
-  let tab: ModerationTab = "reports";
-  let ticketId: number | null = null;
-
-  const savedTab = sessionStorage.getItem("moderation_tab");
-  if (savedTab === "reports" || savedTab === "messages") {
-    tab = savedTab;
-    sessionStorage.removeItem("moderation_tab");
-  }
-
-  const savedTicket = sessionStorage.getItem("moderation_ticket_id");
-  if (savedTicket) {
-    const id = Number(savedTicket);
-    if (!Number.isNaN(id)) {
-      ticketId = id;
-      tab = "messages";
-    }
-    sessionStorage.removeItem("moderation_ticket_id");
-  }
-
-  return { tab, ticketId };
-}
+const TAB_TITLES: Record<ModerationTab, string> = {
+  reports: "Signalements",
+  questions: "Questions citoyennes",
+  suggestions: "Suggestions citoyennes",
+};
 
 export default function ModerationMatrix() {
   const toast = useToast();
@@ -108,6 +90,7 @@ export default function ModerationMatrix() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [readyKey, setReadyKey] = useState<string | null>(null);
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
+  const [questionPool, setQuestionPool] = useState<"open" | "archived">("open");
 
   const fetchKey = `${activeTab}:${refreshKey}`;
   const isLoading = readyKey !== fetchKey;
@@ -164,7 +147,11 @@ export default function ModerationMatrix() {
     }
   };
 
-  const filteredReports = reports.filter((r) => {
+  const activeReports = reports.filter(
+    (r) => r.status !== "Résolu" && r.status !== "Clôturé",
+  );
+
+  const filteredReports = activeReports.filter((r) => {
     const q = search.toLowerCase();
     return (
       String(r.id).includes(q) ||
@@ -173,7 +160,15 @@ export default function ModerationMatrix() {
     );
   });
 
-  const filteredTickets = tickets.filter((t) => {
+  const questionTickets = tickets.filter(
+    (t) => (t.ticketType ?? "question") === "question",
+  );
+  const openQuestions = questionTickets.filter((t) => t.status !== "Clôturé");
+  const archivedQuestions = questionTickets.filter((t) => t.status === "Clôturé");
+  const questionPoolTickets =
+    questionPool === "open" ? openQuestions : archivedQuestions;
+
+  const filteredQuestions = questionPoolTickets.filter((t) => {
     const q = search.toLowerCase();
     const preview = t.lastMessage?.body ?? "";
     return (
@@ -182,6 +177,17 @@ export default function ModerationMatrix() {
       preview.toLowerCase().includes(q)
     );
   });
+
+  const openSuggestionsCount = tickets.filter(
+    (t) =>
+      t.ticketType === "suggestion" &&
+      !isTerminalContactStatus("suggestion", t.status),
+  ).length;
+
+  const handleTabChange = (tab: ModerationTab) => {
+    setActiveTab(tab);
+    setSelectedTicketId(null);
+  };
 
   return (
     <PageShell>
@@ -194,10 +200,14 @@ export default function ModerationMatrix() {
         }}
       />
       <PageHeader
-        title={
-          activeTab === "reports" ? "Signalements" : "Conversations contact"
+        title={TAB_TITLES[activeTab]}
+        description={
+          activeTab === "suggestions"
+            ? "Suivi des idées citoyennes — chaque suggestion est traitée comme un dossier"
+            : activeTab === "questions"
+              ? "Échanges rapides avec les citoyens"
+              : "Gestion citoyenne · Console de modération"
         }
-        description="Gestion citoyenne · Console de modération"
         actions={
           <>
             <input
@@ -219,10 +229,10 @@ export default function ModerationMatrix() {
         }
       />
 
-      <div className="mb-6 flex gap-2">
+      <div className="mb-6 flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => setActiveTab("reports")}
+          onClick={() => handleTabChange("reports")}
           className={clsx(
             "rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all",
             activeTab === "reports"
@@ -234,102 +244,159 @@ export default function ModerationMatrix() {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab("messages")}
+          onClick={() => handleTabChange("questions")}
           className={clsx(
             "rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2",
-            activeTab === "messages"
+            activeTab === "questions"
               ? "tab-segment-active"
               : "tab-segment-inactive",
           )}
         >
-          <MessageSquare className="w-4 h-4" />
-          Conversations
+          <MessageSquare className="h-4 w-4" />
+          Questions
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTabChange("suggestions")}
+          className={clsx(
+            "rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2",
+            activeTab === "suggestions"
+              ? "bg-amber-500 text-white shadow-sm"
+              : "tab-segment-inactive",
+          )}
+        >
+          <Lightbulb className="h-4 w-4" />
+          Suggestions
+          {openSuggestionsCount > 0 && (
+            <span className="ml-1 rounded-full bg-white/25 px-1.5 py-0.5 text-[10px]">
+              {openSuggestionsCount}
+            </span>
+          )}
         </button>
       </div>
 
       <div className="card-panel overflow-hidden">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="w-10 h-10 text-[var(--accent)] animate-spin opacity-40" />
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-[var(--accent)] opacity-40" />
           </div>
-        ) : activeTab === "messages" ? (
-          filteredTickets.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-zinc-400">
-              <MessageSquare className="w-12 h-12 mb-4 opacity-20" />
-              <p className="text-sm font-black opacity-40 uppercase tracking-widest">
-                Aucune conversation{search ? " trouvée" : ""}
-              </p>
+        ) : activeTab === "suggestions" ? (
+          <SuggestionsBoard
+            tickets={tickets}
+            search={search}
+            selectedTicketId={selectedTicketId}
+            onSelectTicket={setSelectedTicketId}
+            onUpdated={() => {
+              fetchData();
+              refreshInbox();
+            }}
+          />
+        ) : activeTab === "questions" ? (
+          <>
+            <div className="flex flex-wrap gap-2 border-b border-[var(--card-border)] px-4 py-3">
+              <button
+                type="button"
+                onClick={() => setQuestionPool("open")}
+                className={clsx(
+                  "rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-wider",
+                  questionPool === "open"
+                    ? "bg-[var(--accent)] text-white"
+                    : "bg-zinc-100 text-zinc-500",
+                )}
+              >
+                Actives ({openQuestions.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuestionPool("archived")}
+                className={clsx(
+                  "rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-wider",
+                  questionPool === "archived"
+                    ? "bg-zinc-600 text-white"
+                    : "bg-zinc-100 text-zinc-500",
+                )}
+              >
+                Archives ({archivedQuestions.length})
+              </button>
             </div>
-          ) : (
-            <div
-              className={clsx(
-                "grid min-h-[520px]",
-                selectedTicketId
-                  ? "lg:grid-cols-[minmax(0,1fr)_minmax(320px,42%)]"
-                  : "grid-cols-1",
-              )}
-            >
-              <div className="divide-y divide-[var(--card-border)] overflow-y-auto max-h-[70vh]">
-                {filteredTickets.map((ticket) => {
-                  const preview = ticket.lastMessage?.body ?? "—";
-                  const fromCitizen =
-                    ticket.lastMessage?.senderRole === "citizen";
-                  return (
-                    <button
-                      key={ticket.id}
-                      type="button"
-                      onClick={() => setSelectedTicketId(ticket.id)}
-                      className={clsx(
-                        "w-full px-6 py-4 text-left transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20",
-                        selectedTicketId === ticket.id &&
-                          "bg-[var(--accent)]/5 border-l-4 border-[var(--accent)]",
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="text-sm font-black text-[var(--foreground)] line-clamp-1">
-                          {ticket.subject}
-                        </p>
-                        <span
-                          className={clsx(
-                            "shrink-0 text-[10px] font-black uppercase tracking-widest",
-                            ticket.status === "En attente" && "text-amber-500",
-                            ticket.status === "En cours" &&
-                              "text-[var(--accent)]",
-                            ticket.status === "Clôturé" && "text-zinc-400",
-                          )}
-                        >
-                          {ticket.status}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-[var(--muted)] line-clamp-2">
-                        {fromCitizen ? "" : "Mairie · "}
-                        {preview}
-                      </p>
-                      <p className="mt-2 text-[10px] font-bold text-apple-muted">
-                        {formatDate(
-                          ticket.lastMessage?.createdAt ?? ticket.updatedAt,
-                        )}
-                      </p>
-                    </button>
-                  );
-                })}
+            {filteredQuestions.length === 0 ? (
+              <div className="flex h-64 flex-col items-center justify-center text-zinc-400">
+                <MessageSquare className="mb-4 h-12 w-12 opacity-20" />
+                <p className="text-sm font-black uppercase tracking-widest opacity-40">
+                  Aucune question{search ? " trouvée" : ""}
+                </p>
               </div>
-              {selectedTicketId && (
-                <ContactTicketChat
-                  ticketId={selectedTicketId}
-                  onUpdated={fetchData}
-                  onClose={() => {
-                    setSelectedTicketId(null);
-                    fetchData();
-                  }}
-                />
-              )}
-            </div>
-          )
+            ) : (
+              <div
+                className={clsx(
+                  "grid min-h-[520px]",
+                  selectedTicketId
+                    ? "lg:grid-cols-[minmax(0,1fr)_minmax(320px,42%)]"
+                    : "grid-cols-1",
+                )}
+              >
+                <div className="max-h-[70vh] divide-y divide-[var(--card-border)] overflow-y-auto">
+                  {filteredQuestions.map((ticket) => {
+                    const preview = ticket.lastMessage?.body ?? "—";
+                    const fromCitizen =
+                      ticket.lastMessage?.senderRole === "citizen";
+                    return (
+                      <button
+                        key={ticket.id}
+                        type="button"
+                        onClick={() => setSelectedTicketId(ticket.id)}
+                        className={clsx(
+                          "w-full px-6 py-4 text-left transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20",
+                          selectedTicketId === ticket.id &&
+                            "border-l-4 border-[var(--accent)] bg-[var(--accent)]/5",
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="line-clamp-1 text-sm font-black text-[var(--foreground)]">
+                            {ticket.subject}
+                          </p>
+                          <span
+                            className={clsx(
+                              "shrink-0 text-[10px] font-black uppercase tracking-widest",
+                              ticket.status === "En attente" && "text-amber-500",
+                              ticket.status === "En cours" &&
+                                "text-[var(--accent)]",
+                              ticket.status === "Clôturé" && "text-zinc-400",
+                            )}
+                          >
+                            {ticket.status}
+                          </span>
+                        </div>
+                        <p className="mt-1 line-clamp-2 text-xs text-[var(--muted)]">
+                          {fromCitizen ? "" : "Mairie · "}
+                          {preview}
+                        </p>
+                        <p className="mt-2 text-[10px] font-bold text-apple-muted">
+                          {formatDate(
+                            ticket.lastMessage?.createdAt ?? ticket.updatedAt,
+                          )}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedTicketId && (
+                  <ContactTicketChat
+                    ticketId={selectedTicketId}
+                    onUpdated={fetchData}
+                    onClose={() => {
+                      setSelectedTicketId(null);
+                      fetchData();
+                    }}
+                  />
+                )}
+              </div>
+            )}
+          </>
         ) : filteredReports.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-zinc-400">
-            <ShieldAlert className="w-12 h-12 mb-4 opacity-20" />
-            <p className="text-sm font-black opacity-40 uppercase tracking-widest">
+          <div className="flex h-64 flex-col items-center justify-center text-zinc-400">
+            <ShieldAlert className="mb-4 h-12 w-12 opacity-20" />
+            <p className="text-sm font-black uppercase tracking-widest opacity-40">
               Aucun signalement{search ? " trouvé" : " actif"}
             </p>
           </div>
@@ -337,12 +404,12 @@ export default function ModerationMatrix() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-[var(--card-border)] text-[10px] font-black text-apple-muted uppercase tracking-[0.2em] opacity-50">
-                  <th className="py-6 px-8 w-28">Visuel</th>
-                  <th className="py-6 px-8">Signalement & Description</th>
-                  <th className="py-6 px-8 w-48">Catégorie</th>
-                  <th className="py-6 px-8 w-40">Priorité</th>
-                  <th className="py-6 px-8 text-right w-64">Actions</th>
+                <tr className="border-b border-[var(--card-border)] text-[10px] font-black uppercase tracking-[0.2em] text-apple-muted opacity-50">
+                  <th className="w-28 px-8 py-6">Visuel</th>
+                  <th className="px-8 py-6">Signalement & Description</th>
+                  <th className="w-48 px-8 py-6">Catégorie</th>
+                  <th className="w-40 px-8 py-6">Priorité</th>
+                  <th className="w-64 px-8 py-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--card-border)]">
@@ -350,40 +417,40 @@ export default function ModerationMatrix() {
                   <tr
                     key={report.id}
                     onClick={() => setSelectedReportId(report.id)}
-                    className="cursor-pointer hover:bg-zinc-50/80 dark:hover:bg-zinc-800/20 transition-colors group"
+                    className="group cursor-pointer transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-800/20"
                   >
-                    <td className="py-6 px-8">
+                    <td className="px-8 py-6">
                       <ReportThumbnail
                         imageUrl={report.imageUrl}
-                        className="group-hover:scale-105 transition-transform"
+                        className="transition-transform group-hover:scale-105"
                       />
                     </td>
 
-                    <td className="py-6 px-8">
-                      <div className="flex items-center gap-3 mb-2">
-                        <p className="text-sm font-black text-[var(--foreground)] tracking-tight">
+                    <td className="px-8 py-6">
+                      <div className="mb-2 flex items-center gap-3">
+                        <p className="text-sm font-black tracking-tight text-[var(--foreground)]">
                           INCIDENT #{String(report.id).padStart(4, "0")}
                         </p>
                         {report.isResident ? (
-                          <span className="text-[9px] font-black bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full uppercase tracking-tighter border border-emerald-500/20">
+                          <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-emerald-500">
                             Résident
                           </span>
                         ) : (
-                          <span className="text-[9px] font-black bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full uppercase tracking-tighter border border-amber-500/20">
+                          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter text-amber-500">
                             Extérieur
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-[var(--foreground)] opacity-70 mb-2 line-clamp-2 leading-relaxed max-w-lg font-medium">
+                      <p className="mb-2 line-clamp-2 max-w-lg text-sm font-medium leading-relaxed text-[var(--foreground)] opacity-70">
                         {report.description || "Aucune description détaillée."}
                       </p>
                       <div className="flex items-center gap-2 text-[10px] font-bold text-apple-muted opacity-60">
-                        <Clock className="w-3.5 h-3.5" />
+                        <Clock className="h-3.5 w-3.5" />
                         {formatDate(report.createdAt)}
                       </div>
                     </td>
 
-                    <td className="py-6 px-8">
+                    <td className="px-8 py-6">
                       <span
                         className={clsx(
                           "inline-flex items-center rounded-xl border px-3 py-1.5 text-[11px] font-black uppercase tracking-wider shadow-sm",
@@ -394,10 +461,10 @@ export default function ModerationMatrix() {
                       </span>
                     </td>
 
-                    <td className="py-6 px-8">
+                    <td className="px-8 py-6">
                       {report.priority === "Haute" && (
                         <div className="flex items-center gap-2 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.2)]">
-                          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                          <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
                           <span className="text-xs font-black uppercase tracking-widest">
                             Haute
                           </span>
@@ -405,7 +472,7 @@ export default function ModerationMatrix() {
                       )}
                       {report.priority === "Moyenne" && (
                         <div className="flex items-center gap-2 text-amber-500">
-                          <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                          <div className="h-2 w-2 rounded-full bg-amber-500" />
                           <span className="text-xs font-black uppercase tracking-widest">
                             Moyenne
                           </span>
@@ -413,7 +480,7 @@ export default function ModerationMatrix() {
                       )}
                       {report.priority === "Basse" && (
                         <div className="flex items-center gap-2 text-zinc-400">
-                          <div className="w-2 h-2 rounded-full bg-zinc-400"></div>
+                          <div className="h-2 w-2 rounded-full bg-zinc-400" />
                           <span className="text-xs font-black uppercase tracking-widest opacity-60">
                             Basse
                           </span>
@@ -421,7 +488,7 @@ export default function ModerationMatrix() {
                       )}
                     </td>
 
-                    <td className="py-6 px-8 text-right">
+                    <td className="px-8 py-6 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {report.status === "En attente" ? (
                           <button
@@ -430,18 +497,18 @@ export default function ModerationMatrix() {
                               e.stopPropagation();
                               void assignReport(report.id);
                             }}
-                            className="bg-[var(--accent)] text-white text-[11px] font-black uppercase tracking-widest px-5 py-2.5 rounded-2xl shadow-lg shadow-[var(--accent)]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                            className="flex items-center gap-2 rounded-2xl bg-[var(--accent)] px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-[var(--accent)]/20 transition-all hover:scale-105 active:scale-95"
                           >
-                            <Wrench className="w-4 h-4" />
+                            <Wrench className="h-4 w-4" />
                             Assigner
                           </button>
                         ) : (
-                          <div className="px-4 py-2.5 border border-emerald-500/30 bg-emerald-50 text-emerald-700 font-black rounded-2xl text-[11px] uppercase tracking-widest flex items-center gap-2">
-                            <Check className="w-4 h-4" />
+                          <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-50 px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-emerald-700">
+                            <Check className="h-4 w-4" />
                             {report.status}
                           </div>
                         )}
-                        <ChevronRight className="h-5 w-5 text-zinc-300 group-hover:text-[var(--accent)] transition-colors" />
+                        <ChevronRight className="h-5 w-5 text-zinc-300 transition-colors group-hover:text-[var(--accent)]" />
                       </div>
                     </td>
                   </tr>

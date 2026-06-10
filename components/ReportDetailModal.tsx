@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   X,
@@ -18,6 +18,7 @@ import { api, ReportDetail } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import ReportThumbnail from "@/components/ReportThumbnail";
+import { useLiveChatRefresh } from "@/hooks/useLiveChatRefresh";
 
 const ReportLocationMap = dynamic(
   () => import("@/components/ReportLocationMap"),
@@ -82,19 +83,66 @@ export default function ReportDetailModal({
   const loading = reportId !== null && loadedId !== reportId;
   const isClosed = report?.status === "Résolu" || report?.status === "Clôturé";
 
+  const applyReportData = useCallback(
+    (
+      result: { data: ReportDetail | null; error?: string },
+      silent: boolean,
+    ) => {
+      const { data, error } = result;
+      if (!data) {
+        if (!silent) {
+          setReport(null);
+          setLoadError(error ?? "Signalement introuvable.");
+          setLoadedId(reportId!);
+        }
+        return;
+      }
+      setReport((prev) => {
+        if (!prev) return data;
+        const prevLastId = prev.messages[prev.messages.length - 1]?.id;
+        const nextLastId = data.messages[data.messages.length - 1]?.id;
+        if (
+          prev.messages.length === data.messages.length &&
+          prevLastId === nextLastId &&
+          prev.status === data.status
+        ) {
+          return prev;
+        }
+        return data;
+      });
+      if (!silent) {
+        setLoadError(null);
+        setLoadedId(reportId!);
+      }
+    },
+    [reportId],
+  );
+
+  const loadReport = useCallback(
+    async (silent = false) => {
+      if (!reportId) return;
+      const result = await api.getReport(reportId);
+      applyReportData(result, silent);
+    },
+    [reportId, applyReportData],
+  );
+
   useEffect(() => {
     if (!reportId) return;
     let cancelled = false;
-    void api.getReport(reportId).then(({ data, error }) => {
+    void api.getReport(reportId).then((result) => {
       if (cancelled) return;
-      setReport(data);
-      setLoadError(error ?? (data ? null : "Signalement introuvable."));
-      setLoadedId(reportId);
+      applyReportData(result, false);
     });
     return () => {
       cancelled = true;
     };
-  }, [reportId]);
+  }, [reportId, applyReportData]);
+
+  useLiveChatRefresh(
+    () => loadReport(true),
+    Boolean(report) && !isClosed && reportId !== null,
+  );
 
   useEffect(() => {
     if (report?.messages.length) {

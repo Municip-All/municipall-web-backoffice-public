@@ -15,6 +15,7 @@ import {
   Users,
   ShieldAlert,
   MessageSquare,
+  Lightbulb,
   Loader2,
   Clock,
   CheckCircle2,
@@ -27,6 +28,11 @@ import PageShell from "@/components/PageShell";
 import StatCard from "@/components/StatCard";
 import Badge from "@/components/Badge";
 import { ViewType } from "./Sidebar";
+import {
+  openAlertInModeration,
+  setModerationNavigation,
+  type ModerationTab,
+} from "@/lib/moderationNav";
 
 interface PoulsAiDashboardProps {
   onViewChange: (view: ViewType) => void;
@@ -55,10 +61,13 @@ export default function PoulsAiDashboard({
     refresh,
   } = useInbox();
 
-  const goModeration = (tab: "reports" | "messages") => {
-    sessionStorage.setItem("moderation_tab", tab);
+  const goModeration = (tab: ModerationTab) => {
+    setModerationNavigation(tab);
     onViewChange("moderation");
   };
+
+  const pendingSuggestions = stats?.suggestionsCount ?? 0;
+  const pendingQuestions = Math.max(0, pendingMessages - pendingSuggestions);
 
   const trendData = stats?.trendData ?? [];
   const urgentAlerts = alerts
@@ -112,12 +121,20 @@ export default function PoulsAiDashboard({
               onClick={() => goModeration("reports")}
             />
             <StatCard
-              title="Messages en attente"
-              value={pendingMessages}
+              title="Questions en attente"
+              value={pendingQuestions}
               icon={MessageSquare}
-              alertCount={pendingMessages}
-              highlight={pendingMessages > 0}
-              onClick={() => goModeration("messages")}
+              alertCount={pendingQuestions}
+              highlight={pendingQuestions > 0}
+              onClick={() => goModeration("questions")}
+            />
+            <StatCard
+              title="Suggestions citoyennes"
+              value={pendingSuggestions}
+              icon={Lightbulb}
+              alertCount={pendingSuggestions}
+              highlight={pendingSuggestions > 0}
+              onClick={() => goModeration("suggestions")}
             />
             <StatCard
               title="Urgences"
@@ -140,8 +157,16 @@ export default function PoulsAiDashboard({
             />
             <StatCard
               title="Satisfaction"
-              value={`${stats?.satisfaction ?? 0}%`}
-              trend={stats?.satisfactionTrend}
+              value={
+                (stats?.ratingsCount ?? 0) > 0
+                  ? `${stats?.satisfaction ?? 0}%`
+                  : "—"
+              }
+              trend={
+                (stats?.ratingsCount ?? 0) > 0
+                  ? stats?.satisfactionTrend
+                  : undefined
+              }
               icon={CheckCircle2}
             />
           </div>
@@ -169,22 +194,42 @@ export default function PoulsAiDashboard({
             </button>
             <button
               type="button"
-              onClick={() => goModeration("messages")}
+              onClick={() => goModeration("questions")}
               className="card-panel flex items-center justify-between p-5 text-left transition-all hover:ring-2 hover:ring-[var(--accent)]/20"
             >
               <div>
-                <p className="section-title">Messages contact</p>
+                <p className="section-title">Questions citoyennes</p>
                 <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
-                  Répondre aux demandes
+                  Répondre aux demandes simples
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                {pendingMessages > 0 && (
+                {pendingQuestions > 0 && (
                   <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-black text-white">
-                    {pendingMessages}
+                    {pendingQuestions}
                   </span>
                 )}
                 <ArrowRight className="h-4 w-4 text-[var(--accent)]" />
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => goModeration("suggestions")}
+              className="card-panel flex items-center justify-between p-5 text-left transition-all hover:ring-2 hover:ring-amber-300/40"
+            >
+              <div>
+                <p className="section-title">Suggestions citoyennes</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+                  Suivre les idées des riverains
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {pendingSuggestions > 0 && (
+                  <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-black text-white">
+                    {pendingSuggestions}
+                  </span>
+                )}
+                <ArrowRight className="h-4 w-4 text-amber-600" />
               </div>
             </button>
             <button
@@ -223,16 +268,12 @@ export default function PoulsAiDashboard({
                       <button
                         type="button"
                         onClick={() => {
-                          sessionStorage.setItem(
-                            "moderation_tab",
-                            alert.type === "contact" ? "messages" : "reports",
+                          const nav = openAlertInModeration(alert);
+                          setModerationNavigation(
+                            nav.tab,
+                            nav.ticketId,
+                            nav.contactKind,
                           );
-                          if (alert.type === "contact") {
-                            sessionStorage.setItem(
-                              "moderation_ticket_id",
-                              String(alert.entityId),
-                            );
-                          }
                           onViewChange("moderation");
                         }}
                         className={clsx(
