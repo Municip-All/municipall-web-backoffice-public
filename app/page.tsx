@@ -14,6 +14,7 @@ import Login from "@/components/Login";
 import ConstructionManager from "@/components/ConstructionManager";
 import WasteManager from "@/components/WasteManager";
 import EventManager from "@/components/EventManager";
+import TransportSettings from "@/components/TransportSettings";
 import TeamInsightsDashboard from "@/components/TeamInsightsDashboard";
 import TeamManager from "@/components/TeamManager";
 import { useAuth } from "@/context/AuthContext";
@@ -60,6 +61,7 @@ export default function Home() {
               )}
               {activeView === "moderation" && <ModerationMatrix />}
               {activeView === "widgets" && <WidgetGenerator />}
+              {activeView === "transport" && <TransportSettings />}
               {activeView === "targeted-push" && <TargetedCommunication />}
               {activeView === "settings" && <WhiteLabelSettings />}
               {activeView === "profile" && (

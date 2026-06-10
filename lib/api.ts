@@ -26,6 +26,10 @@ async function request<T>(
       tenantId = "";
     }
   }
+  if (!tenantId) {
+    const cityConfigMatch = endpoint.match(/^\/api\/v1\/city-config\/([^/]+)/);
+    if (cityConfigMatch) tenantId = cityConfigMatch[1];
+  }
 
   const defaultHeaders: Record<string, string> = {
     "Content-Type": "application/json",
@@ -95,6 +99,8 @@ export interface CityConfig {
   theme: {
     primaryColor: string;
     secondaryColor?: string;
+    backgroundColorLight?: string;
+    backgroundColorDark?: string;
     useGradient: boolean;
     logoUrl: string;
   };
@@ -107,6 +113,8 @@ export interface CityConfig {
       time: string;
     }[];
   };
+  isTransportFeatureAllowed?: boolean;
+  isTransportFeatureEnabled?: boolean;
 }
 
 export type DashboardAlertSeverity = "urgent" | "high" | "normal";
@@ -293,6 +301,7 @@ export const api = {
       `/api/v1/city-config/${cityId}`,
       "PATCH",
       data,
+      { "x-tenant-id": cityId },
     );
     if (response.error) return { ok: false, error: response.error };
     return { ok: response.status < 400 };

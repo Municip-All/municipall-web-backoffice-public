@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Send, X, CheckCircle2 } from "lucide-react";
 import clsx from "clsx";
 import { api, ContactTicketDetail } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import { useInbox } from "@/context/InboxContext";
+import { useLiveChatRefresh } from "@/hooks/useLiveChatRefresh";
 
 interface ContactTicketChatProps {
   ticketId: number;
@@ -28,18 +29,60 @@ export default function ContactTicketChat({
   const [closing, setClosing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const applyTicketData = useCallback(
+    (data: ContactTicketDetail | null, silent: boolean) => {
+      if (!data) {
+        if (!silent) {
+          setTicket(null);
+          setLoadedTicketId(ticketId);
+        }
+        return;
+      }
+      setTicket((prev) => {
+        if (!prev) return data;
+        const prevLastId = prev.messages[prev.messages.length - 1]?.id;
+        const nextLastId = data.messages[data.messages.length - 1]?.id;
+        if (
+          prev.messages.length === data.messages.length &&
+          prevLastId === nextLastId &&
+          prev.status === data.status
+        ) {
+          return prev;
+        }
+        return data;
+      });
+      if (!silent) {
+        setLoadedTicketId(ticketId);
+      }
+    },
+    [ticketId],
+  );
+
+  const loadTicket = useCallback(
+    async (silent = false) => {
+      const data = await api.getContactTicket(ticketId);
+      applyTicketData(data, silent);
+    },
+    [ticketId, applyTicketData],
+  );
+
   useEffect(() => {
     let cancelled = false;
     void api.getContactTicket(ticketId).then((data) => {
-      if (!cancelled) {
-        setTicket(data);
-        setLoadedTicketId(ticketId);
-      }
+      if (cancelled) return;
+      applyTicketData(data, false);
     });
     return () => {
       cancelled = true;
     };
-  }, [ticketId]);
+  }, [ticketId, applyTicketData]);
+
+  const isClosed = ticket?.status === "Clôturé";
+
+  useLiveChatRefresh(
+    () => loadTicket(true),
+    Boolean(ticket) && !isClosed,
+  );
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -83,8 +126,6 @@ export default function ContactTicketChat({
       toast("error", "Impossible de clôturer.");
     }
   };
-
-  const isClosed = ticket?.status === "Clôturé";
 
   return (
     <div className="flex h-full min-h-[480px] flex-col border-l border-[var(--card-border)] bg-[var(--card)]">

@@ -14,6 +14,7 @@ import {
   Calendar,
   BarChart3,
   UserCog,
+  Bus,
 } from "lucide-react";
 import clsx from "clsx";
 import BrandLogo from "@/components/BrandLogo";
@@ -32,7 +33,8 @@ export type ViewType =
   | "profile"
   | "construction"
   | "waste"
-  | "events";
+  | "events"
+  | "transport";
 
 interface SidebarProps {
   activeView: ViewType;
@@ -117,6 +119,12 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
           id: "widgets",
           label: "Services GPS",
           icon: Smartphone,
+          permission: Permission.WIDGETS_READ,
+        },
+        {
+          id: "transport",
+          label: "Transports IDFM",
+          icon: Bus,
           permission: Permission.WIDGETS_READ,
         },
         {
