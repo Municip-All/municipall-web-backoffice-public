@@ -5,6 +5,10 @@ import { Bell, AlertTriangle, MessageSquare, ShieldAlert } from "lucide-react";
 import clsx from "clsx";
 import { useInbox } from "@/context/InboxContext";
 import { DashboardAlert } from "@/lib/api";
+import {
+  openAlertInModeration,
+  setModerationNavigation,
+} from "@/lib/moderationNav";
 import { ViewType } from "./Sidebar";
 
 interface NotificationCenterProps {
@@ -49,13 +53,8 @@ export default function NotificationCenter({
   }, [open]);
 
   const openAlert = (alert: DashboardAlert) => {
-    sessionStorage.setItem(
-      "moderation_tab",
-      alert.type === "contact" ? "messages" : "reports",
-    );
-    if (alert.type === "contact") {
-      sessionStorage.setItem("moderation_ticket_id", String(alert.entityId));
-    }
+    const nav = openAlertInModeration(alert);
+    setModerationNavigation(nav.tab, nav.ticketId, nav.contactKind);
     setOpen(false);
     onViewChange("moderation");
   };

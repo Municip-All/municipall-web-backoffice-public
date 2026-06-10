@@ -15,8 +15,11 @@ import ConstructionManager from "@/components/ConstructionManager";
 import WasteManager from "@/components/WasteManager";
 import EventManager from "@/components/EventManager";
 import TransportSettings from "@/components/TransportSettings";
+import AssociationsManager from "@/components/AssociationsManager";
+import CityPublicProfile from "@/components/CityPublicProfile";
 import TeamInsightsDashboard from "@/components/TeamInsightsDashboard";
 import TeamManager from "@/components/TeamManager";
+import CitizenFeedbackDashboard from "@/components/CitizenFeedbackDashboard";
 import { useAuth } from "@/context/AuthContext";
 import { usePermissions, Permission } from "@/context/PermissionsContext";
 import { InboxProvider } from "@/context/InboxContext";
@@ -53,6 +56,8 @@ export default function Home() {
               {activeView === "team-insights" && can(Permission.TEAM_KPIS) && (
                 <TeamInsightsDashboard />
               )}
+              {activeView === "citizen-feedback" &&
+                can(Permission.FEEDBACK_READ) && <CitizenFeedbackDashboard />}
               {activeView === "team-manage" && can(Permission.TEAM_MANAGE) && (
                 <TeamManager />
               )}
@@ -75,6 +80,12 @@ export default function Home() {
                 <WasteManager cityId={user.cityId} />
               )}
               {activeView === "events" && <EventManager />}
+              {activeView === "associations" && user?.cityId && (
+                <AssociationsManager cityId={user.cityId} />
+              )}
+              {activeView === "city-profile" && user?.cityId && (
+                <CityPublicProfile cityId={user.cityId} />
+              )}
             </div>
           </main>
         </div>

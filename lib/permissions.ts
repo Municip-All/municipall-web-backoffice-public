@@ -17,6 +17,8 @@ export const Permission = {
   TEAM_READ: "team:read",
   TEAM_MANAGE: "team:manage",
   TEAM_KPIS: "team:kpis",
+  FEEDBACK_CREATE: "feedback:create",
+  FEEDBACK_READ: "feedback:read",
   PROFILE_READ: "profile:read",
   PROFILE_WRITE: "profile:write",
 } as const;

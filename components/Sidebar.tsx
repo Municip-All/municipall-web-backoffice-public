@@ -15,6 +15,9 @@ import {
   BarChart3,
   UserCog,
   Bus,
+  Users,
+  Landmark,
+  Star,
 } from "lucide-react";
 import clsx from "clsx";
 import BrandLogo from "@/components/BrandLogo";
@@ -34,7 +37,10 @@ export type ViewType =
   | "construction"
   | "waste"
   | "events"
-  | "transport";
+  | "transport"
+  | "associations"
+  | "city-profile"
+  | "citizen-feedback";
 
 interface SidebarProps {
   activeView: ViewType;
@@ -70,6 +76,13 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
           label: "Performance équipe",
           icon: BarChart3,
           permission: Permission.TEAM_KPIS,
+        },
+        {
+          id: "citizen-feedback",
+          label: "Avis citoyens",
+          icon: Star,
+          permission: Permission.FEEDBACK_READ,
+          title: "Réservé au maire",
         },
         {
           id: "team-manage",
@@ -150,6 +163,18 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
           label: "Calendrier déchets",
           icon: Trash2,
           permission: Permission.CITY_CONFIG_READ,
+        },
+        {
+          id: "associations",
+          label: "Vie associative",
+          icon: Users,
+          permission: Permission.CITY_CONFIG_WRITE,
+        },
+        {
+          id: "city-profile",
+          label: "Fiche commune",
+          icon: Landmark,
+          permission: Permission.CITY_CONFIG_WRITE,
         },
       ],
     },
