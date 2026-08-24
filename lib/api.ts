@@ -270,17 +270,6 @@ export interface CityEvent {
   imageUrl?: string;
 }
 
-/** @deprecated */
-export interface ContactMessage {
-  id: number;
-  subject: string;
-  body: string;
-  status: string;
-  userId: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface NotificationPreferences {
   moderationAlerts: boolean;
   weeklyReports: boolean;
@@ -453,29 +442,6 @@ export const api = {
       { status },
     );
     return response.data || null;
-  },
-
-  /** @deprecated */
-  async getContactMessages(): Promise<ContactTicketListItem[]> {
-    return this.getContactTickets();
-  },
-
-  /** @deprecated */
-  async updateContactMessageStatus(
-    id: number,
-    status: string,
-  ): Promise<boolean> {
-    if (status === "En cours") {
-      const t = await this.getContactTicket(id);
-      if (t && t.status === "En attente") {
-        await this.replyContactTicket(id, "Prise en charge par la mairie.");
-      }
-      return true;
-    }
-    if (status === "Clôturé" || status === "Résolu") {
-      return (await this.closeContactTicket(id)) !== null;
-    }
-    return false;
   },
 
   // --- Events ---
