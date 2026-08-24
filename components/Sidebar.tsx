@@ -224,7 +224,7 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
             title={item.title}
             className={clsx(
               "flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-black text-white",
-              item.urgent ? "bg-red-500" : "bg-red-500",
+              item.urgent ? "bg-red-500" : "bg-amber-500",
             )}
           >
             {item.count > 99 ? "99+" : item.count}
