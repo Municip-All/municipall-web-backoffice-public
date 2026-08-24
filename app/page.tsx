@@ -61,29 +61,29 @@ export default function Home() {
               {activeView === "team-manage" && can(Permission.TEAM_MANAGE) && (
                 <TeamManager />
               )}
-              {activeView === "pouls-ai" && (
+              {activeView === "pouls-ai" && can(Permission.CITY_CONFIG_READ) && (
                 <PoulsAiDashboard onViewChange={setActiveView} />
               )}
-              {activeView === "moderation" && <ModerationMatrix />}
-              {activeView === "widgets" && <WidgetGenerator />}
-              {activeView === "transport" && <TransportSettings />}
-              {activeView === "targeted-push" && <TargetedCommunication />}
-              {activeView === "settings" && <WhiteLabelSettings />}
-              {activeView === "profile" && (
+              {activeView === "moderation" && can(Permission.REPORTS_READ) && <ModerationMatrix />}
+              {activeView === "widgets" && can(Permission.WIDGETS_READ) && <WidgetGenerator />}
+              {activeView === "transport" && can(Permission.WIDGETS_READ) && <TransportSettings />}
+              {activeView === "targeted-push" && can(Permission.NOTIFICATIONS_SEND) && <TargetedCommunication />}
+              {activeView === "settings" && can(Permission.CITY_CONFIG_WRITE) && <WhiteLabelSettings />}
+              {activeView === "profile" && can(Permission.PROFILE_READ) && (
                 <ProfileView onNavigate={setActiveView} />
               )}
-              {activeView === "neighborhoods" && <NeighborhoodManager />}
-              {activeView === "construction" && user?.cityId && (
+              {activeView === "neighborhoods" && can(Permission.NEIGHBORHOODS_MANAGE) && <NeighborhoodManager />}
+              {activeView === "construction" && can(Permission.CONSTRUCTION_MANAGE) && user?.cityId && (
                 <ConstructionManager cityId={user.cityId} />
               )}
-              {activeView === "waste" && user?.cityId && (
+              {activeView === "waste" && can(Permission.CITY_CONFIG_READ) && user?.cityId && (
                 <WasteManager cityId={user.cityId} />
               )}
-              {activeView === "events" && <EventManager />}
-              {activeView === "associations" && user?.cityId && (
+              {activeView === "events" && can(Permission.EVENTS_MANAGE) && <EventManager />}
+              {activeView === "associations" && can(Permission.CITY_CONFIG_WRITE) && user?.cityId && (
                 <AssociationsManager cityId={user.cityId} />
               )}
-              {activeView === "city-profile" && user?.cityId && (
+              {activeView === "city-profile" && can(Permission.CITY_CONFIG_WRITE) && user?.cityId && (
                 <CityPublicProfile cityId={user.cityId} />
               )}
             </div>
