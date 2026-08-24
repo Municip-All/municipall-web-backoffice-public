@@ -8,17 +8,9 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
+import { type User } from "@/lib/api";
 
-export interface User {
-  id: number;
-  email: string;
-  name: string;
-  surname: string;
-  role: string;
-  cityId: string;
-  avatar_url?: string;
-  permissions?: string[];
-}
+export type { User } from "@/lib/api";
 
 interface AuthContextType {
   user: User | null;
