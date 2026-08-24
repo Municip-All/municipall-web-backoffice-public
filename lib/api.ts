@@ -140,6 +140,7 @@ export interface CityConfig {
   };
   isTransportFeatureAllowed?: boolean;
   isTransportFeatureEnabled?: boolean;
+  dataRetentionPolicy?: string;
 }
 
 export type DashboardAlertSeverity = "urgent" | "high" | "normal";

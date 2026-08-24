@@ -6,6 +6,7 @@ import clsx from "clsx";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
 import { api, CitizenFeedbackItem } from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
 
 function Stars({ value }: { value: number }) {
   return (
@@ -41,6 +42,7 @@ function formatDate(iso: string): string {
 }
 
 export default function CitizenFeedbackDashboard() {
+  const toast = useToast();
   const [items, setItems] = useState<CitizenFeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,6 +52,11 @@ export default function CitizenFeedbackDashboard() {
       if (cancelled) return;
       setItems(data);
       setLoading(false);
+    }).catch(() => {
+      if (!cancelled) {
+        toast("error", "Impossible de charger les avis citoyens.");
+        setLoading(false);
+      }
     });
     return () => {
       cancelled = true;

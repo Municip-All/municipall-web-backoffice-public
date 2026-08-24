@@ -3,6 +3,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import type { GeoJsonFeature } from "@/lib/api";
+import type L from "leaflet";
+import type * as geojson from "geojson";
 
 interface CommuneMapProps {
   /** Nom officiel INSEE pour recherche geo.api.gouv.fr (pas le nom d'app) */
@@ -33,7 +35,7 @@ interface MapZone {
   bounds?: [[number, number], [number, number]];
 }
 
-function generateSubZones(contour: number[][][], zoneName: string): MapZone[] {
+function generateSubZones(contour: number[][][]): MapZone[] {
   const coords = contour[0];
   const lngs = coords.map((c) => c[0]);
   const lats = coords.map((c) => c[1]);
@@ -75,7 +77,6 @@ function generateSubZones(contour: number[][][], zoneName: string): MapZone[] {
       ] as [[number, number], [number, number]],
     },
   ];
-  void zoneName;
   return zones;
 }
 
@@ -169,11 +170,10 @@ export default function CommuneMap({
         const [lng, lat] = commune.centre.coordinates;
 
         if (mapInstance.current) {
-          (mapInstance.current as { remove: () => void }).remove();
+          (mapInstance.current as L.Map).remove();
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const leafletMap = (L as any).map(mapRef.current, {
+        const leafletMap = (L as typeof import("leaflet")).map(mapRef.current, {
           center: [lat, lng],
           zoom: 14,
           zoomControl: false,
@@ -182,22 +182,20 @@ export default function CommuneMap({
 
         mapInstance.current = leafletMap;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (L as any)
+        (L as typeof import("leaflet"))
           .tileLayer(
             "https://data.geopf.fr/wmts?service=WMTS&request=GetTile&version=1.0.0&tilematrixset=PM&tilematrix={z}&tilecol={x}&tilerow={y}&layer=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&format=image/png&style=normal",
             { maxZoom: 18 },
           )
           .addTo(leafletMap);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const communeLayer = (L as any)
+        const communeLayer = (L as typeof import("leaflet"))
           .geoJSON(
             {
-              type: "Feature",
-              geometry: commune.contour,
+              type: "Feature" as const,
+              geometry: commune.contour as unknown as geojson.GeometryObject,
               properties: {},
-            },
+            } as geojson.Feature,
             {
               style: {
                 color: "var(--accent)",
@@ -217,7 +215,6 @@ export default function CommuneMap({
             ? customNeighborhoods
             : generateSubZones(
                 commune.contour.coordinates as number[][][],
-                commune.nom,
               );
 
         zonesToDraw.forEach((zone: MapZone) => {
@@ -225,8 +222,7 @@ export default function CommuneMap({
 
           let layer;
           if (zone.points) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            layer = (L as any).polygon(zone.points, {
+            layer = (L as typeof import("leaflet")).polygon(zone.points as L.LatLngExpression[], {
               color: isSelected ? "var(--accent)" : "rgba(107, 114, 128, 0.4)",
               weight: 2,
               fillColor: isSelected
@@ -236,8 +232,7 @@ export default function CommuneMap({
               interactive: !isEditing,
             });
           } else if (zone.bounds) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            layer = (L as any).rectangle(zone.bounds, {
+            layer = (L as typeof import("leaflet")).rectangle(zone.bounds as L.LatLngBoundsExpression, {
               color: isSelected ? "var(--accent)" : "rgba(107, 114, 128, 0.4)",
               weight: 2,
               fillColor: isSelected
@@ -249,8 +244,7 @@ export default function CommuneMap({
           }
 
           if (layer) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const label = (L as any)
+            const label = (L as typeof import("leaflet"))
               .tooltip({
                 permanent: true,
                 direction: "center",

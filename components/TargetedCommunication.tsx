@@ -80,8 +80,8 @@ export default function TargetedCommunication() {
   };
 
   const totalCitizens = useMemo(() => {
-    // Estimated citizens per zone based on area or fixed average
-    return selectedZones.size * 1250; // Simple estimate
+    // Approximation — not based on real population data
+    return selectedZones.size * 1250;
   }, [selectedZones]);
 
   const handleSend = async () => {

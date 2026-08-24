@@ -143,10 +143,7 @@ export default function ProfileView({ onNavigate }: ProfileViewProps) {
         if (cancelled) return;
         if (config) {
           setCityName(config.name || cityId);
-          setDataRetentionPolicy(
-            (config as { dataRetentionPolicy?: string }).dataRetentionPolicy ||
-              "",
-          );
+          setDataRetentionPolicy(config.dataRetentionPolicy || "");
         } else {
           setCityName(cityId);
         }

@@ -2,23 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { Plus, Trash2, Save, Loader2, Users } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, type AssociationCategory, type CityAssociation } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
-
-type AssociationCategory = "association" | "groupe-parole" | "autre";
-
-interface AssociationItem {
-  id: string;
-  name: string;
-  category: AssociationCategory;
-  description?: string;
-  address?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  website?: string;
-}
 
 const CATEGORIES: { value: AssociationCategory; label: string }[] = [
   { value: "association", label: "Association" },
@@ -32,7 +19,7 @@ function newId() {
 
 export default function AssociationsManager({ cityId }: { cityId: string }) {
   const toast = useToast();
-  const [items, setItems] = useState<AssociationItem[]>([]);
+  const [items, setItems] = useState<CityAssociation[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -54,11 +41,11 @@ export default function AssociationsManager({ cityId }: { cityId: string }) {
   const addItem = () => {
     setItems((prev) => [
       ...prev,
-      { id: newId(), name: "", category: "association", description: "" },
+      { id: newId(), name: "", category: "association", description: "", address: "", contactEmail: "", contactPhone: "", website: "" },
     ]);
   };
 
-  const updateItem = (id: string, patch: Partial<AssociationItem>) => {
+  const updateItem = (id: string, patch: Partial<CityAssociation>) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
   };
 

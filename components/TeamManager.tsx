@@ -23,6 +23,9 @@ export default function TeamManager() {
     void api.getTeam().then((data) => {
       setTeam(data);
       setLoading(false);
+    }).catch(() => {
+      toast("error", "Impossible de charger l'équipe.");
+      setLoading(false);
     });
   };
 

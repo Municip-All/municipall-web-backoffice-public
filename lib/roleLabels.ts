@@ -1,6 +1,4 @@
-function normalizeRole(role: string): string {
-  return role.trim().toLowerCase();
-}
+import { normalizeRole } from "./permissions";
 
 export function roleLabel(role: string): string {
   const n = normalizeRole(role);

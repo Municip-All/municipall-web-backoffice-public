@@ -12,6 +12,7 @@ import {
 import PageShell from "@/components/PageShell";
 import RoleBadge from "@/components/RoleBadge";
 import { api, AgentKpi, TeamActivityItem } from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
 
 function KpiCard({
   label,
@@ -52,6 +53,7 @@ function actionLabel(action: string): string {
 }
 
 export default function TeamInsightsDashboard() {
+  const toast = useToast();
   const [kpis, setKpis] = useState<AgentKpi[]>([]);
   const [activity, setActivity] = useState<TeamActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,12 @@ export default function TeamInsightsDashboard() {
         setActivity(activityData);
         setLoading(false);
       },
-    );
+    ).catch(() => {
+      if (!cancelled) {
+        toast("error", "Impossible de charger les données de l'équipe.");
+        setLoading(false);
+      }
+    });
     return () => {
       cancelled = true;
     };

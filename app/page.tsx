@@ -8,7 +8,7 @@ import ModerationMatrix from "@/components/ModerationMatrix";
 import WidgetGenerator from "@/components/WidgetGenerator";
 import TargetedCommunication from "@/components/TargetedCommunication";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
-import ProfileView from "../components/ProfileView";
+import ProfileView from "@/components/ProfileView";
 import NeighborhoodManager from "@/components/NeighborhoodManager";
 import Login from "@/components/Login";
 import ConstructionManager from "@/components/ConstructionManager";
