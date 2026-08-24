@@ -12,6 +12,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import { api } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
@@ -36,23 +37,14 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
 
   const fetchWorks = React.useCallback(async () => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/construction-works`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-            "x-tenant-id": cityId,
-          },
-        },
-      );
-      const data = await response.json();
-      setWorks(data);
+      const data = await api.get<ConstructionWork[]>("/api/v1/construction-works");
+      setWorks(data.data || []);
     } catch (error) {
       console.error("Error fetching works:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [cityId]);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -64,31 +56,25 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
   const handleSave = async (work: ConstructionWork) => {
     setIsSaving(true);
     try {
-      const method = work.id ? "PATCH" : "POST";
-      const url = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/construction-works${work.id ? `/${work.id}` : ""}`;
-
       const body = {
         ...work,
         startDate: new Date(work.startDate).toISOString(),
         endDate: new Date(work.endDate).toISOString(),
       };
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-          "x-tenant-id": cityId,
-        },
-        body: JSON.stringify(body),
-      });
+      let result;
+      if (work.id) {
+        result = await api.patch<ConstructionWork>(`/api/v1/construction-works/${work.id}`, body);
+      } else {
+        result = await api.post<ConstructionWork>("/api/v1/construction-works", body);
+      }
 
-      if (response.ok) {
+      if (result.data) {
         toast("success", `Chantier ${work.id ? "mis à jour" : "ajouté"} !`);
         setEditingWork(null);
         fetchWorks();
       } else {
-        toast("error", "Erreur lors de l'enregistrement.");
+        toast("error", result.error || "Erreur lors de l'enregistrement.");
       }
     } catch {
       toast("error", "Une erreur est survenue.");
@@ -101,18 +87,9 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
     if (!confirm("Voulez-vous vraiment supprimer ce chantier ?")) return;
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/v1/construction-works/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-            "x-tenant-id": cityId,
-          },
-        },
-      );
+      const result = await api.delete(`/api/v1/construction-works/${id}`);
 
-      if (response.ok) {
+      if (result.status < 400) {
         toast("success", "Chantier supprimé.");
         fetchWorks();
       }
