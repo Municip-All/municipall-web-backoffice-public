@@ -141,6 +141,7 @@ export default function EventManager() {
               type="button"
               onClick={() => setEditingEvent(null)}
               className="btn-ghost !p-2"
+              aria-label="Fermer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -354,6 +355,7 @@ export default function EventManager() {
                       type="button"
                       onClick={() => setEditingEvent(event)}
                       className="btn-ghost !p-2"
+                      aria-label="Modifier"
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
@@ -361,6 +363,7 @@ export default function EventManager() {
                       type="button"
                       onClick={() => event.id && handleDelete(event.id)}
                       className="btn-ghost !p-2 text-red-500"
+                      aria-label="Supprimer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

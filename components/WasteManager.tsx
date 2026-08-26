@@ -76,7 +76,7 @@ export default function WasteManager({ cityId }: { cityId: string }) {
         ]);
       }
       setIsLoading(false);
-    });
+    }).catch(() => { setIsLoading(false); });
     return () => { cancelled = true; };
   }, [cityId]);
 
@@ -171,6 +171,7 @@ export default function WasteManager({ cityId }: { cityId: string }) {
             <button
               onClick={() => handleRemoveService(sIndex)}
               className="absolute top-6 right-6 p-3 text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+              aria-label="Supprimer"
             >
               <X className="w-6 h-6" />
             </button>

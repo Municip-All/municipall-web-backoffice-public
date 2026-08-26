@@ -219,7 +219,7 @@ export default function ReportDetailModal({
               Incident #{String(reportId).padStart(4, "0")}
             </h2>
           </div>
-          <button type="button" onClick={onClose} className="btn-ghost !p-2">
+          <button type="button" onClick={onClose} className="btn-ghost !p-2" aria-label="Fermer">
             <X className="h-5 w-5" />
           </button>
         </div>

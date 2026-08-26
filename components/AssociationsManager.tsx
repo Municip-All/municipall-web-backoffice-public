@@ -29,7 +29,7 @@ export default function AssociationsManager({ cityId }: { cityId: string }) {
       if (cancelled) return;
       setItems(data?.associations ?? []);
       setLoading(false);
-    });
+    }).catch(() => { setLoading(false); });
     return () => { cancelled = true; };
   }, [cityId]);
 

@@ -33,6 +33,7 @@ export default function ProfileSubHeader({
               type="button"
               onClick={onBack}
               className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--card-border)] bg-[var(--card)] text-[var(--muted)] shadow-sm transition-all hover:text-[var(--foreground)]"
+              aria-label="Retour"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>

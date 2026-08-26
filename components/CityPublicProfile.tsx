@@ -48,7 +48,7 @@ export default function CityPublicProfile({ cityId }: { cityId: string }) {
         openingHours: p?.openingHours ?? "",
       });
       setLoading(false);
-    });
+    }).catch(() => { setLoading(false); });
     return () => { cancelled = true; };
   }, [cityId]);
 

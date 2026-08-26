@@ -122,7 +122,7 @@ export default function ProfileView({ onNavigate }: ProfileViewProps) {
           email: data.email || "",
         });
       }
-    });
+    }).catch(() => {});
     return () => { cancelled = true; };
   }, [updateUser]);
 
@@ -130,30 +130,32 @@ export default function ProfileView({ onNavigate }: ProfileViewProps) {
     let cancelled = false;
 
     const loadProfileData = async () => {
-      const [userStats, notificationPrefs] = await Promise.all([
-        api.getUserStats(),
-        api.getNotificationPreferences(),
-      ]);
-      if (cancelled) return;
-      if (userStats) {
-        setStats({ reports: userStats.reports, points: userStats.points });
-      }
-      if (notificationPrefs) {
-        setPrefs(notificationPrefs);
-        setPrefsDirty(false);
-      }
-
-      const cityId = user?.cityId;
-      if (cityId) {
-        const config = await api.getCityConfig(cityId);
+      try {
+        const [userStats, notificationPrefs] = await Promise.all([
+          api.getUserStats(),
+          api.getNotificationPreferences(),
+        ]);
         if (cancelled) return;
-        if (config) {
-          setCityName(config.name || cityId);
-          setDataRetentionPolicy(config.dataRetentionPolicy || "");
-        } else {
-          setCityName(cityId);
+        if (userStats) {
+          setStats({ reports: userStats.reports, points: userStats.points });
         }
-      }
+        if (notificationPrefs) {
+          setPrefs(notificationPrefs);
+          setPrefsDirty(false);
+        }
+
+        const cityId = user?.cityId;
+        if (cityId) {
+          const config = await api.getCityConfig(cityId);
+          if (cancelled) return;
+          if (config) {
+            setCityName(config.name || cityId);
+            setDataRetentionPolicy(config.dataRetentionPolicy || "");
+          } else {
+            setCityName(cityId);
+          }
+        }
+      } catch {}
     };
 
     void loadProfileData();
@@ -591,6 +593,7 @@ export default function ProfileView({ onNavigate }: ProfileViewProps) {
                     type="button"
                     onClick={() => setShowPass(!showPass)}
                     className="absolute right-7 top-[52px] text-zinc-400 transition-colors hover:text-[var(--accent)]"
+                    aria-label={showPass ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                   >
                     {showPass ? (
                       <EyeOff className="h-6 w-6" />

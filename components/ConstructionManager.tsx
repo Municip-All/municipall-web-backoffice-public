@@ -155,6 +155,7 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
             <button
               onClick={() => setEditingWork(null)}
               className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+              aria-label="Fermer"
             >
               <X className="w-6 h-6 text-zinc-400" />
             </button>
@@ -379,12 +380,14 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
                 <button
                   onClick={() => setEditingWork(work)}
                   className="p-4 text-zinc-400 hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 rounded-[18px] transition-all"
+                  aria-label="Modifier"
                 >
                   <Pencil className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => work.id && handleDelete(work.id)}
                   className="p-4 text-zinc-400 hover:text-red-500 hover:bg-red-500/5 rounded-[18px] transition-all"
+                  aria-label="Supprimer"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
