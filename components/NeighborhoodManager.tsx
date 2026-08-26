@@ -184,10 +184,7 @@ export default function NeighborhoodManager() {
             setTempPoints((prev) => [...prev, [e.latlng.lat, e.latlng.lng]]);
           }
         });
-      } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-          console.error("Map error:", err);
-        }
+      } catch {
       }
     };
 

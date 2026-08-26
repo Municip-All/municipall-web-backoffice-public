@@ -261,10 +261,7 @@ export default function CommuneMap({
         });
 
         setIsLoading(false);
-      } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-          console.error("Map init error:", err);
-        }
+      } catch {
         if (isMounted) {
           setError("Impossible de charger la carte.");
           setIsLoading(false);
