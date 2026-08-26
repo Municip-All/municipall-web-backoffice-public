@@ -139,6 +139,13 @@ export default function ReportDetailModal({
     };
   }, [reportId, applyReportData]);
 
+  useEffect(() => {
+    if (!reportId) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [reportId, onClose]);
+
   useLiveChatRefresh(
     () => loadReport(true),
     Boolean(report) && !isClosed && reportId !== null,
