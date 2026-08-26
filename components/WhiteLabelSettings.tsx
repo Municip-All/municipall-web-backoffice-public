@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import {
   PaintBucket,
@@ -42,6 +42,7 @@ export default function WhiteLabelSettings() {
   const [contactHelpText, setContactHelpText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -77,6 +78,12 @@ export default function WhiteLabelSettings() {
     return () => clearTimeout(timer);
   }, [user?.cityId]);
 
+  useEffect(() => {
+    return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    };
+  }, []);
+
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -103,7 +110,8 @@ export default function WhiteLabelSettings() {
       if (ok) {
         toast("success", "Paramètres publiés avec succès !");
         setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+        if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+        savedTimerRef.current = setTimeout(() => setSaved(false), 3000);
       } else {
         toast("error", "Échec de la mise à jour. Réessayez.");
       }
