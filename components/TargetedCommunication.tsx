@@ -311,15 +311,18 @@ export default function TargetedCommunication() {
 
                 {selectedZones.size > 0 && (
                   <div className="bg-[var(--accent)]/5 border border-[var(--accent)]/10 rounded-[22px] p-5 text-center mt-6 animate-in slide-in-from-bottom-2 duration-300">
-                    <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest mb-1 opacity-60">
-                      Audience Estimée
-                    </p>
-                    <div className="text-2xl font-black text-[var(--foreground)] tracking-tighter">
-                      ~ {totalCitizens.toLocaleString("fr-FR")}{" "}
-                      <span className="text-xs text-apple-muted opacity-60 ml-1">
-                        CITOYENS
-                      </span>
-                    </div>
+                     <p className="text-[10px] font-black text-apple-muted uppercase tracking-widest mb-1 opacity-60">
+                       Audience Estimée
+                     </p>
+                     <div className="text-2xl font-black text-[var(--foreground)] tracking-tighter">
+                       ~ {totalCitizens.toLocaleString("fr-FR")}{" "}
+                       <span className="text-xs text-apple-muted opacity-60 ml-1">
+                         CITOYENS
+                       </span>
+                     </div>
+                     <p className="text-[9px] text-apple-muted opacity-50 mt-1">
+                       (estimation approximative)
+                     </p>
                   </div>
                 )}
               </div>

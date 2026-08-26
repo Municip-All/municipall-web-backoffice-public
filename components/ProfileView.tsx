@@ -150,7 +150,11 @@ export default function ProfileView({ onNavigate }: ProfileViewProps) {
       }
     };
 
-    void loadProfileData().catch(console.error);
+    void loadProfileData().catch((err) => {
+      if (process.env.NODE_ENV === "development") {
+        console.error(err);
+      }
+    });
 
     return () => {
       cancelled = true;

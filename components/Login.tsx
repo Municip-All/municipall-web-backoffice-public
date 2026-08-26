@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   Lock,
   Mail,
@@ -46,6 +46,32 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockCountdown, setLockCountdown] = useState(0);
+  const failCount = useRef(0);
+  const lockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const startLock = useCallback((seconds: number) => {
+    setIsLocked(true);
+    setLockCountdown(seconds);
+    const start = Date.now();
+    const iv = setInterval(() => {
+      const remaining = Math.ceil((seconds * 1000 - (Date.now() - start)) / 1000);
+      if (remaining <= 0) {
+        clearInterval(iv);
+        setIsLocked(false);
+        setLockCountdown(0);
+      } else {
+        setLockCountdown(remaining);
+      }
+    }, 1000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (lockTimer.current) clearTimeout(lockTimer.current);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,16 +87,25 @@ export default function Login() {
       const result = await api.backofficeLogin(email, password);
 
       if (result.error) {
+        failCount.current += 1;
         setError(result.error);
+        setIsLocked(true);
+        const lockSeconds = failCount.current >= 5 ? 10 : 2;
+        startLock(lockSeconds);
         return;
       }
 
       if (result.data) {
+        failCount.current = 0;
         const { access_token, user } = result.data;
         login(access_token, user);
       }
     } catch {
+      failCount.current += 1;
       setError("Impossible de contacter le serveur d'authentification.");
+      setIsLocked(true);
+      const lockSeconds = failCount.current >= 5 ? 10 : 2;
+      startLock(lockSeconds);
     } finally {
       setIsLoading(false);
     }
@@ -249,14 +284,18 @@ export default function Login() {
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isLocked}
                 className={clsx(
                   "btn-primary w-full py-3",
-                  isLoading && "opacity-75",
+                  (isLoading || isLocked) && "opacity-75",
                 )}
               >
                 {isLoading ? (
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : isLocked ? (
+                  lockCountdown > 0
+                    ? `Attendez ${lockCountdown}s`
+                    : "Se connecter"
                 ) : (
                   <>
                     Se connecter

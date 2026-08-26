@@ -262,7 +262,9 @@ export default function CommuneMap({
 
         setIsLoading(false);
       } catch (err) {
-        console.error("Map init error:", err);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Map init error:", err);
+        }
         if (isMounted) {
           setError("Impossible de charger la carte.");
           setIsLoading(false);

@@ -59,7 +59,9 @@ async function request<T>(
       status: response.status,
     };
   } catch (error) {
-    console.error(`API Error (${method} ${endpoint}):`, error);
+    if (process.env.NODE_ENV === "development") {
+      console.error(`API Error (${method} ${endpoint}):`, error);
+    }
     return {
       error: "Impossible de contacter le serveur",
       status: 500,

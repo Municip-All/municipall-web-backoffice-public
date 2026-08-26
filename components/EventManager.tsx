@@ -37,7 +37,9 @@ export default function EventManager() {
       const data = await api.getEvents();
       setEvents(data);
     } catch (error) {
-      console.error("Error fetching events:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error fetching events:", error);
+      }
     } finally {
       setIsLoading(false);
     }

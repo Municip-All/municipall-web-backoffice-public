@@ -185,7 +185,9 @@ export default function NeighborhoodManager() {
           }
         });
       } catch (err) {
-        console.error("Map error:", err);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Map error:", err);
+        }
       }
     };
 
