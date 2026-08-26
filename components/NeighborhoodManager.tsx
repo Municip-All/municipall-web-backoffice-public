@@ -95,10 +95,12 @@ export default function NeighborhoodManager() {
 
   useEffect(() => {
     if (!user?.cityId) return;
+    let cancelled = false;
 
     api
       .getCityConfig(user.cityId)
       .then((config) => {
+        if (cancelled) return;
         if (config && user.cityId) {
           setCommuneName(getGeoCommuneName(user.cityId, config));
           setNeighborhoods(config.neighborhoods ?? []);
@@ -108,10 +110,12 @@ export default function NeighborhoodManager() {
         }
       })
       .catch(() => {
+        if (cancelled) return;
         setCommuneName("Paris");
         toast("error", "Erreur API. Mode démo activé.");
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
   }, [user?.cityId, toast]);
 
   useEffect(() => {
@@ -203,9 +207,10 @@ export default function NeighborhoodManager() {
       return;
     }
 
+    let cancelled = false;
     const map = mapInstance.current;
     loadLeaflet().then((L) => {
-      if (!map) return;
+      if (cancelled || !map) return;
       if (tempLayer.current) tempLayer.current.remove();
 
       const poly = L.polygon(tempPoints, {
@@ -218,6 +223,7 @@ export default function NeighborhoodManager() {
 
       tempLayer.current = poly;
     });
+    return () => { cancelled = true; };
   }, [tempPoints]);
 
   // Render existing neighborhoods
@@ -227,9 +233,10 @@ export default function NeighborhoodManager() {
     // Clear previous layers
     neighborhoodLayers.current.clearLayers();
 
+    let cancelled = false;
     const layers = neighborhoodLayers.current;
     loadLeaflet().then((L) => {
-      if (!layers) return;
+      if (cancelled || !layers) return;
       neighborhoods.forEach((n) => {
         L.polygon(n.points, {
           color: "var(--accent)",
@@ -245,6 +252,7 @@ export default function NeighborhoodManager() {
           });
       });
     });
+    return () => { cancelled = true; };
   }, [neighborhoods]);
 
   const startDrawing = () => {

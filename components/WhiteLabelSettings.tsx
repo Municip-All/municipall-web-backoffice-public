@@ -46,14 +46,16 @@ export default function WhiteLabelSettings() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const timer = setTimeout(() => {
       if (!user?.cityId) {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
         return;
       }
       api
         .getCityConfig(user.cityId)
         .then((config) => {
+          if (cancelled) return;
           if (config) {
             setAppName(config.name || "");
             setOfficialName(config.officialName || config.name || "");
@@ -73,9 +75,12 @@ export default function WhiteLabelSettings() {
           }
           setIsLoading(false);
         })
-        .catch(() => setIsLoading(false));
+        .catch(() => {
+          if (cancelled) return;
+          setIsLoading(false);
+        });
     }, 0);
-    return () => clearTimeout(timer);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [user?.cityId]);
 
   useEffect(() => {

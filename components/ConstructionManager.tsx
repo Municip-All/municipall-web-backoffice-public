@@ -46,11 +46,19 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchWorks();
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const data = await api.get<ConstructionWork[]>("/api/v1/construction-works");
+        if (cancelled) return;
+        setWorks(data.data || []);
+      } catch {
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     }, 0);
-    return () => clearTimeout(timer);
-  }, [cityId, fetchWorks]);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [cityId]);
 
   const handleSave = async (work: ConstructionWork) => {
     setIsSaving(true);

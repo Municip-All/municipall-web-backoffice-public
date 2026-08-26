@@ -49,6 +49,7 @@ export default function TargetedCommunication() {
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const timer = setTimeout(() => {
       if (!user?.cityId) return;
       Promise.all([
@@ -56,6 +57,7 @@ export default function TargetedCommunication() {
         api.getCityBoundary(user.cityId).catch(() => null),
       ])
         .then(([config, boundary]) => {
+          if (cancelled) return;
           if (config) {
             setAppDisplayName(config.name);
             setCommuneName(getGeoCommuneName(user.cityId, config));
@@ -65,9 +67,12 @@ export default function TargetedCommunication() {
             setCommuneName("Paris");
           }
         })
-        .catch(() => setCommuneName("Paris"));
+        .catch(() => {
+          if (cancelled) return;
+          setCommuneName("Paris");
+        });
     }, 0);
-    return () => clearTimeout(timer);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [user?.cityId]);
 
   const toggleZone = (name: string) => {

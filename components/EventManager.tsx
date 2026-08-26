@@ -43,11 +43,23 @@ export default function EventManager() {
   }, [user?.cityId]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchEvents();
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      if (!user?.cityId) {
+        if (!cancelled) setIsLoading(false);
+        return;
+      }
+      try {
+        const data = await api.getEvents();
+        if (cancelled) return;
+        setEvents(data);
+      } catch {
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     }, 0);
-    return () => clearTimeout(timer);
-  }, [fetchEvents]);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [user?.cityId]);
 
   const handleSave = async (event: CityEvent) => {
     setIsSaving(true);

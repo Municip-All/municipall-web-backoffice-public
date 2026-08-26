@@ -146,12 +146,15 @@ export default function ReportDetailModal({
 
   useEffect(() => {
     if (report?.messages.length) {
+      let cancelled = false;
       const t = setTimeout(
-        () =>
-          scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }),
+        () => {
+          if (cancelled) return;
+          scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+        },
         80,
       );
-      return () => clearTimeout(t);
+      return () => { cancelled = true; clearTimeout(t); };
     }
   }, [report?.messages.length]);
 

@@ -103,8 +103,10 @@ export default function ProfileView({ onNavigate }: ProfileViewProps) {
   };
 
   useEffect(() => {
+    let cancelled = false;
     const me = api.getMe();
     me.then((data) => {
+      if (cancelled) return;
       if (data) {
         updateUser({
           name: data.name,
@@ -121,6 +123,7 @@ export default function ProfileView({ onNavigate }: ProfileViewProps) {
         });
       }
     });
+    return () => { cancelled = true; };
   }, [updateUser]);
 
   useEffect(() => {
