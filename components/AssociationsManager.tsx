@@ -24,10 +24,13 @@ export default function AssociationsManager({ cityId }: { cityId: string }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     api.getCityConfig(cityId).then((data) => {
+      if (cancelled) return;
       setItems(data?.associations ?? []);
       setLoading(false);
     });
+    return () => { cancelled = true; };
   }, [cityId]);
 
   const handleSave = async () => {

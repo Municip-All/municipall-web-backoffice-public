@@ -52,11 +52,12 @@ export default function WasteManager({ cityId }: { cityId: string }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     api.getCityConfig(cityId).then((data) => {
+      if (cancelled) return;
       if (data?.wasteConfig?.services) {
         setServices(data.wasteConfig.services);
       } else {
-        // Default services if none exist
         setServices([
           {
             type: "Ordures Ménagères",
@@ -76,6 +77,7 @@ export default function WasteManager({ cityId }: { cityId: string }) {
       }
       setIsLoading(false);
     });
+    return () => { cancelled = true; };
   }, [cityId]);
 
   const handleAddService = () => {

@@ -49,7 +49,7 @@ export default function Login() {
   const [isLocked, setIsLocked] = useState(false);
   const [lockCountdown, setLockCountdown] = useState(0);
   const failCount = useRef(0);
-  const lockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lockIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startLock = useCallback((seconds: number) => {
     setIsLocked(true);
@@ -59,17 +59,19 @@ export default function Login() {
       const remaining = Math.ceil((seconds * 1000 - (Date.now() - start)) / 1000);
       if (remaining <= 0) {
         clearInterval(iv);
+        lockIntervalRef.current = null;
         setIsLocked(false);
         setLockCountdown(0);
       } else {
         setLockCountdown(remaining);
       }
     }, 1000);
+    lockIntervalRef.current = iv;
   }, []);
 
   useEffect(() => {
     return () => {
-      if (lockTimer.current) clearTimeout(lockTimer.current);
+      if (lockIntervalRef.current) clearInterval(lockIntervalRef.current);
     };
   }, []);
 

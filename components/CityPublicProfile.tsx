@@ -34,7 +34,9 @@ export default function CityPublicProfile({ cityId }: { cityId: string }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     api.getCityConfig(cityId).then((data) => {
+      if (cancelled) return;
       const p = data?.publicProfile;
       setForm({
         mayorName: p?.mayorName ?? "",
@@ -47,6 +49,7 @@ export default function CityPublicProfile({ cityId }: { cityId: string }) {
       });
       setLoading(false);
     });
+    return () => { cancelled = true; };
   }, [cityId]);
 
   const handleSave = async () => {

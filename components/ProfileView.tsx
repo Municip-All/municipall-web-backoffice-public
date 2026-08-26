@@ -103,27 +103,30 @@ export default function ProfileView({ onNavigate }: ProfileViewProps) {
   };
 
   useEffect(() => {
+    const me = api.getMe();
+    me.then((data) => {
+      if (data) {
+        updateUser({
+          name: data.name,
+          surname: data.surname,
+          email: data.email,
+          role: data.role,
+          avatar_url: data.avatar_url,
+          permissions: data.permissions,
+        });
+        setIdentityForm({
+          name: data.name || "",
+          surname: data.surname || "",
+          email: data.email || "",
+        });
+      }
+    });
+  }, [updateUser]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const loadProfileData = async () => {
-      const me = await api.getMe();
-      if (cancelled) return;
-      if (me) {
-        updateUser({
-          name: me.name,
-          surname: me.surname,
-          email: me.email,
-          role: me.role,
-          avatar_url: me.avatar_url,
-          permissions: me.permissions,
-        });
-        setIdentityForm({
-          name: me.name || "",
-          surname: me.surname || "",
-          email: me.email || "",
-        });
-      }
-
       const [userStats, notificationPrefs] = await Promise.all([
         api.getUserStats(),
         api.getNotificationPreferences(),
@@ -155,7 +158,7 @@ export default function ProfileView({ onNavigate }: ProfileViewProps) {
     return () => {
       cancelled = true;
     };
-  }, [updateUser, user]);
+  }, [user?.cityId]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -21,12 +21,15 @@ export default function Header({ onViewChange }: HeaderProps) {
 
   useEffect(() => {
     if (!user?.cityId) return;
+    let cancelled = false;
     api
       .getCityConfig(user.cityId)
       .then((config) => {
+        if (cancelled) return;
         if (config) setCityName(config.name);
       })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, [user?.cityId]);
 
   return (

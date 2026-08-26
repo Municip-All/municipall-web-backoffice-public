@@ -273,6 +273,10 @@ export default function CommuneMap({
 
     return () => {
       isMounted = false;
+      if (mapInstance.current) {
+        (mapInstance.current as L.Map).remove();
+        mapInstance.current = null;
+      }
     };
     // Dépendances volontairement limitées pour éviter de réinitialiser la carte à chaque render.
     // eslint-disable-next-line react-hooks/exhaustive-deps

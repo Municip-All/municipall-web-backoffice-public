@@ -30,7 +30,17 @@ export default function TeamManager() {
   };
 
   useEffect(() => {
-    load();
+    let cancelled = false;
+    void api.getTeam().then((data) => {
+      if (cancelled) return;
+      setTeam(data);
+      setLoading(false);
+    }).catch(() => {
+      if (cancelled) return;
+      toast("error", "Impossible de charger l'équipe.");
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   const handleInvite = async (e: React.FormEvent) => {

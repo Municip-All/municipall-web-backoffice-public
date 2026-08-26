@@ -191,6 +191,8 @@ export default function NeighborhoodManager() {
     initMap();
     return () => {
       isMounted = false;
+      mapInstance.current?.remove();
+      mapInstance.current = null;
     };
   }, [communeName, isPointInPolygon, toast]);
 
