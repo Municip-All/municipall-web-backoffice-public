@@ -18,6 +18,7 @@ import {
   Users,
   Landmark,
   Star,
+  Bot,
 } from "lucide-react";
 import clsx from "clsx";
 import BrandLogo from "@/components/BrandLogo";
@@ -29,6 +30,7 @@ export type ViewType =
   | "team-manage"
   | "pouls-ai"
   | "moderation"
+  | "assistant-ai"
   | "widgets"
   | "targeted-push"
   | "neighborhoods"
@@ -111,6 +113,12 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
             pendingTotal > 0
               ? `${pendingReports} signalement(s), ${pendingMessages} message(s)`
               : undefined,
+        },
+        {
+          id: "assistant-ai",
+          label: "Assistant IA",
+          icon: Bot,
+          permission: Permission.REPORTS_READ,
         },
       ],
     },

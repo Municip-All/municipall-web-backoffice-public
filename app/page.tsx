@@ -5,6 +5,7 @@ import Sidebar, { ViewType } from "@/components/Sidebar";
 import Header from "@/components/Header";
 import PoulsAiDashboard from "@/components/PoulsAiDashboard";
 import ModerationMatrix from "@/components/ModerationMatrix";
+import AiAgentChatPanel from "@/components/AiAgentChatPanel";
 import WidgetGenerator from "@/components/WidgetGenerator";
 import TargetedCommunication from "@/components/TargetedCommunication";
 import WhiteLabelSettings from "@/components/WhiteLabelSettings";
@@ -65,6 +66,7 @@ export default function Home() {
                 <PoulsAiDashboard onViewChange={setActiveView} />
               )}
               {activeView === "moderation" && can(Permission.REPORTS_READ) && <ModerationMatrix />}
+              {activeView === "assistant-ai" && can(Permission.REPORTS_READ) && <AiAgentChatPanel />}
               {activeView === "widgets" && can(Permission.WIDGETS_READ) && <WidgetGenerator />}
               {activeView === "transport" && can(Permission.WIDGETS_READ) && <TransportSettings />}
               {activeView === "targeted-push" && can(Permission.NOTIFICATIONS_SEND) && <TargetedCommunication />}
