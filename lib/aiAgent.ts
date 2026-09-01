@@ -1,3 +1,5 @@
+import { request } from "./api";
+
 const IA_BASE_URL = process.env.NEXT_PUBLIC_API_URL_IA || "http://localhost:8000";
 const IA_API_KEY = process.env.NEXT_PUBLIC_IA_API_KEY || "";
 
@@ -26,7 +28,7 @@ export interface AgentChatResponse {
   fallback: boolean;
 }
 
-export async function askAgent(
+async function askAgentDirect(
   question: string,
   tenantId: string,
 ): Promise<AgentChatResponse> {
@@ -48,4 +50,20 @@ export async function askAgent(
     throw new Error(detail || `Erreur ${response.status} de l'assistant IA`);
   }
   return data as AgentChatResponse;
+}
+
+export async function askAgent(
+  question: string,
+  tenantId: string,
+): Promise<AgentChatResponse> {
+  const result = await request<AgentChatResponse>(
+    "/api/v1/ai/chat/agent",
+    "POST",
+    { question },
+  );
+  if (result.data) return result.data;
+  if (!process.env.NEXT_PUBLIC_API_URL_IA) {
+    throw new Error(result.error || "Erreur de l'assistant IA");
+  }
+  return askAgentDirect(question, tenantId);
 }

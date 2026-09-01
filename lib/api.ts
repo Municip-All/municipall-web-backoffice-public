@@ -8,7 +8,7 @@ export interface ApiResponse<T = unknown> {
   status: number;
 }
 
-async function request<T>(
+export async function request<T>(
   endpoint: string,
   method: string = "GET",
   body?: unknown,
