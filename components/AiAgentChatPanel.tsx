@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Bot, Loader2, Send, Sparkles, TriangleAlert, Wrench } from "lucide-react";
+import { Bot, Info, Loader2, Send, Sparkles, TriangleAlert, Wrench } from "lucide-react";
 import clsx from "clsx";
 import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
@@ -21,10 +21,71 @@ interface ChatEntry {
   error?: boolean;
 }
 
-const SUGGESTED_QUESTIONS = [
-  "Quels sont les 3 problèmes les plus urgents cette semaine ?",
-  "Analyse le signalement : un lampadaire est cassé rue des Écoles depuis 3 jours",
-  "Ce signalement est-il un doublon : poubelle débordante depuis une semaine ?",
+const SUGGESTION_GROUPS: { label: string; questions: string[] }[] = [
+  {
+    label: "Pilotage",
+    questions: [
+      "Quels sont les 3 problèmes les plus urgents cette semaine ?",
+      "Combien de signalements par catégorie ce mois-ci ?",
+      "Combien de signalements sont en attente depuis 30 jours ?",
+      "Quels travaux sont en cours dans ma ville ?",
+    ],
+  },
+  {
+    label: "Analyse d'un signalement",
+    questions: [
+      "Analyse le signalement : un lampadaire est cassé rue des Écoles depuis 3 jours",
+      "Quelle catégorie et quel service pour : fuite d'eau sous le trottoir avenue de la Gare ?",
+      "Ce message est-il du spam : gagnez 1000 € en cliquant sur ce lien ?",
+    ],
+  },
+  {
+    label: "Qualité des données",
+    questions: [
+      "Ce signalement est-il un doublon : poubelle débordante depuis une semaine ?",
+      "Y a-t-il des doublons ou des spams détectés récemment ?",
+      "Liste les 10 derniers signalements rejetés",
+    ],
+  },
+];
+
+const AGENT_CAPABILITIES: { name: string; description: string; example: string }[] = [
+  {
+    name: "Urgences & sentiment",
+    description:
+      "Classe les signalements ouverts par urgence selon le sentiment des citoyens (score négatif = frustration forte).",
+    example: "« Quels sont les 3 problèmes les plus urgents cette semaine ? »",
+  },
+  {
+    name: "Catégorisation & service compétent",
+    description:
+      "Détermine la catégorie municipale (voirie, éclairage public, déchets…) et le service à affecter pour un texte libre.",
+    example: "« Quelle catégorie pour une fuite d'eau avenue de la Gare ? »",
+  },
+  {
+    name: "Détection de doublons",
+    description:
+      "Compare un texte aux signalements existants de la commune par similarité sémantique pour éviter les traitements en double.",
+    example: "« Ce signalement est-il un doublon : poubelle débordante ? »",
+  },
+  {
+    name: "Recherche filtrée",
+    description:
+      "Liste les signalements par statut, catégorie et période, triés par date ou par urgence.",
+    example: "« Liste les 10 derniers signalements en attente »",
+  },
+  {
+    name: "Comptages & statistiques",
+    description:
+      "Agrège les volumes par catégorie, statut ou service municipal sur la période de votre choix.",
+    example: "« Combien de signalements par catégorie ce mois-ci ? »",
+  },
+  {
+    name: "Analyse spam & tonalité",
+    description:
+      "Évalue un message : indésirable ou non, ton positif/négatif, niveau d'urgence — avant de le traiter.",
+    example: "« Ce message est-il du spam : gagnez 1000 € ici ? »",
+  },
 ];
 
 const MAX_QUESTION_LENGTH = 2000;
@@ -229,22 +290,51 @@ export default function AiAgentChatPanel() {
                   Posez votre première question
                 </p>
                 <p className="mt-1 max-w-md text-[13px] text-[var(--muted)]">
-                  L&apos;assistant interroge la base des signalements et les outils IA
-                  en temps réel. Exemples :
+                  L&apos;assistant interroge la base des signalements de votre commune et
+                  les outils IA en temps réel. Exemples :
                 </p>
               </div>
-              <div className="flex max-w-xl flex-wrap justify-center gap-2">
-                {SUGGESTED_QUESTIONS.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => void sendQuestion(suggestion)}
-                    className="rounded-full border border-[#A8C69F] bg-[#F7F4EC] px-3.5 py-1.5 text-[12px] font-medium text-[#4A6741] transition-colors hover:bg-[#E3EDDE] dark:border-[#A8C69F]/30 dark:bg-white/5 dark:text-[#A8C69F] dark:hover:bg-[#E3EDDE]/15"
-                  >
-                    {suggestion}
-                  </button>
+              <div className="flex max-w-2xl flex-col items-center gap-3">
+                {SUGGESTION_GROUPS.map((group) => (
+                  <div key={group.label} className="flex flex-wrap items-center justify-center gap-2">
+                    <span className="mr-1 text-[10px] font-black uppercase tracking-wider text-[var(--muted)]">
+                      {group.label}
+                    </span>
+                    {group.questions.map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => void sendQuestion(suggestion)}
+                        className="rounded-full border border-[#A8C69F] bg-[#F7F4EC] px-3.5 py-1.5 text-[12px] font-medium text-[#4A6741] transition-colors hover:bg-[#E3EDDE] dark:border-[#A8C69F]/30 dark:bg-white/5 dark:text-[#A8C69F] dark:hover:bg-[#E3EDDE]/15"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
                 ))}
               </div>
+              <details className="w-full max-w-2xl rounded-xl border border-[#EFEAE0] bg-white/60 text-left dark:border-white/10 dark:bg-white/5">
+                <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2.5 text-[12px] font-bold text-[#4A6741] dark:text-[#A8C69F]">
+                  <Info className="h-4 w-4" />
+                  Ce que l&apos;assistant sait faire
+                  <span className="ml-auto font-medium text-[var(--muted)] group-open:hidden">
+                    Afficher
+                  </span>
+                </summary>
+                <ul className="space-y-2.5 border-t border-[#EFEAE0] px-4 py-3 dark:border-white/10">
+                  {AGENT_CAPABILITIES.map((capability) => (
+                    <li key={capability.name} className="text-[12px] leading-relaxed">
+                      <span className="font-bold text-[var(--foreground)]">
+                        {capability.name}
+                      </span>
+                      <span className="text-[var(--muted)]"> — {capability.description}</span>
+                      <span className="block text-[11px] italic text-[#4A6741] dark:text-[#A8C69F]">
+                        {capability.example}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
             </div>
           )}
 
