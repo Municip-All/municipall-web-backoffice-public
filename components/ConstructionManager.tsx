@@ -37,7 +37,9 @@ export default function ConstructionManager({ cityId }: { cityId: string }) {
 
   const fetchWorks = React.useCallback(async () => {
     try {
-      const data = await api.get<ConstructionWork[]>("/api/v1/construction-works");
+      const data = await api.get<ConstructionWork[]>(
+        "/api/v1/construction-works",
+      );
       setWorks(data.data || []);
     } catch {
     } finally {

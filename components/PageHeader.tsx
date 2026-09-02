@@ -27,13 +27,13 @@ export default function PageHeader({
     >
       <div className="min-w-0 space-y-2">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-[var(--foreground)]">
             {title}
           </h1>
           {badge}
         </div>
         {description && (
-          <div className="text-sm text-[var(--muted)]">{description}</div>
+          <div className="text-base text-[var(--muted)]">{description}</div>
         )}
       </div>
       {actions && (

@@ -1,7 +1,23 @@
 import type { NextConfig } from "next";
 
+const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/$/, "") ?? "";
+const apiProxyTarget =
+  configuredApiRoot &&
+  !/localhost|127\.0\.0\.1/i.test(configuredApiRoot)
+    ? configuredApiRoot
+    : null;
+
 const nextConfig: NextConfig = {
   output: "standalone",
+  async rewrites() {
+    if (!apiProxyTarget) return [];
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: `${apiProxyTarget}/api/v1/:path*`,
+      },
+    ];
+  },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },

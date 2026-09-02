@@ -177,13 +177,16 @@ export default function ProfileView({ onNavigate }: ProfileViewProps) {
     reader.onloadend = async () => {
       const avatarUrl = reader.result as string;
       setIsSaving(true);
-      const ok = await api.updateAvatar(avatarUrl);
+      const { ok, error } = await api.updateAvatar(avatarUrl);
       setIsSaving(false);
       if (ok) {
         updateUser({ avatar_url: avatarUrl });
         toast("success", "Photo de profil mise à jour.");
       } else {
-        toast("error", "Impossible de mettre à jour la photo.");
+        toast(
+          "error",
+          error ?? "Impossible de mettre à jour la photo.",
+        );
       }
     };
     reader.readAsDataURL(file);

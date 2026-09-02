@@ -44,11 +44,6 @@ export type ViewType =
   | "city-profile"
   | "citizen-feedback";
 
-interface SidebarProps {
-  activeView: ViewType;
-  onViewChange: (view: ViewType) => void;
-}
-
 type NavItem = {
   id: ViewType;
   label: string;
@@ -64,7 +59,21 @@ type NavSection = {
   items: NavItem[];
 };
 
-export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
+interface SidebarProps {
+  activeView: ViewType;
+  onViewChange: (view: ViewType) => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+  desktopCollapsed?: boolean;
+}
+
+export default function Sidebar({
+  activeView,
+  onViewChange,
+  mobileOpen = false,
+  onMobileClose,
+  desktopCollapsed = false,
+}: SidebarProps) {
   const { pendingTotal, pendingReports, pendingMessages, urgentCount } =
     useInbox();
   const { can, isMayor } = usePermissions();
@@ -201,6 +210,11 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const filterItems = (items: NavItem[]) =>
     items.filter((item) => !item.permission || can(item.permission));
 
+  const handleNav = (view: ViewType) => {
+    onViewChange(view);
+    onMobileClose?.();
+  };
+
   const renderButton = (item: NavItem) => {
     const isActive = activeView === item.id;
     const Icon = item.icon;
@@ -209,73 +223,106 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
       <button
         key={item.id}
         type="button"
-        onClick={() => onViewChange(item.id)}
+        onClick={() => handleNav(item.id)}
+        aria-current={isActive ? "page" : undefined}
         className={clsx(
-          "flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium transition-all outline-none",
+          "flex w-full min-h-[44px] items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all",
           isActive
-            ? "bg-[var(--accent)]/[0.08] text-[var(--accent)]"
-            : "text-[var(--muted)] hover:bg-zinc-50 hover:text-[var(--foreground)] dark:hover:bg-zinc-800/60",
+            ? "bg-[var(--color-primary-bg)] text-[var(--accent)] ring-1 ring-[var(--accent)]/20"
+            : "text-[var(--muted)] hover:bg-[var(--surface-subtle)] hover:text-[var(--foreground)]",
         )}
       >
         <span className="flex min-w-0 items-center gap-3">
           <Icon
             className={clsx(
               "h-[18px] w-[18px] shrink-0",
-              isActive ? "text-[var(--accent)]" : "text-zinc-400",
+              isActive ? "text-[var(--accent)]" : "text-[var(--muted)]",
             )}
             strokeWidth={isActive ? 2.25 : 2}
+            aria-hidden
           />
           <span className="truncate">{item.label}</span>
         </span>
         {item.count && item.count > 0 ? (
           <span
             title={item.title}
+            aria-label={
+              item.title ?? `${item.count} élément(s) en attente`
+            }
             className={clsx(
-              "flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-black text-white",
-              item.urgent ? "bg-red-500" : "bg-amber-500",
+              "flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-[var(--color-on-brand)]",
+              item.urgent ? "bg-[var(--color-danger)]" : "bg-amber-500",
             )}
           >
             {item.count > 99 ? "99+" : item.count}
           </span>
         ) : isActive ? (
-          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+          <span
+            className="h-2 w-2 shrink-0 rounded-full bg-[var(--accent)]"
+            aria-hidden
+          />
         ) : null}
       </button>
     );
   };
 
   return (
-    <aside className="z-20 flex h-full w-[260px] shrink-0 flex-col border-r border-[var(--card-border)] bg-[var(--card)] shadow-sidebar">
-      <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-5">
-        <div className="mb-4 flex items-center gap-3 px-1">
-          <BrandLogo size="md" />
-          <div className="min-w-0">
-            <h1 className="text-[15px] font-semibold leading-tight text-[var(--foreground)]">
-              Municip&apos;All Panel
-            </h1>
-            <p className="text-[11px] font-medium text-[var(--muted)]">
-              {isMayor ? "Espace maire" : "Espace mairie"}
-            </p>
+    <>
+      {mobileOpen ? (
+        <button
+          type="button"
+          className="fixed inset-x-0 bottom-0 top-[72px] z-30 bg-black/50 backdrop-blur-sm lg:hidden"
+          onClick={onMobileClose}
+          aria-label="Fermer le menu de navigation"
+        />
+      ) : null}
+
+      <aside
+        id="app-sidebar"
+        aria-label="Navigation principale"
+        aria-hidden={!mobileOpen && desktopCollapsed ? true : undefined}
+        className={clsx(
+          "flex h-full shrink-0 flex-col border-r border-[var(--card-border)] bg-[var(--card)] shadow-sidebar transition-[transform,width,opacity] duration-300 ease-out",
+          // Mobile drawer — sous le header, pas en plein écran
+          "fixed bottom-0 left-0 top-[72px] z-40 w-[min(100%,280px)] lg:static lg:top-auto lg:z-20",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          // Desktop — rétractable
+          desktopCollapsed
+            ? "lg:w-0 lg:overflow-hidden lg:border-r-0 lg:opacity-0"
+            : "lg:w-[280px] lg:opacity-100",
+        )}
+      >
+        <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-5 custom-scrollbar">
+          <div className="mb-4 flex items-center gap-3 px-1">
+            <BrandLogo size="md" />
+            <div className="min-w-0">
+              <p className="font-display text-[15px] font-bold leading-tight text-[var(--foreground)]">
+                Municip&apos;All Panel
+              </p>
+              <p className="text-xs font-medium text-[var(--muted)]">
+                {isMayor ? "Espace maire" : "Espace mairie"}
+              </p>
+            </div>
           </div>
+
+          <nav className="space-y-5">
+            {sections.map((section) => {
+              const items = filterItems(section.items);
+              if (items.length === 0) return null;
+              return (
+                <div key={section.title}>
+                  <p className="section-title mb-2 px-1">{section.title}</p>
+                  <div className="space-y-0.5">{items.map(renderButton)}</div>
+                </div>
+              );
+            })}
+          </nav>
         </div>
 
-        <nav className="space-y-5" aria-label="Navigation principale">
-          {sections.map((section) => {
-            const items = filterItems(section.items);
-            if (items.length === 0) return null;
-            return (
-              <div key={section.title}>
-                <p className="section-title mb-2 px-1">{section.title}</p>
-                <div className="space-y-0.5">{items.map(renderButton)}</div>
-              </div>
-            );
-          })}
-        </nav>
-      </div>
-
-      <div className="space-y-0.5 border-t border-[var(--card-border)] p-5">
-        {filterItems(bottomItems).map(renderButton)}
-      </div>
-    </aside>
+        <div className="space-y-0.5 border-t border-[var(--card-border)] p-5">
+          {filterItems(bottomItems).map(renderButton)}
+        </div>
+      </aside>
+    </>
   );
 }

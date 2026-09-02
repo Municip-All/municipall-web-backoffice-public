@@ -121,7 +121,7 @@ export default function Login() {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(165deg, #0b0080 0%, #1a1a6e 45%, #2d2a9a 100%)",
+              "linear-gradient(165deg, #0a0c16 0%, #1b2036 40%, #2e4029 100%)",
           }}
         />
         <div
@@ -133,7 +133,7 @@ export default function Login() {
           }}
         />
         <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-indigo-400/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-[#8FCB86]/20 blur-3xl" />
 
         <div className="relative z-10 flex flex-1 flex-col justify-between p-10 xl:p-12">
           <div>
@@ -152,7 +152,7 @@ export default function Login() {
               </div>
             </div>
 
-            <h2 className="max-w-sm text-2xl font-semibold leading-snug tracking-tight text-white xl:text-[1.65rem]">
+            <h2 className="font-display max-w-sm text-2xl font-bold leading-snug tracking-tight text-white xl:text-[1.65rem]">
               Pilotez votre commune au quotidien
             </h2>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/75">
@@ -197,7 +197,7 @@ export default function Login() {
           className="pointer-events-none absolute inset-0 opacity-80 dark:opacity-50"
           style={{
             background:
-              "radial-gradient(ellipse 70% 50% at 80% 0%, rgba(11, 0, 128, 0.06), transparent), radial-gradient(ellipse 50% 40% at 0% 100%, rgba(79, 70, 229, 0.05), transparent)",
+              "radial-gradient(ellipse 70% 50% at 80% 0%, rgba(122, 155, 109, 0.08), transparent), radial-gradient(ellipse 50% 40% at 0% 100%, rgba(74, 103, 65, 0.06), transparent)",
           }}
         />
 
@@ -205,7 +205,7 @@ export default function Login() {
           {/* En-tête mobile */}
           <div className="mb-8 flex flex-col items-center text-center lg:hidden">
             <BrandLogo size="lg" className="mb-4" />
-            <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-[var(--foreground)]">
               Municip&apos;All Panel
             </h1>
             <p className="mt-1.5 text-sm text-[var(--muted)]">
@@ -214,7 +214,7 @@ export default function Login() {
           </div>
 
           <div className="mb-6 hidden lg:block">
-            <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-[var(--foreground)]">
               Connexion
             </h1>
             <p className="mt-1.5 text-sm text-[var(--muted)]">

@@ -1,6 +1,5 @@
 import { translateApiError } from "./apiErrors";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002";
+import { getApiBaseUrl } from "./apiBaseUrl";
 
 export interface ApiResponse<T = unknown> {
   data?: T;
@@ -39,13 +38,24 @@ export async function request<T>(
   };
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(`${getApiBaseUrl()}${endpoint}`, {
       method,
       headers: defaultHeaders,
       body: body ? JSON.stringify(body) : undefined,
     });
 
-    const data = await response.json();
+    const rawText = await response.text();
+    let data: unknown = {};
+    if (rawText) {
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        return {
+          error: translateApiError(null, response.status),
+          status: response.status,
+        };
+      }
+    }
 
     if (!response.ok) {
       return {
@@ -497,11 +507,12 @@ export const api = {
     return response.status < 400;
   },
 
-  async updateAvatar(avatarUrl: string): Promise<boolean> {
+  async updateAvatar(avatarUrl: string): Promise<{ ok: boolean; error?: string }> {
     const response = await request("/api/v1/users/avatar", "POST", {
       avatarUrl,
     });
-    return response.status < 400;
+    if (response.status < 400) return { ok: true };
+    return { ok: false, error: response.error };
   },
 
   async getMe(): Promise<User | null> {

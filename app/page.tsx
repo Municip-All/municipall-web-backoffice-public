@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar, { ViewType } from "@/components/Sidebar";
 import Header from "@/components/Header";
 import PoulsAiDashboard from "@/components/PoulsAiDashboard";
@@ -31,6 +31,28 @@ export default function Home() {
   const [activeView, setActiveView] = useState<ViewType>(
     isMayor ? "team-insights" : "pouls-ai",
   );
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [desktopNavCollapsed, setDesktopNavCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [mobileNavOpen]);
+
+  const handleMenuToggle = () => {
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+    if (isDesktop) {
+      setDesktopNavCollapsed((prev) => !prev);
+    } else {
+      setMobileNavOpen((prev) => !prev);
+    }
+  };
+
+  const menuOpenForAria = mobileNavOpen || !desktopNavCollapsed;
 
   if (isLoading) {
     return (
@@ -47,12 +69,27 @@ export default function Home() {
   return (
     <InboxProvider>
       <div className="flex h-screen w-full flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-        <Header onViewChange={setActiveView} />
+        <Header
+          onViewChange={setActiveView}
+          onMenuToggle={handleMenuToggle}
+          menuOpen={menuOpenForAria}
+          mobileNavOpen={mobileNavOpen}
+        />
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          <Sidebar activeView={activeView} onViewChange={setActiveView} />
+          <Sidebar
+            activeView={activeView}
+            onViewChange={setActiveView}
+            mobileOpen={mobileNavOpen}
+            onMobileClose={() => setMobileNavOpen(false)}
+            desktopCollapsed={desktopNavCollapsed}
+          />
 
-          <main className="relative min-w-0 flex-1 overflow-hidden">
+          <main
+            id="main-content"
+            className="relative min-w-0 flex-1 overflow-hidden"
+            tabIndex={-1}
+          >
             <div className="fade-in h-full w-full overflow-y-auto">
               {activeView === "team-insights" && can(Permission.TEAM_KPIS) && (
                 <TeamInsightsDashboard />

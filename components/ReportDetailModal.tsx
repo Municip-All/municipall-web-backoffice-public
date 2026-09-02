@@ -19,6 +19,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import ReportThumbnail from "@/components/ReportThumbnail";
 import { useLiveChatRefresh } from "@/hooks/useLiveChatRefresh";
+import { useDialog } from "@/hooks/useDialog";
 
 const ReportLocationMap = dynamic(
   () => import("@/components/ReportLocationMap"),
@@ -79,6 +80,7 @@ export default function ReportDetailModal({
   const [sending, setSending] = useState(false);
   const [statusSaving, setStatusSaving] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useDialog(Boolean(reportId), onClose);
 
   const loading = reportId !== null && loadedId !== reportId;
   const isClosed = report?.status === "Résolu" || report?.status === "Clôturé";
@@ -211,16 +213,30 @@ export default function ReportDetailModal({
         className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="card-panel relative z-10 flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-detail-title"
+        className="card-panel relative z-10 flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden"
+      >
         <div className="flex items-start justify-between border-b border-[var(--card-border)] px-6 py-4">
           <div>
             <p className="section-title">Détails du signalement</p>
-            <h2 className="text-xl font-black text-[var(--foreground)]">
+            <h2
+              id="report-detail-title"
+              className="font-display text-xl font-bold text-[var(--foreground)]"
+            >
               Incident #{String(reportId).padStart(4, "0")}
             </h2>
           </div>
-          <button type="button" onClick={onClose} className="btn-ghost !p-2" aria-label="Fermer">
-            <X className="h-5 w-5" />
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-ghost !p-2"
+            aria-label="Fermer la fenêtre"
+          >
+            <X className="h-5 w-5" aria-hidden />
           </button>
         </div>
 
