@@ -184,8 +184,8 @@ export default function SuggestionsBoard({
                     Réf. SUG-{String(ticket.id).padStart(4, "0")}
                   </p>
 
-                  <div className="mt-3 rounded-xl bg-zinc-50 px-3 py-2.5 dark:bg-zinc-800/40">
-                    <p className="text-xs leading-relaxed text-[var(--muted)] line-clamp-3">
+                  <div className="mt-3 rounded-xl border border-[var(--card-border)] bg-[var(--surface-subtle)] px-3 py-2.5">
+                    <p className="line-clamp-3 text-xs leading-relaxed text-[var(--foreground)]">
                       {preview}
                     </p>
                   </div>

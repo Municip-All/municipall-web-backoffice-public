@@ -353,9 +353,17 @@ export default function ReportDetailModal({
                   lon={report.lon}
                   label={report.description || report.category}
                 />
-                <p className="mt-2 text-[11px] font-mono text-[var(--muted)]">
-                  {report.lat.toFixed(6)}, {report.lon.toFixed(6)}
-                </p>
+                {Number.isFinite(report.lat) &&
+                Number.isFinite(report.lon) &&
+                !(Math.abs(report.lat) < 1e-6 && Math.abs(report.lon) < 1e-6) ? (
+                  <p className="mt-2 text-[11px] font-mono text-[var(--muted)]">
+                    {report.lat.toFixed(6)}, {report.lon.toFixed(6)}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-[11px] text-[var(--muted)]">
+                    Pas de GPS enregistré
+                  </p>
+                )}
               </div>
             </div>
 

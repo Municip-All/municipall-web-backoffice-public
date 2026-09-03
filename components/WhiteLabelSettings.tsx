@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import {
   PaintBucket,
   Image as ImageIcon,
@@ -25,6 +24,8 @@ import PageHeader from "@/components/PageHeader";
 import PageShell from "@/components/PageShell";
 import ColorHexField from "@/components/ColorHexField";
 import { getOnPrimaryColor, isPrimaryReadableOnWhite } from "@/lib/brandUtils";
+import { getDisplayableImageSrc } from "@/lib/imageSrc";
+import ConfigurableImage from "@/components/ConfigurableImage";
 
 export default function WhiteLabelSettings() {
   const { user } = useAuth();
@@ -36,7 +37,7 @@ export default function WhiteLabelSettings() {
   const [backgroundColorLight, setBackgroundColorLight] = useState("#F2F2F7");
   const [backgroundColorDark, setBackgroundColorDark] = useState("#000000");
   const [useGradient, setUseGradient] = useState(false);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactHelpText, setContactHelpText] = useState("");
@@ -68,7 +69,7 @@ export default function WhiteLabelSettings() {
               config.theme.backgroundColorDark || "#000000",
             );
             setUseGradient(config.theme.useGradient ?? false);
-            setLogoPreview(config.theme.logoUrl || null);
+            setLogoUrl(config.theme.logoUrl || "");
             setContactEmail(config.contact?.email || "");
             setContactPhone(config.contact?.phone || "");
             setContactHelpText(config.contact?.helpText || "");
@@ -89,11 +90,20 @@ export default function WhiteLabelSettings() {
     };
   }, []);
 
+  const displayLogoSrc = getDisplayableImageSrc(logoUrl);
+
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setLogoPreview(file.name);
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      if (typeof dataUrl !== "string") return;
+      setLogoUrl(dataUrl);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   const handleSave = async () => {
@@ -104,7 +114,7 @@ export default function WhiteLabelSettings() {
         name: appName,
         primaryColor,
         secondaryColor,
-        logoUrl: logoPreview || "",
+        logoUrl: logoUrl.trim(),
         backgroundColorLight,
         backgroundColorDark,
         useGradient,
@@ -194,9 +204,9 @@ export default function WhiteLabelSettings() {
                       commune.
                     </p>
                     {officialName && officialName !== appName && (
-                      <p className="mt-3 rounded-xl bg-zinc-100 px-3 py-2 text-[11px] font-medium text-[var(--muted)] dark:bg-zinc-800/60">
+                      <p className="mt-3 rounded-xl border border-[var(--card-border)] bg-[var(--surface-subtle)] px-3 py-2 text-[11px] font-medium text-[var(--foreground)]/85">
                         Commune officielle (cartes &amp; géoloc.) :{" "}
-                        <strong className="text-[var(--foreground)]">
+                        <strong className="font-semibold text-[var(--foreground)]">
                           {officialName}
                         </strong>
                       </p>
@@ -209,13 +219,13 @@ export default function WhiteLabelSettings() {
                     </label>
                     <div className="flex items-center gap-6">
                       <div className="w-20 h-20 rounded-3xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center overflow-hidden border-2 border-dashed border-zinc-200 dark:border-zinc-700 relative shrink-0">
-                        {logoPreview ? (
+                        {displayLogoSrc ? (
                           <div className="relative w-full h-full p-2">
-                            <Image
-                              src={logoPreview}
+                            <ConfigurableImage
+                              src={displayLogoSrc}
                               alt="Logo preview"
                               fill
-                              className="object-contain"
+                              className="object-contain p-0"
                             />
                           </div>
                         ) : (
@@ -408,9 +418,9 @@ export default function WhiteLabelSettings() {
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center p-2 shrink-0 border border-white/30 relative">
-                          {logoPreview ? (
-                            <Image
-                              src={logoPreview}
+                          {displayLogoSrc ? (
+                            <ConfigurableImage
+                              src={displayLogoSrc}
                               alt="Logo"
                               fill
                               className="object-contain p-2"

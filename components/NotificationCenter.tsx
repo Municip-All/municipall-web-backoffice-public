@@ -24,15 +24,27 @@ function formatRelativeTime(iso: string): string {
   return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
 
-function severityStyles(severity: DashboardAlert["severity"]) {
-  switch (severity) {
-    case "urgent":
-      return "border-red-500/30 bg-red-500/5";
-    case "high":
-      return "border-amber-500/30 bg-amber-500/5";
-    default:
-      return "border-[var(--card-border)] bg-[var(--card)] dark:bg-zinc-800/30";
+/** Pastels + texte foncé uniquement — pas de `dark:` (évite conflit OS vs thème app). */
+function rowTone(
+  severity: DashboardAlert["severity"],
+  type: DashboardAlert["type"],
+): { row: string; icon: string } {
+  if (severity === "urgent") {
+    return {
+      row: "border-[#fecaca] bg-[#fef2f2]",
+      icon: "text-[#b91c1c]",
+    };
   }
+  if (severity === "high" || type === "report") {
+    return {
+      row: "border-[#fde68a] bg-[#fffbeb]",
+      icon: "text-[#b45309]",
+    };
+  }
+  return {
+    row: "border-[#a7f3d0] bg-[#ecfdf5]",
+    icon: "text-[#047857]",
+  };
 }
 
 export default function NotificationCenter({
@@ -102,41 +114,46 @@ export default function NotificationCenter({
                 Rien à signaler pour le moment.
               </p>
             ) : (
-              alerts.slice(0, 12).map((alert) => (
-                <button
-                  key={alert.id}
-                  type="button"
-                  onClick={() => openAlert(alert)}
-                  className={clsx(
-                    "flex w-full gap-3 border-b border-[var(--card-border)] px-4 py-3 text-left transition-colors hover:bg-[var(--surface-subtle)] dark:hover:bg-zinc-800/50",
-                    severityStyles(alert.severity),
-                  )}
-                >
-                  <div className="mt-0.5 shrink-0">
-                    {alert.severity === "urgent" ? (
-                      <AlertTriangle className="h-4 w-4 text-red-500" />
-                    ) : alert.type === "contact" ? (
-                      <MessageSquare className="h-4 w-4 text-[var(--accent)]" />
-                    ) : (
-                      <ShieldAlert className="h-4 w-4 text-amber-500" />
+              alerts.slice(0, 12).map((alert) => {
+                const tone = rowTone(alert.severity, alert.type);
+                return (
+                  <button
+                    key={alert.id}
+                    type="button"
+                    onClick={() => openAlert(alert)}
+                    className={clsx(
+                      "flex w-full gap-3 border-b px-4 py-3 text-left transition-colors hover:brightness-[0.96]",
+                      tone.row,
                     )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-bold text-[var(--foreground)]">
-                      {alert.title}
-                    </p>
-                    <p className="mt-0.5 line-clamp-2 text-[11px] text-[var(--muted)]">
-                      {alert.subtitle}
-                    </p>
-                    <p className="mt-1 text-[10px] font-semibold text-[var(--muted)]">
-                      {formatRelativeTime(alert.createdAt)}
-                      {alert.severity === "urgent" && (
-                        <span className="ml-2 text-red-500">URGENT</span>
+                  >
+                    <div className={clsx("mt-0.5 shrink-0", tone.icon)}>
+                      {alert.severity === "urgent" ? (
+                        <AlertTriangle className="h-4 w-4" />
+                      ) : alert.type === "contact" ? (
+                        <MessageSquare className="h-4 w-4" />
+                      ) : (
+                        <ShieldAlert className="h-4 w-4" />
                       )}
-                    </p>
-                  </div>
-                </button>
-              ))
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-bold text-[#111827]">
+                        {alert.title}
+                      </p>
+                      <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-[#374151]">
+                        {alert.subtitle}
+                      </p>
+                      <p className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-semibold text-[#4b5563]">
+                        <span>{formatRelativeTime(alert.createdAt)}</span>
+                        {alert.severity === "urgent" && (
+                          <span className="rounded bg-[#dc2626] px-1.5 py-0.5 text-[9px] font-black tracking-wide text-white">
+                            URGENT
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })
             )}
           </div>
 

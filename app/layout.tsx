@@ -30,10 +30,6 @@ export const metadata: Metadata = {
   title: "Municip'All Panel | Espace mairie",
   description:
     "Portail de gestion citoyenne et administrative pour les mairies",
-  icons: {
-    icon: [{ url: "/favicon.png", type: "image/png" }],
-    apple: [{ url: "/favicon.png", type: "image/png" }],
-  },
 };
 
 const themeInitScript = `

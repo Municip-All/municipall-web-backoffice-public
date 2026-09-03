@@ -100,31 +100,29 @@ export default function ModerationMatrix() {
   useEffect(() => {
     let cancelled = false;
 
-    if (activeTab === "reports") {
-      void api
-        .getReports()
-        .then((data) => {
-          if (cancelled) return;
+    void Promise.all([api.getReports(), api.getContactTickets()])
+      .then(([reportResult, ticketData]) => {
+        if (cancelled) return;
+        if (reportResult.error) {
+          toast("error", reportResult.error);
+          setReports([]);
+        } else {
           setReports(
-            data.map((r) => ({ ...r, priority: getPriority(r.category) })),
+            (reportResult.data ?? []).map((r) => ({
+              ...r,
+              priority: getPriority(r.category),
+            })),
           );
+        }
+        setTickets(ticketData);
+        setReadyKey(fetchKey);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          toast("error", "Impossible de charger la modération.");
           setReadyKey(fetchKey);
-        })
-        .catch(() => {
-          if (!cancelled) setReadyKey(fetchKey);
-        });
-    } else {
-      void api
-        .getContactTickets()
-        .then((data) => {
-          if (cancelled) return;
-          setTickets(data);
-          setReadyKey(fetchKey);
-        })
-        .catch(() => {
-          if (!cancelled) setReadyKey(fetchKey);
-        });
-    }
+        }
+      });
 
     return () => {
       cancelled = true;
@@ -234,19 +232,31 @@ export default function ModerationMatrix() {
           type="button"
           onClick={() => handleTabChange("reports")}
           className={clsx(
-            "rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all",
+            "flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all",
             activeTab === "reports"
               ? "tab-segment-active"
               : "tab-segment-inactive",
           )}
         >
           Signalements
+          {activeReports.length > 0 && (
+            <span
+              className={clsx(
+                "rounded-full px-1.5 py-0.5 text-[10px]",
+                activeTab === "reports"
+                  ? "bg-white/25"
+                  : "bg-[var(--accent)]/15 text-[var(--accent)]",
+              )}
+            >
+              {activeReports.length}
+            </span>
+          )}
         </button>
         <button
           type="button"
           onClick={() => handleTabChange("questions")}
           className={clsx(
-            "rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2",
+            "flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all",
             activeTab === "questions"
               ? "tab-segment-active"
               : "tab-segment-inactive",
@@ -254,12 +264,24 @@ export default function ModerationMatrix() {
         >
           <MessageSquare className="h-4 w-4" />
           Questions
+          {openQuestions.length > 0 && (
+            <span
+              className={clsx(
+                "rounded-full px-1.5 py-0.5 text-[10px]",
+                activeTab === "questions"
+                  ? "bg-white/25"
+                  : "bg-[var(--accent)]/15 text-[var(--accent)]",
+              )}
+            >
+              {openQuestions.length}
+            </span>
+          )}
         </button>
         <button
           type="button"
           onClick={() => handleTabChange("suggestions")}
           className={clsx(
-            "rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2",
+            "flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all",
             activeTab === "suggestions"
               ? "bg-amber-500 text-white shadow-sm"
               : "tab-segment-inactive",
@@ -268,7 +290,14 @@ export default function ModerationMatrix() {
           <Lightbulb className="h-4 w-4" />
           Suggestions
           {openSuggestionsCount > 0 && (
-            <span className="ml-1 rounded-full bg-white/25 px-1.5 py-0.5 text-[10px]">
+            <span
+              className={clsx(
+                "rounded-full px-1.5 py-0.5 text-[10px]",
+                activeTab === "suggestions"
+                  ? "bg-white/25"
+                  : "bg-amber-500/15 text-amber-700",
+              )}
+            >
               {openSuggestionsCount}
             </span>
           )}
@@ -394,10 +423,15 @@ export default function ModerationMatrix() {
             )}
           </>
         ) : filteredReports.length === 0 ? (
-          <div className="flex h-64 flex-col items-center justify-center text-zinc-400">
-            <ShieldAlert className="mb-4 h-12 w-12 opacity-20" />
-            <p className="text-sm font-black uppercase tracking-widest opacity-40">
+          <div className="flex h-64 flex-col items-center justify-center px-6 text-center">
+            <ShieldAlert className="mb-4 h-12 w-12 text-zinc-500 dark:text-zinc-400" />
+            <p className="text-sm font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-200">
               Aucun signalement{search ? " trouvé" : " actif"}
+            </p>
+            <p className="mt-2 max-w-sm text-xs text-zinc-600 dark:text-zinc-400">
+              {search
+                ? "Aucun résultat pour ce filtre."
+                : "Les signalements en attente ou en cours apparaîtront ici."}
             </p>
           </div>
         ) : (

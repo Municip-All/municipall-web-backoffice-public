@@ -50,8 +50,11 @@ export async function request<T>(
       try {
         data = JSON.parse(rawText);
       } catch {
+        const looksLikeHtml = /^\s*</.test(rawText);
         return {
-          error: translateApiError(null, response.status),
+          error: looksLikeHtml
+            ? "Impossible de joindre l'API. Vérifiez NEXT_PUBLIC_API_URL (backend, pas le port du backoffice)."
+            : translateApiError(null, response.status),
           status: response.status,
         };
       }
@@ -356,18 +359,30 @@ export const api = {
     return response.data || [];
   },
 
-  async getDashboardStats(cityId: string): Promise<CityDashboardStats | null> {
+  async getDashboardStats(
+    cityId: string,
+  ): Promise<{ data?: CityDashboardStats; error?: string }> {
     const response = await request<CityDashboardStats>(
       `/api/v1/city-config/${cityId}/dashboard-stats`,
     );
-    return response.data || null;
+    if (response.error) return { error: response.error };
+    if (
+      !response.data ||
+      typeof response.data.activeReportsCount !== "number"
+    ) {
+      return { error: "Réponse statistiques invalide." };
+    }
+    return { data: response.data };
   },
 
   // --- Reports ---
 
-  async getReports(): Promise<Report[]> {
+  async getReports(): Promise<{ data: Report[]; error?: string }> {
     const response = await request<Report[]>("/api/v1/reports");
-    return response.data || [];
+    if (response.error) {
+      return { data: [], error: response.error };
+    }
+    return { data: Array.isArray(response.data) ? response.data : [] };
   },
 
   async getReport(

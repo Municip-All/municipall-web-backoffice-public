@@ -19,6 +19,7 @@ interface InboxContextValue {
   pendingTotal: number;
   urgentCount: number;
   isLoading: boolean;
+  loadError: string | null;
   refresh: () => void;
 }
 
@@ -26,8 +27,12 @@ const InboxContext = createContext<InboxContextValue | undefined>(undefined);
 
 export function InboxProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const cityId = user?.cityId;
+  const cityId =
+    user?.cityId?.trim() ||
+    process.env.NEXT_PUBLIC_CITY_ID?.trim() ||
+    "";
   const [stats, setStats] = useState<CityDashboardStats | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [readyKey, setReadyKey] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -37,19 +42,31 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
   const isLoading = Boolean(fetchKey) && readyKey !== fetchKey;
 
   useEffect(() => {
-    if (!cityId || !fetchKey) return;
+    if (!cityId || !fetchKey) {
+      setStats(null);
+      setLoadError(null);
+      return;
+    }
 
     let cancelled = false;
     void api
       .getDashboardStats(cityId)
-      .then((data) => {
-        if (!cancelled) {
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || !data) {
+          setStats(null);
+          setLoadError(error ?? "Impossible de charger le tableau de bord.");
+        } else {
           setStats(data);
-          setReadyKey(fetchKey);
+          setLoadError(null);
         }
+        setReadyKey(fetchKey);
       })
       .catch(() => {
-        if (!cancelled) setReadyKey(fetchKey);
+        if (cancelled) return;
+        setStats(null);
+        setLoadError("Impossible de charger le tableau de bord.");
+        setReadyKey(fetchKey);
       });
 
     return () => {
@@ -74,9 +91,10 @@ export function InboxProvider({ children }: { children: React.ReactNode }) {
       pendingTotal: effectiveStats?.pendingTotalCount ?? 0,
       urgentCount: effectiveStats?.urgentAlertsCount ?? 0,
       isLoading,
+      loadError: cityId ? loadError : "Commune non associée à votre compte.",
       refresh,
     }),
-    [effectiveStats, isLoading, refresh],
+    [effectiveStats, isLoading, loadError, cityId, refresh],
   );
 
   return (

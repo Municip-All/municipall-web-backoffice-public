@@ -9,6 +9,18 @@ type Props = {
   className?: string;
 };
 
+/** Tuiles IGN (mêmes que CommuneMap). */
+const IGN_TILES =
+  "https://data.geopf.fr/wmts?service=WMTS&request=GetTile&version=1.0.0&tilematrixset=PM&tilematrix={z}&tilecol={x}&tilerow={y}&layer=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&format=image/png&style=normal";
+
+function hasValidCoords(lat: number, lon: number): boolean {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+  // 0,0 = Null Island — données manquantes, pas une vraie localisation FR
+  if (Math.abs(lat) < 1e-6 && Math.abs(lon) < 1e-6) return false;
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return false;
+  return true;
+}
+
 export default function ReportLocationMap({
   lat,
   lon,
@@ -17,10 +29,10 @@ export default function ReportLocationMap({
 }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<unknown>(null);
+  const valid = hasValidCoords(lat, lon);
 
   useEffect(() => {
-    if (!mapRef.current || !Number.isFinite(lat) || !Number.isFinite(lon))
-      return;
+    if (!valid || !mapRef.current) return;
 
     let cancelled = false;
 
@@ -40,14 +52,33 @@ export default function ReportLocationMap({
         attributionControl: true,
       }).setView([lat, lon], 17);
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-        maxZoom: 19,
+      L.tileLayer(IGN_TILES, {
+        attribution: "© IGN",
+        maxZoom: 18,
       }).addTo(map);
 
-      const marker = L.marker([lat, lon]).addTo(map);
+      const pin = L.divIcon({
+        className: "municipall-report-pin",
+        html: `<span style="
+          display:block;
+          width:18px;height:18px;
+          border-radius:50% 50% 50% 0;
+          transform:rotate(-45deg);
+          background:#b91c1c;
+          border:2px solid #fff;
+          box-shadow:0 1px 4px rgba(0,0,0,.35);
+        "></span>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 18],
+        popupAnchor: [0, -16],
+      });
+
+      const marker = L.marker([lat, lon], { icon: pin }).addTo(map);
       if (label) marker.bindPopup(label).openPopup();
+
+      requestAnimationFrame(() => {
+        map.invalidateSize();
+      });
 
       mapInstance.current = map;
     };
@@ -61,7 +92,22 @@ export default function ReportLocationMap({
         mapInstance.current = null;
       }
     };
-  }, [lat, lon, label]);
+  }, [lat, lon, label, valid]);
+
+  if (!valid) {
+    return (
+      <div
+        className={
+          className ??
+          "flex h-56 w-full items-center justify-center rounded-2xl border border-[var(--card-border)] bg-[var(--surface-subtle)] px-4 text-center"
+        }
+      >
+        <p className="text-sm text-[var(--muted)]">
+          Coordonnées GPS indisponibles pour ce signalement.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div

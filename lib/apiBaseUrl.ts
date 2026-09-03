@@ -9,13 +9,13 @@ export function isLocalApiRoot(url: string): boolean {
 }
 
 /**
- * Base URL for browser API calls. Remote APIs use same-origin `/api/v1/*` so
- * Next.js rewrites proxy to dev/prod without CORS issues on localhost.
+ * Base URL for browser API calls. When a proxy target is configured, requests use
+ * same-origin `/api/v1/*` so Next.js rewrites forward to the backend (local or remote).
  */
 export function getApiBaseUrl(): string {
   const configured = getConfiguredApiRoot();
   if (!configured) return "http://localhost:3000";
-  if (!isLocalApiRoot(configured) && typeof window !== "undefined") {
+  if (getApiProxyRewriteTarget() && typeof window !== "undefined") {
     return "";
   }
   return configured;
@@ -23,6 +23,6 @@ export function getApiBaseUrl(): string {
 
 export function getApiProxyRewriteTarget(): string | null {
   const configured = getConfiguredApiRoot();
-  if (!configured || isLocalApiRoot(configured)) return null;
+  if (!configured) return null;
   return configured;
 }

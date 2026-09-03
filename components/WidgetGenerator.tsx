@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import {
   CarFront,
   CloudRainWind,
@@ -20,6 +19,8 @@ import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import { getOnPrimaryColor } from "@/lib/brandUtils";
+import { getDisplayableImageSrc } from "@/lib/imageSrc";
+import ConfigurableImage from "@/components/ConfigurableImage";
 
 interface WidgetItem {
   id: string;
@@ -312,8 +313,8 @@ export default function WidgetGenerator() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/25 bg-white/15">
-                            {logoUrl ? (
-                              <Image
+                            {getDisplayableImageSrc(logoUrl) ? (
+                              <ConfigurableImage
                                 src={logoUrl}
                                 alt=""
                                 fill

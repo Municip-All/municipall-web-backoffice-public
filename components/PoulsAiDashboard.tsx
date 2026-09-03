@@ -58,6 +58,7 @@ export default function PoulsAiDashboard({
     pendingMessages,
     urgentCount,
     isLoading,
+    loadError,
     refresh,
   } = useInbox();
 
@@ -108,6 +109,18 @@ export default function PoulsAiDashboard({
       {isLoading ? (
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)] opacity-40" />
+        </div>
+      ) : loadError ? (
+        <div className="card-panel mb-8 border border-amber-200/60 bg-amber-50/80 px-5 py-4 text-sm text-amber-900">
+          <p className="font-semibold">Statistiques indisponibles</p>
+          <p className="mt-1">{loadError}</p>
+          <button
+            type="button"
+            onClick={refresh}
+            className="mt-3 text-xs font-bold text-[var(--accent)]"
+          >
+            Réessayer
+          </button>
         </div>
       ) : (
         <>
